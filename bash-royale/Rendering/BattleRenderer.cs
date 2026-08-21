@@ -1,18 +1,21 @@
+using System.Runtime.CompilerServices;
+
 namespace bash_royale.Scenes;
 
 // UI/BattleRenderer.cs
 public class BattleRenderer : SadConsole.ScreenSurface
 {
     private GameState _gameState;
-    
-    // Timer to handle the fixed timestep
-    private double _timeSinceLastTick = 0;
-    private const double TickRate = 1.0 / 10.0; // 10 ticks per second
+    private ScreenSurface _unitLayer; 
 
     public BattleRenderer() : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
     {
         // 1. Initialize your deterministic engine
         _gameState = new GameState();
+        _unitLayer = new ScreenSurface(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT);
+        _unitLayer.Surface.DefaultBackground = Color.Transparent;
+
+        Children.Add(_unitLayer);
         // 3. Draw the static map onto the base surface once
         DrawArena();
     }
@@ -29,9 +32,31 @@ public class BattleRenderer : SadConsole.ScreenSurface
         return (hash % 100) < 15; 
     }
 
+    public void DrawUnits(PlayerState player)
+    {
+        foreach (UnitState unit in player.Units)
+        {
+            Vector2Int pos = unit.Position;
+            UnitDisplay display = UnitDisplay.Displays[unit.Type];
+            Vector2Int size = UnitInfos.GetUnitInfo(unit.Type).Size;
+            for (int x = 0; x < size.X; x++)
+            {
+                for (int y = 0; y < size.Y; y++)
+                {
+                    ColoredGlyph glyph = display.Glyphs[y][x];
+                    _unitLayer.Surface[pos.X, pos.Y].Background = glyph.Background;
+                    _unitLayer.Surface[pos.X, pos.Y].Foreground = glyph.Foreground;
+                    _unitLayer.Surface[pos.X, pos.Y].GlyphCharacter = glyph.GlyphCharacter;
+                }
+            }
+        }
+    }
     public override void Update(TimeSpan delta)
     {
-        //
+        _unitLayer.Surface.Clear();
+        
+        
+     
         base.Update(delta);
     }
     private void DrawArena()
