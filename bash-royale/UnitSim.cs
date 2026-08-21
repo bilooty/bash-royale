@@ -3,7 +3,10 @@ namespace bash_royale;
 // Handles targeting, movement and attacking across both armies. This lives apart from
 // UnitSim/PlayerSim because resolving an attack needs to mutate the *enemy's* state.
 
-public record ActionResult(UnitState unit, int targetIdx, int damage, bool didDamage);
+public record ActionResult(UnitState unit, int targetIdx, int damage, bool didDamage)
+{
+    public static ActionResult NoAttack(UnitState unit) => new(unit, -1, 0, false);
+}
 
 public static class UnitSim
 {
@@ -29,17 +32,14 @@ public static class UnitSim
         curUnit.Ticks++;
         return behaviour.Update(curUnit, gameState, target, targetIdx ?? -1);
     }
-
-
-
-
+    
     private static int? FindNearestEnemy(UnitState curUnit, GameState gameState, int aggroRange)
     {
         Vector2Int curPosition = curUnit.Position;
         long rangeSquared = (long)aggroRange * aggroRange;
-
         List<UnitState> enemies = GetEnemyUnits(curUnit, gameState);
-        UnitState? closest = null;
+
+        int? closestIndex = null;
         long closestDistanceSquared = long.MaxValue;
 
         for (int i = 0; i < enemies.Count; i++)
@@ -50,10 +50,10 @@ public static class UnitSim
             if (distanceSquared >= closestDistanceSquared) continue;
 
             closestDistanceSquared = distanceSquared;
-            closest = enemies[i];
+            closestIndex = i;
         }
 
-        return closest;
+        return closestIndex;
     }
 
     private static long DistanceSquared(Vector2Int a, Vector2Int b)
