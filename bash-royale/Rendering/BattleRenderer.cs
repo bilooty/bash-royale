@@ -22,7 +22,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
         Children.Add(_unitLayer);
         // 3. Draw the static map onto the base surface once
         DrawArena();
-        DrawGUI();
+
 
     }
     private bool ShouldDrawSprout(int x, int y)
@@ -62,6 +62,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
     {
         _unitLayer.Surface.Clear();
         _guiLayer.Surface.Clear();
+        DrawGUI();
         
      
         base.Update(delta);

@@ -8,7 +8,7 @@ public static class ArenaMap
 
     // The visual template of the Clash Royale arena (24x32)
     // . = Grass | ~ = Water | = = Bridge
-    private static readonly string[] MapTemplate = new string[]
+    public static readonly string[] MapTemplate = new string[]
     {
         "............................",
         "............................",
