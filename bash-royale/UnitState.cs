@@ -6,8 +6,6 @@ public struct UnitState
     public PlayerId Owner;
     public Vector2Int Position;
     public int Health;
-    public float AttackCooldown;
-    public float MoveProgress;
     public IUnitBehaviour UnitBehaviour;
     // increase by 1 each frame / iteration of unit sim
     // if we have attack 1 per second then we want to do 
@@ -18,10 +16,6 @@ public struct UnitState
         Owner = owner;
         Position = position;
         Health = UnitInfos.GetUnitInfo(type).MaxHealth;
-        AttackCooldown = 0f;
-        MoveProgress = 0f;
-        
-        
     }
 }
 

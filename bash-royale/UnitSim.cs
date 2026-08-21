@@ -3,7 +3,10 @@ namespace bash_royale;
 // Handles targeting, movement and attacking across both armies. This lives apart from
 // UnitSim/PlayerSim because resolving an attack needs to mutate the *enemy's* state.
 
-public record ActionResult(UnitState unit, int targetIdx, int damage, bool didDamage);
+public record ActionResult(UnitState unit, int targetIdx, int damage, bool didDamage)
+{
+    public static ActionResult NoAttack(UnitState unit) => new(unit, -1, 0, false);
+}
 
 public static class UnitSim
 {
@@ -34,8 +37,8 @@ public static class UnitSim
     {
         Vector2Int curPosition = curUnit.Position;
         long rangeSquared = (long)aggroRange * aggroRange;
-
         List<UnitState> enemies = GetEnemyUnits(curUnit, gameState);
+
         int? closestIndex = null;
         long closestDistanceSquared = long.MaxValue;
 
