@@ -12,8 +12,8 @@ public struct GameState
     {
         return new GameState
         {
-            PlayerOne = PlayerState.CreateNew(PlayerId.One, playerOneHand),
-            PlayerTwo = PlayerState.CreateNew(PlayerId.Two, playerTwoHand),
+            PlayerOne = PlayerState.CreateNew(PlayerId.One),
+            PlayerTwo = PlayerState.CreateNew(PlayerId.Two),
             ElapsedSeconds = 0f,
             IsGameOver = false,
             Winner = null,
