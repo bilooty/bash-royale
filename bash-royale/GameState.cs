@@ -4,7 +4,6 @@ public struct GameState
 {
     public PlayerState PlayerOne;
     public PlayerState PlayerTwo;
-    public float ElapsedSeconds;
     public bool IsGameOver;
     public PlayerId? Winner;
     public int Tick;
@@ -15,7 +14,6 @@ public struct GameState
             PlayerOne = PlayerState.CreateNew(PlayerId.One, playerOneHand),
             PlayerTwo = PlayerState.CreateNew(PlayerId.Two, playerTwoHand),
             
-            ElapsedSeconds = 0f,
             IsGameOver = false,
             Winner = null,
         };

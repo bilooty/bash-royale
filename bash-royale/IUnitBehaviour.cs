@@ -32,22 +32,23 @@ public class ChaseBehaviour(int speed) : IUnitBehaviour
 public class AttackBehaviour(int damage) : IUnitBehaviour
 {
      
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target)
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
     {
-        // attack enemy unit that is in range
         
-        // doesn't move 
-        // for attack rate subtract damage from enemy hp 
-        if (target is null) return unit;
-        return unit;
+        if (target is null) return ActionResult.NoAttack(unit);
+        
+        UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
+        if (unit.Ticks % info.TicksPerAttack != 0) return ActionResult.NoAttack(unit);
+        
+        return new ActionResult(unit, targetIdx, damage, true);
     }
 }
 
-public class DoNothing() : IUnitBehaviour
+public class DoNothing : IUnitBehaviour
 {
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target)
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
     {
-        return unit;
+        return ActionResult.NoAttack(unit);
     }
 }
 
