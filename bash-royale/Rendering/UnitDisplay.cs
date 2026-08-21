@@ -22,6 +22,26 @@ public class UnitDisplay(ColoredGlyph[][] glyphs)
                 ]
             ]
         ),
+        [UnitType.Archer] = new UnitDisplay(
+            [
+                [new ColoredGlyph(Color.LightGreen, Color.DarkGray, 'A')]
+            ]
+        ),
+        [UnitType.Goblin] = new UnitDisplay(
+            [
+                [new ColoredGlyph(Color.Green, Color.DarkGray, 'g')]
+            ]
+        ),
+        [UnitType.Wizard] = new UnitDisplay(
+            [
+                [new ColoredGlyph(Color.Purple, Color.DarkGray, 'W')]
+            ]
+        ),
+        [UnitType.Horde] = new UnitDisplay(
+            [
+                [new ColoredGlyph(Color.Orange, Color.DarkGray, 'h')]
+            ]
+        ),
 
     };
 }

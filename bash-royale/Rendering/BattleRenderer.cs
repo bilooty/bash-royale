@@ -1,18 +1,21 @@
 using System.Runtime.CompilerServices;
+using SadConsole.Input;
 
 namespace bash_royale.Scenes;
 
 // UI/BattleRenderer.cs
 public class BattleRenderer : SadConsole.ScreenSurface
 {
+    private static readonly Keys[] HandSlotKeys = { Keys.D1, Keys.D2, Keys.D3, Keys.D4 };
+
     private GameState _gameState;
-    private ScreenSurface _unitLayer; 
+    private ScreenSurface _unitLayer;
     private ScreenSurface _guiLayer;
 
     public BattleRenderer() : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
     {
         // 1. Initialize your deterministic engine
-        _gameState = new GameState();
+        _gameState = GameState.CreateNew();
         _unitLayer = new ScreenSurface(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT);
         _unitLayer.Surface.DefaultBackground = Color.Transparent;
         _guiLayer = new ScreenSurface(GameSettings.GAME_WIDTH, 8);
@@ -23,7 +26,23 @@ public class BattleRenderer : SadConsole.ScreenSurface
         // 3. Draw the static map onto the base surface once
         DrawArena();
 
+        UseKeyboard = true;
+        IsFocused = true;
+    }
 
+    public override bool ProcessKeyboard(Keyboard keyboard)
+    {
+        for (int i = 0; i < HandSlotKeys.Length; i++)
+        {
+            if (keyboard.IsKeyPressed(HandSlotKeys[i]))
+            {
+                Vector2Int deployPosition = new Vector2Int(ArenaMap.Width / 2, ArenaMap.Height - 5);
+                _gameState = CardSim.PlayFromHand(_gameState, PlayerId.One, i, deployPosition);
+                return true;
+            }
+        }
+
+        return base.ProcessKeyboard(keyboard);
     }
     private bool ShouldDrawSprout(int x, int y)
     {
@@ -60,11 +79,16 @@ public class BattleRenderer : SadConsole.ScreenSurface
     }
     public override void Update(TimeSpan delta)
     {
+        _gameState.PlayerOne.Elixir = PlayerSim.RegenerateElixir(_gameState.PlayerOne.Elixir, (float)delta.TotalSeconds);
+        _gameState.PlayerTwo.Elixir = PlayerSim.RegenerateElixir(_gameState.PlayerTwo.Elixir, (float)delta.TotalSeconds);
+
         _unitLayer.Surface.Clear();
         _guiLayer.Surface.Clear();
+        DrawUnits(_gameState.PlayerOne);
+        DrawUnits(_gameState.PlayerTwo);
         DrawGUI();
-        
-     
+
+
         base.Update(delta);
     }
     private void DrawArena()
@@ -120,10 +144,17 @@ public class BattleRenderer : SadConsole.ScreenSurface
             new Rectangle(0, 0, _guiLayer.Surface.Width, _guiLayer.Surface.Height),
             ShapeParameters.CreateBorder(new ColoredGlyph(Color.Black)));
         
-            _guiLayer.Surface.Print(2, 1, "=== HAND ===", Color.Yellow);
-        _guiLayer.Surface.Print(2, 3, "[1] Knight (3)", Color.Cyan);
-        _guiLayer.Surface.Print(2, 4, "[2] Fireball (4)", Color.Orange);
-        _guiLayer.Surface.Print(25, 2, "Elixir: 5 / 10", Color.Magenta);
+        _guiLayer.Surface.Print(2, 1, "=== HAND ===", Color.Yellow);
+
+        PlayerState player = _gameState.PlayerOne;
+        for (int i = 0; i < player.Hand.Count; i++)
+        {
+            CardInfo card = CardInfos.GetCardInfo(player.Hand[i]);
+            Color color = player.Elixir >= card.Cost ? Color.Cyan : Color.Gray;
+            _guiLayer.Surface.Print(2, 3 + i, $"[{i + 1}] {card.Id} ({card.Cost})", color);
+        }
+
+        _guiLayer.Surface.Print(25, 2, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
     }
     private void DrawState()
     {
