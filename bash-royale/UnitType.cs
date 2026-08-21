@@ -18,7 +18,7 @@ public record UnitInfo(
     IUnitBehaviour NeutralBehaviour,
     IUnitBehaviour ChaseBehaviour,
     IUnitBehaviour AttackBehaviour,
-    
+    Vector2Int Size,
     bool IsBuilding = false);
     
 
@@ -37,7 +37,8 @@ public static class UnitInfos
                 20,
                 new WalkForwards(5),
                 new ChaseBehaviour(5), 
-                new AttackBehaviour(75)),
+                new AttackBehaviour(75),
+                new Vector2Int(1,1)),
             UnitType.Tower => new UnitInfo(
                 UnitType.Tower,
                 "Tower",
@@ -48,6 +49,7 @@ public static class UnitInfos
                 new DoNothing(),
                 new DoNothing(),
                 new AttackBehaviour(5),
+                new Vector2Int(3,3),
                 true),
             UnitType.Castle => new UnitInfo(
                 UnitType.Castle,
@@ -59,6 +61,7 @@ public static class UnitInfos
                 new DoNothing(),
                 new DoNothing(),
                 new AttackBehaviour(5),
+                new Vector2Int(3,3),
                 true),
             _ => throw new ArgumentOutOfRangeException(nameof(unitType), unitType, null)
         };
