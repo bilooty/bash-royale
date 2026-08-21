@@ -6,12 +6,14 @@ namespace bash_royale;
 public enum UnitType
 {
     Knight,
-    Giant
+    Giant,
+    Archer,
+    Goblin,
+    Wizard
 }
 public record UnitInfo(
     UnitType Type,
     string Name,
-    int Cost,
     int MaxHealth,
     int Damage,
     int Range,
@@ -33,16 +35,32 @@ public static class UnitInfos
             UnitType.Knight => new UnitInfo(
                 UnitType.Knight,
                 "Knight",
-                5, 
-                700,
+                6, 
+                2,
                 1, 
                 1, 
                 1,
+                new WalkForwards(60),
+                new ChaseBehaviour(60),
+                new AttackBehaviour(75, false),
+                new Vector2Int(1,1)),
+            
+            UnitType.Giant => new UnitInfo(
+                UnitType.Giant,
+                "Giant",
+                6,
                 1,
-                new WalkForwards(5),
-                new ChaseBehaviour(5), 
-                new AttackBehaviour(75, false)),
-                new Vector2Int(1,1),
+                1,
+                1,
+                1,
+                new WalkForwards(30),
+                new ChaseBehaviour(30),
+                new AttackBehaviour(100, false),
+                new Vector2Int(2,2)
+                
+                
+                ),
+                
             _ => throw new ArgumentOutOfRangeException(nameof(unitType), unitType, null)
         };
     }
