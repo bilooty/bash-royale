@@ -7,7 +7,7 @@ public interface IUnitBehaviour
 // FOR ALL NON ATTACKS ENSURE ACTIONRESULT.ISATTACK IS FALSE
 public class WalkForwards(int speed) : IUnitBehaviour
 {
-    public ActionResult Update(UnitState unit, GameState state,UnitState? target)
+    public ActionResult Update(UnitState unit, GameState state,UnitState? target, int targetIdx)
     {
         // ok get list of enemy units
         // filter list to contain only buildings 
@@ -15,17 +15,17 @@ public class WalkForwards(int speed) : IUnitBehaviour
         // walk toward closest
         // A*
         
-        return unit;
+        return null;
     }
 }
 public class ChaseBehaviour(int speed) : IUnitBehaviour
 {
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target)
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
     {   
         // A* towards closest enemy unit
         
         // should chase nearest enemy unit?
-        return unit;
+        return null;
     }
 }
 
