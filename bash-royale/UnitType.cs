@@ -1,3 +1,6 @@
+using System.Drawing;
+using System.Numerics;
+
 namespace bash_royale;
 
 public enum UnitType
@@ -17,7 +20,7 @@ public record UnitInfo(
     IUnitBehaviour NeutralBehaviour,
     IUnitBehaviour ChaseBehaviour,
     IUnitBehaviour AttackBehaviour,
-    
+    Vector2Int Size,
     bool IsBuilding = false);
     
 
@@ -39,7 +42,7 @@ public static class UnitInfos
                 new WalkForwards(5),
                 new ChaseBehaviour(5), 
                 new AttackBehaviour(75, false)),
-            
+                new Vector2Int(1,1),
             _ => throw new ArgumentOutOfRangeException(nameof(unitType), unitType, null)
         };
     }
