@@ -56,10 +56,32 @@ public static class UnitInfos
                 new WalkForwards(30),
                 new ChaseBehaviour(30),
                 new AttackBehaviour(100, false),
-                new Vector2Int(2,2)
-                
-                
-                ),
+                new Vector2Int(2,2)),
+            
+            UnitType.Archer => new UnitInfo(
+                UnitType.Archer,
+                "Archer",
+                2,
+                3,
+                5,
+                1,
+                1,
+                new WalkForwards(30),
+                new ChaseBehaviour(30),
+                new AttackBehaviour(20, true),
+                new Vector2Int(1,1)),
+            UnitType.Wizard => new UnitInfo(
+                UnitType.Wizard,
+                "Wizard",
+                2,
+                3,
+                5,
+                1,
+                1,
+                new WalkForwards(30),
+                new ChaseBehaviour(30),
+                new AttackBehaviour(20, true),
+                new Vector2Int(1,1)),
                 
             _ => throw new ArgumentOutOfRangeException(nameof(unitType), unitType, null)
         };
