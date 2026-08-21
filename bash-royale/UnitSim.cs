@@ -2,40 +2,55 @@ namespace bash_royale;
 
 // Handles targeting, movement and attacking across both armies. This lives apart from
 // UnitSim/PlayerSim because resolving an attack needs to mutate the *enemy's* state.
+
+public record ActionResult(UnitState unit, int targetIdx, int damage, bool didDamage);
+
 public static class UnitSim
 {
-    public static void Update(UnitState curUnit, GameState gameState)
+    public static ActionResult Update(UnitState curUnit, GameState gameState)
     {
-        // find if unit in attack range and if it is then we 
-        if (FindEnemyInAttackRange(curUnit, gameState) is not null)
+        UnitInfo info = UnitInfos.GetUnitInfo(curUnit.Type);
+        int? targetIdx = FindNearestEnemy(curUnit, gameState, info.AggroRange);
+
+        IUnitBehaviour behaviour;
+        UnitState? target = null;
+
+        if (targetIdx is null)
         {
-            curUnit = curUnit;
+            behaviour = info.NeutralBehaviour;
+        }
+        else
+        {
+            target = GetEnemyUnits(curUnit, gameState)[targetIdx.Value];
+            bool inAttackRange = InRange(curUnit.Position, target.Value.Position, info.AttackRange);
+            behaviour = inAttackRange ? info.AttackBehaviour : info.ChaseBehaviour;
         }
 
-
+        curUnit.Ticks++;
+        return behaviour.Update(curUnit, gameState, target, targetIdx ?? -1);
     }
-
-    private static UnitState? FindEnemyInAttackRange(UnitState curUnit, GameState gameState)
+    
+    private static int? FindNearestEnemy(UnitState curUnit, GameState gameState, int aggroRange)
     {
-        int range = UnitInfos.GetUnitInfo(curUnit.Type).Range;
         Vector2Int curPosition = curUnit.Position;
-        long rangeSquared = (long)range * range;
+        long rangeSquared = (long)aggroRange * aggroRange;
 
-        UnitState? closest = null;
+        List<UnitState> enemies = GetEnemyUnits(curUnit, gameState);
+        int? closestIndex = null;
         long closestDistanceSquared = long.MaxValue;
 
-        foreach (UnitState enemy in GetEnemyUnits(curUnit, gameState))
+        for (int i = 0; i < enemies.Count; i++)
         {
-            long distanceSquared = DistanceSquared(curPosition, enemy.Position);
+            long distanceSquared = DistanceSquared(curPosition, enemies[i].Position);
 
             if (distanceSquared > rangeSquared) continue;
             if (distanceSquared >= closestDistanceSquared) continue;
 
             closestDistanceSquared = distanceSquared;
-            closest = enemy;
+            closestIndex = i;
         }
 
-        return closest;
+        return closestIndex;
     }
 
     private static long DistanceSquared(Vector2Int a, Vector2Int b)
@@ -60,3 +75,5 @@ public static class UnitSim
         };
     }
 }
+
+   

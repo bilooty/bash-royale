@@ -7,13 +7,13 @@ public struct GameState
     public float ElapsedSeconds;
     public bool IsGameOver;
     public PlayerId? Winner;
-
+    public int Tick;
     public static GameState CreateNew(List<UnitType> playerOneHand, List<UnitType> playerTwoHand)
     {
         return new GameState
         {
-            PlayerOne = PlayerState.CreateNew(PlayerId.One, playerOneHand),
-            PlayerTwo = PlayerState.CreateNew(PlayerId.Two, playerTwoHand),
+            PlayerOne = PlayerState.CreateNew(PlayerId.One),
+            PlayerTwo = PlayerState.CreateNew(PlayerId.Two),
             ElapsedSeconds = 0f,
             IsGameOver = false,
             Winner = null,
@@ -21,38 +21,44 @@ public struct GameState
     }
 }
 
+public record PlayerResult(PlayerState playerState, List<ActionResult> results);
 public static class GameSim
 {
-    public static GameState Update(GameState state, float deltaSeconds)
+    private static List<ActionResult> UpdatePlayer(PlayerState playerState, GameState gameState)
     {
-        if (state.IsGameOver)
-            return state;
+        List<UnitState> units = playerState.Units;
+        List<ActionResult> results = new(units.Count);
+        for (int i = 0; i < units.Count; i++)
+        {
+            ActionResult result = UnitSim.Update(units[i], gameState);
+            units[i] = result.unit;
+            results.Add(result);
+        }
+        return results;
+    }
+    public static GameState Update(GameState state)
+    {
+        var p1Result = UpdatePlayer(state.PlayerOne, state);
+        var p2Result = UpdatePlayer(state.PlayerTwo, state);
 
-        state.PlayerOne.Elixir = PlayerSim.RegenerateElixir(state.PlayerOne.Elixir, deltaSeconds);
-        state.PlayerTwo.Elixir = PlayerSim.RegenerateElixir(state.PlayerTwo.Elixir, deltaSeconds);
+        ApplyDamage(p1Result, state.PlayerTwo.Units);
+        ApplyDamage(p2Result, state.PlayerOne.Units);
 
-        
+        state.PlayerOne.Units.RemoveAll(u => u.Health <= 0);
+        state.PlayerTwo.Units.RemoveAll(u => u.Health <= 0);
 
-        state.PlayerOne.Units.RemoveAll(unit => unit.Health <= 0);
-        state.PlayerTwo.Units.RemoveAll(unit => unit.Health <= 0);
-
-        state.ElapsedSeconds += deltaSeconds;
-        UpdateWinCondition(ref state);
-
+        state.Tick++;
         return state;
     }
-
-    private static void UpdateWinCondition(ref GameState state)
+        
+    private static void ApplyDamage(List<ActionResult> results, List<UnitState> enemies)
     {
-        bool playerOneDefeated = state.PlayerOne.KingTowerHealth <= 0;
-        bool playerTwoDefeated = state.PlayerTwo.KingTowerHealth <= 0;
-
-        if (!playerOneDefeated && !playerTwoDefeated)
-            return;
-
-        state.IsGameOver = true;
-        state.Winner = playerOneDefeated == playerTwoDefeated
-            ? null
-            : playerOneDefeated ? PlayerId.Two : PlayerId.One;
-    }
+        foreach (ActionResult result in results)
+        {
+            if (!result.didDamage) continue;
+            UnitState target = enemies[result.targetIdx];
+            target.Health -= result.damage;
+            enemies[result.targetIdx] = target;
+        }
+    } 
 }
