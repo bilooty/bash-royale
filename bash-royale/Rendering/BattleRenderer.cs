@@ -1,19 +1,22 @@
 using System.Runtime.CompilerServices;
+using SadConsole.Input;
 
 namespace bash_royale.Scenes;
 
 // UI/BattleRenderer.cs
 public class BattleRenderer : SadConsole.ScreenSurface
 {
+    private static readonly Keys[] HandSlotKeys = { Keys.D1, Keys.D2, Keys.D3, Keys.D4 };
+
     private GameState _gameState;
-    private ScreenSurface _unitLayer; 
+    private ScreenSurface _unitLayer;
     private ScreenSurface _guiLayer;
     private double _timer = 0.05f;
     private int tick = 0;
     public BattleRenderer() : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
     {
         // 1. Initialize your deterministic engine
-        _gameState = new GameState();
+        _gameState = GameState.CreateNew();
         _unitLayer = new ScreenSurface(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT);
         _unitLayer.Surface.DefaultBackground = Color.Transparent;
         _guiLayer = new ScreenSurface(GameSettings.GAME_WIDTH, 8);
@@ -31,7 +34,23 @@ public class BattleRenderer : SadConsole.ScreenSurface
         // 3. Draw the static map onto the base surface once
         DrawArena();
 
+        UseKeyboard = true;
+        IsFocused = true;
+    }
 
+    public override bool ProcessKeyboard(Keyboard keyboard)
+    {
+        for (int i = 0; i < HandSlotKeys.Length; i++)
+        {
+            if (keyboard.IsKeyPressed(HandSlotKeys[i]))
+            {
+                Vector2Int deployPosition = new Vector2Int(ArenaMap.Width / 2, ArenaMap.Height - 5);
+                _gameState = CardSim.PlayFromHand(_gameState, PlayerId.One, i, deployPosition);
+                return true;
+            }
+        }
+
+        return base.ProcessKeyboard(keyboard);
     }
     private bool ShouldDrawSprout(int x, int y)
     {
@@ -68,8 +87,13 @@ public class BattleRenderer : SadConsole.ScreenSurface
     }
     public override void Update(TimeSpan delta)
     {
+        _gameState.PlayerOne.Elixir = PlayerSim.RegenerateElixir(_gameState.PlayerOne.Elixir, (float)delta.TotalSeconds);
+        _gameState.PlayerTwo.Elixir = PlayerSim.RegenerateElixir(_gameState.PlayerTwo.Elixir, (float)delta.TotalSeconds);
+
         _unitLayer.Surface.Clear();
         _guiLayer.Surface.Clear();
+        DrawUnits(_gameState.PlayerOne);
+        DrawUnits(_gameState.PlayerTwo);
         DrawGUI();
         _timer -= delta.TotalSeconds;
         if (_timer <= 0f)
