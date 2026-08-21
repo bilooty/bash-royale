@@ -3,9 +3,13 @@ namespace bash_royale;
 public enum UnitType
 {
     Knight,
-    Giant
+    Giant,
+    Archer,
+    Goblin,
+    Wizard,
+    Horde
 }
-public record UnitInfo(string Name, int Cost, int MaxHealth, int Damage, float Range, float Speed, float AttacksPerSecond);
+public record UnitInfo(string Name, int hp, bool flying, string attackType, bool siege, int damage);
 
 public static class UnitInfos
 {
@@ -13,9 +17,12 @@ public static class UnitInfos
     {
         return unitType switch
         {
-            UnitType.Knight => new UnitInfo("Knight", Cost: 5, MaxHealth: 700, Damage: 75, Range: 1f, Speed: 1.5f, AttacksPerSecond: 1.2f),
-            UnitType.Giant => new UnitInfo("Giant", Cost: 6, MaxHealth: 2000, Damage: 120, Range: 1f, Speed: 1f, AttacksPerSecond: 1f),
-            _ => throw new ArgumentOutOfRangeException(nameof(unitType), unitType, null)
+            UnitType.Knight => new UnitInfo("Knight", 10, false, "Melee", false, 2),
+            UnitType.Giant => new UnitInfo("Giant", 40, false, "Melee", true, 5),
+            UnitType.Archer => new UnitInfo("Archer", 4, false, "Ranged", false,2),
+            UnitType.Goblin => new UnitInfo("Goblin", 3, false, "Melee", false, 1),
+            UnitType.Wizard => new UnitInfo("Wizard", 8, false, "Ranged", false, 4),
+            UnitType.Horde => new UnitInfo("Horde", 20, true, "Melee", false, 2)
         };
     }
 }
