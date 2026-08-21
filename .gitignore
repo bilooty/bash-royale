@@ -1,0 +1,24 @@
+## --- Build Results ---
+[Bb]in/
+[Oo]bj/
+Generated\ Files/
+TestResults/
+
+## --- JetBrains Rider / IntelliJ / ReSharper ---
+.idea/
+*.sln.DotSettings.user
+*.usercaps
+_ReSharper.*/
+
+## --- Visual Studio & .NET Core Cache ---
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.kdev4/
+
+## --- OS Specific (Optional but Recommended) ---
+.DS_Store
+Thumbs.db
+Desktop.ini
