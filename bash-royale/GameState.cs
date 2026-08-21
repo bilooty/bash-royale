@@ -7,6 +7,7 @@ public struct GameState
     public float ElapsedSeconds;
     public bool IsGameOver;
     public PlayerId? Winner;
+    public int Tick;
     public static GameState CreateNew(List<UnitType> playerOneHand, List<UnitType> playerTwoHand)
     {
         return new GameState
@@ -24,46 +25,41 @@ public struct GameState
 public record PlayerResult(PlayerState playerState, List<ActionResult> results);
 public static class GameSim
 {
-    private static PlayerResult UpdatePlayer(PlayerState playerState, GameState gameState)
+    private static List<ActionResult> UpdatePlayer(PlayerState playerState, GameState gameState)
     {
         List<UnitState> units = playerState.Units;
-        List<ActionResult> results = new List<ActionResult>();
+        List<ActionResult> results = new(units.Count);
         for (int i = 0; i < units.Count; i++)
         {
             ActionResult result = UnitSim.Update(units[i], gameState);
             units[i] = result.unit;
             results.Add(result);
         }
-        return new PlayerResult(playerState, results);
+        return results;
     }
-    public static GameState Update(GameState state, float deltaSeconds)
+    public static GameState Update(GameState state)
     {
+        var p1Result = UpdatePlayer(state.PlayerOne, state);
+        var p2Result = UpdatePlayer(state.PlayerTwo, state);
 
-        List<ActionResult> results;
-        var P1Result = UpdatePlayer(state.PlayerOne, state);
-        state.PlayerOne = P1Result.playerState;
-        foreach (ActionResult result in P1Result.results)
-        {
-            if (result.didDamage == false) continue;
-            UnitState target = state.PlayerTwo.Units[result.targetIdx];
-            target.Health = result.targetNewHP;
-            PlayerState p2 = state.PlayerTwo;
-            p2.Units[result.targetIdx] = target;
-            state.PlayerTwo = p2;
-        }
-        
-        var P2Result = UpdatePlayer( state.PlayerTwo, state);
-        state.PlayerTwo = P2Result.playerState;
-        foreach (ActionResult result in P2Result.results)
-        {
-            if (result.didDamage == false) continue;
-            UnitState target = state.PlayerOne.Units[result.targetIdx];
-            target.Health = result.targetNewHP;
-            PlayerState p1 = state.PlayerOne;
-            p1.Units[result.targetIdx] = target;
-            state.PlayerTwo = p1;
-        }
-        
+        ApplyDamage(p1Result, state.PlayerTwo.Units);
+        ApplyDamage(p2Result, state.PlayerOne.Units);
+
+        state.PlayerOne.Units.RemoveAll(u => u.Health <= 0);
+        state.PlayerTwo.Units.RemoveAll(u => u.Health <= 0);
+
+        state.Tick++;
         return state;
     }
+        
+    private static void ApplyDamage(List<ActionResult> results, List<UnitState> enemies)
+    {
+        foreach (ActionResult result in results)
+        {
+            if (!result.didDamage) continue;
+            UnitState target = enemies[result.targetIdx];
+            target.Health -= result.damage;
+            enemies[result.targetIdx] = target;
+        }
+    } 
 }

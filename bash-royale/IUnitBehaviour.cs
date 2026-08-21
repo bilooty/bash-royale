@@ -2,7 +2,7 @@
 
 public interface IUnitBehaviour
 {
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target);
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx);
 }
 // FOR ALL NON ATTACKS ENSURE ACTIONRESULT.ISATTACK IS FALSE
 public class WalkForwards(int speed) : IUnitBehaviour
