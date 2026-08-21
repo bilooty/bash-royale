@@ -31,7 +31,7 @@ public static class GameSim
         state.PlayerOne.Elixir = PlayerSim.RegenerateElixir(state.PlayerOne.Elixir, deltaSeconds);
         state.PlayerTwo.Elixir = PlayerSim.RegenerateElixir(state.PlayerTwo.Elixir, deltaSeconds);
 
-        CombatSim.Update(ref state.PlayerOne, ref state.PlayerTwo, deltaSeconds);
+        
 
         state.PlayerOne.Units.RemoveAll(unit => unit.Health <= 0);
         state.PlayerTwo.Units.RemoveAll(unit => unit.Health <= 0);
