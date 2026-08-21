@@ -7,12 +7,12 @@ public struct GameState
     public bool IsGameOver;
     public PlayerId? Winner;
     public int Tick;
-    public static GameState CreateNew(List<UnitType> playerOneHand, List<UnitType> playerTwoHand)
+    public static GameState CreateNew()
     {
         return new GameState
         {
-            PlayerOne = PlayerState.CreateNew(PlayerId.One, playerOneHand),
-            PlayerTwo = PlayerState.CreateNew(PlayerId.Two, playerTwoHand),
+            PlayerOne = PlayerState.CreateNew(PlayerId.One),
+            PlayerTwo = PlayerState.CreateNew(PlayerId.Two),
             
             IsGameOver = false,
             Winner = null,
