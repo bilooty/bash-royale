@@ -56,7 +56,7 @@ public static class UnitSim
         return closestIndex;
     }
 
-    private static long DistanceSquared(Vector2Int a, Vector2Int b)
+    internal static long DistanceSquared(Vector2Int a, Vector2Int b)
     {
         long dx = (long)b.X - a.X;
         long dy = (long)b.Y - a.Y;
@@ -68,7 +68,7 @@ public static class UnitSim
         return DistanceSquared(curPosition, target) <= (long)range * range;
     }
 
-    private static List<UnitState> GetEnemyUnits(UnitState curUnit, GameState gameState)
+    internal static List<UnitState> GetEnemyUnits(UnitState curUnit, GameState gameState)
     {
         return curUnit.Owner switch
         {
