@@ -4,8 +4,8 @@ Settings.WindowTitle = "My SadConsole Game";
 
 Builder
     .GetBuilder()
-    .SetWindowSizeInCells(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
-    .SetStartingScreen<bash_royale.Scenes.RootScreen>()
+    .SetWindowSizeInCells(40, 40)
+    .SetStartingScreen<bash_royale.Scenes.BattleRenderer>()
     .IsStartingScreenFocused(true)
     .ConfigureFonts(true)
     .Run();
