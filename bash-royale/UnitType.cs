@@ -5,7 +5,21 @@ public enum UnitType
     Knight,
     Giant
 }
-public record UnitInfo(string Name, int Cost, int MaxHealth, int Damage, float Range, float Speed, float AttacksPerSecond);
+public record UnitInfo(
+    UnitType Type,
+    string Name,
+    int Cost,
+    int MaxHealth,
+    int Damage,
+    int Range,
+    int Speed,
+    int AttacksPerTwentyTicks,
+    IUnitBehaviour NeutralBehaviour,
+    IUnitBehaviour ChaseBehaviour,
+    IUnitBehaviour AttackBehaviour,
+    
+    bool IsBuilding = false);
+    
 
 public static class UnitInfos
 {
@@ -13,8 +27,19 @@ public static class UnitInfos
     {
         return unitType switch
         {
-            UnitType.Knight => new UnitInfo("Knight", Cost: 5, MaxHealth: 700, Damage: 75, Range: 1f, Speed: 1.5f, AttacksPerSecond: 1.2f),
-            UnitType.Giant => new UnitInfo("Giant", Cost: 6, MaxHealth: 2000, Damage: 120, Range: 1f, Speed: 1f, AttacksPerSecond: 1f),
+            UnitType.Knight => new UnitInfo(
+                UnitType.Knight,
+                "Knight",
+                5, 
+                700,
+                1, 
+                1, 
+                1,
+                1,
+                new WalkForwards(5),
+                new ChaseBehaviour(5), 
+                new AttackBehaviour(75, false)),
+            
             _ => throw new ArgumentOutOfRangeException(nameof(unitType), unitType, null)
         };
     }
