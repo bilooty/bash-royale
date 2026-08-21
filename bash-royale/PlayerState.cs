@@ -10,14 +10,13 @@ public struct PlayerState
     public int LeftTowerHealth;
     public int RightTowerHealth;
 
-    public static PlayerState CreateNew(PlayerId id, List<UnitType> startingHand)
+    public static PlayerState CreateNew(PlayerId id)
     {
         return new PlayerState
         {
             Id = id,
             Units = new List<UnitState>(),
             Elixir = GameSettings.STARTING_ELIXIR,
-            Hand = startingHand,
             KingTowerHealth = GameSettings.KING_TOWER_HEALTH,
             LeftTowerHealth = GameSettings.PRINCESS_TOWER_HEALTH,
             RightTowerHealth = GameSettings.PRINCESS_TOWER_HEALTH,

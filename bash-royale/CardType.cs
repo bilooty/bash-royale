@@ -1,39 +1,80 @@
 namespace bash_royale;
 
-public enum CardID
+public enum CardId
 {
     Knight,
     Giant,
     Archer,
     Goblin,
     Wizard,
-    Horde
+    Horde,
+    FireBall,
+}
+
+public enum ValidLocation
+{
+    YourSide,
+    BothSides
 }
 
 public enum CardType
 {
     Unit,
     Spell,
-    Building
 }
 
-public record struct CardInfo(
-    CardID ID,
+public record UnitCard(CardId Id, int Cost, UnitType UnitType) : CardInfo(Id, CardType.Unit, Cost, ValidLocation.YourSide);
+
+public record SpellCard(CardId Id, int Cost, SpellType SpellType) : CardInfo(Id, CardType.Spell, Cost, ValidLocation.BothSides);
+
+public record CardInfo(
+    CardId Id,
     CardType Type,
-    UnitType UnitType,
-    int Cost
+    int Cost,
+    ValidLocation ValidLocation
     );
 
+public static class CardSim
+{
+    public static GameState PlayCard(CardInfo card, GameState gameState, PlayerId playerId, Vector2Int position)
+    {
+        PlayerState player = playerId == PlayerId.One ? gameState.PlayerOne : gameState.PlayerTwo;
+        if (player.Elixir - card.Cost < 0)
+        {
+            return gameState;
+        }
+
+        player.Elixir -= card.Cost;
+        if (card is UnitCard unitCard)
+        {
+            player.Units.Add(new UnitState(
+                unitCard.UnitType, playerId, position));
+
+        }
+
+        if (card is SpellCard spellCard)
+        {
+            //
+        }
+
+        if (playerId == PlayerId.One)
+        {
+            gameState.PlayerOne = player;
+        }
+        else
+        {
+            gameState.PlayerTwo = player;
+        }
+
+        return gameState;
+    }
+}
 public static class CardInfos
 {
-    public static CardInfo GetCardInfo(CardID id) => id switch
+    public static CardInfo GetCardInfo(CardId id) => id switch
     {
-        CardID.Knight => new(id, CardType.Unit, UnitType.Knight, 3),
-        CardID.Giant => new(id, CardType.Unit, UnitType.Giant, 6),
-        CardID.Archer => new(id, CardType.Unit, UnitType.Archer, 3),
-        CardID.Horde => new(id, CardType.Unit, UnitType.Horde, 5),
-        CardID.Goblin => new(id, CardType.Unit, UnitType.Goblin, 2),
-        CardID.Wizard => new(id, CardType.Unit, UnitType.Wizard, 5),
+        CardId.Knight => new UnitCard(id, 3, UnitType.Knight),
+        CardId.FireBall => new SpellCard(id, 4, SpellType.FireBall),
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
     };
 }
