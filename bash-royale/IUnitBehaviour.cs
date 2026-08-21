@@ -1,5 +1,23 @@
 ﻿namespace bash_royale;
 
+public static class Movement
+{
+    public const int MOVE_THRESHOLD = 100;   // 100 progress = one cell
+
+    public static UnitState StepToward(UnitState unit, Vector2Int destination, int speed)
+    {
+        unit.MoveProgress += speed;
+        if (unit.MoveProgress < MOVE_THRESHOLD) return unit;
+
+        unit.MoveProgress -= MOVE_THRESHOLD;
+
+        int dx = Math.Sign(destination.X - unit.Position.X);
+        int dy = Math.Sign(destination.Y - unit.Position.Y);
+
+        unit.Position = new Vector2Int(unit.Position.X + dx, unit.Position.Y + dy);
+        return unit;
+    }
+}
 public interface IUnitBehaviour
 {
     public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx);
@@ -7,25 +25,34 @@ public interface IUnitBehaviour
 // FOR ALL NON ATTACKS ENSURE ACTIONRESULT.ISATTACK IS FALSE
 public class WalkForwards(int speed) : IUnitBehaviour
 {
-    public ActionResult Update(UnitState unit, GameState state,UnitState? target, int targetIdx)
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
     {
-        // ok get list of enemy units
-        // filter list to contain only buildings 
-        // sort by distance
-        // walk toward closest
-        // A*
-        
-        return null;
+        List<UnitState> enemies = UnitSim.GetEnemyUnits(unit, state);
+
+        Vector2Int? destination = null;
+        long best = long.MaxValue;
+
+        foreach (UnitState enemy in enemies)
+        {
+            if (!UnitInfos.GetUnitInfo(enemy.Type).IsBuilding) continue;
+
+            long d = UnitSim.DistanceSquared(unit.Position, enemy.Position);
+            if (d >= best) continue;
+
+            best = d;
+            destination = enemy.Position;
+        }
+
+        if (destination is null) return ActionResult.NoAttack(unit);
+        return ActionResult.NoAttack(Movement.StepToward(unit, destination.Value, speed));
     }
 }
 public class ChaseBehaviour(int speed) : IUnitBehaviour
 {
     public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
-    {   
-        // A* towards closest enemy unit
-        
-        // should chase nearest enemy unit?
-        return null;
+    {
+        if (target is null) return ActionResult.NoAttack(unit);
+        return ActionResult.NoAttack(Movement.StepToward(unit, target.Value.Position, speed));
     }
 }
 
