@@ -42,7 +42,7 @@ public static class UnitInfos
             UnitType.Tower => new UnitInfo(
                 UnitType.Tower,
                 "Tower",
-                2000,
+                30,
                 5,
                 5,
                 10,
@@ -54,14 +54,14 @@ public static class UnitInfos
             UnitType.Castle => new UnitInfo(
                 UnitType.Castle,
                 "Castle",
-                3000,
+                30,
                 5,
                 5,
                 10,
                 new DoNothing(),
                 new DoNothing(),
                 new AttackBehaviour(5),
-                new Vector2Int(3,3),
+                new Vector2Int(1,1),
                 true),
             _ => throw new ArgumentOutOfRangeException(nameof(unitType), unitType, null)
         };

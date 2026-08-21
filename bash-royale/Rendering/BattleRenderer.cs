@@ -8,7 +8,8 @@ public class BattleRenderer : SadConsole.ScreenSurface
     private GameState _gameState;
     private ScreenSurface _unitLayer; 
     private ScreenSurface _guiLayer;
-
+    private double _timer = 0.05f;
+    private int tick = 0;
     public BattleRenderer() : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
     {
         // 1. Initialize your deterministic engine
@@ -18,7 +19,14 @@ public class BattleRenderer : SadConsole.ScreenSurface
         _guiLayer = new ScreenSurface(GameSettings.GAME_WIDTH, 8);
         _guiLayer.Surface.DefaultBackground = Color.Transparent;
         Children.Add(_guiLayer);
-
+        _gameState = GameState.CreateNew();
+        PlayerState p1 = _gameState.PlayerOne;
+        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(10, 4)));
+        p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(5, 5)));
+        PlayerState p2 = _gameState.PlayerTwo;
+        p2.Units.Add(new UnitState(UnitType.Knight, PlayerId.Two, new Vector2Int(10, 29)));
+        p2.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(10, 30)));
+        _gameState.PlayerOne = p1;
         Children.Add(_unitLayer);
         // 3. Draw the static map onto the base surface once
         DrawArena();
@@ -63,8 +71,15 @@ public class BattleRenderer : SadConsole.ScreenSurface
         _unitLayer.Surface.Clear();
         _guiLayer.Surface.Clear();
         DrawGUI();
-        
-     
+        _timer -= delta.TotalSeconds;
+        if (_timer <= 0f)
+        {
+            _timer = 0.05;
+            tick++;
+            _gameState = GameSim.Update(_gameState);
+        }
+        DrawUnits(_gameState.PlayerOne);
+        DrawUnits(_gameState.PlayerTwo);
         base.Update(delta);
     }
     private void DrawArena()
@@ -122,7 +137,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
         
             _guiLayer.Surface.Print(2, 1, "=== HAND ===", Color.Yellow);
         _guiLayer.Surface.Print(2, 3, "[1] Knight (3)", Color.Cyan);
-        _guiLayer.Surface.Print(2, 4, "[2] Fireball (4)", Color.Orange);
+        _guiLayer.Surface.Print(2, 4, $"[2] Fireball ({tick})", Color.Orange);
         _guiLayer.Surface.Print(25, 2, "Elixir: 5 / 10", Color.Magenta);
     }
     private void DrawState()

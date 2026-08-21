@@ -1,7 +1,7 @@
 ﻿static class GameSettings
 {
-    public const int GAME_WIDTH = 90;
-    public const int GAME_HEIGHT = 30;
+    public const int GAME_WIDTH = 40;
+    public const int GAME_HEIGHT = 40;
 
     public const float STARTING_ELIXIR = 5f;
     public const float MAX_ELIXIR = 10f;

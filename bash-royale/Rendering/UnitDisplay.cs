@@ -22,6 +22,9 @@ public class UnitDisplay(ColoredGlyph[][] glyphs)
                 ]
             ]
         ),
+        [UnitType.Castle] = new UnitDisplay(
+            [
+            [new ColoredGlyph(Color.White, Color.DarkGray, 'C')]])
 
     };
 }

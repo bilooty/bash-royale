@@ -1,11 +1,13 @@
 ﻿namespace bash_royale;
-
+using System;
 public static class Movement
 {
-    public const int MOVE_THRESHOLD = 100;   // 100 progress = one cell
+    public const int MOVE_THRESHOLD = 50;   // 100 progress = one cell
 
     public static UnitState StepToward(UnitState unit, Vector2Int destination, int speed)
     {
+        Console.WriteLine("OldPos: " + unit.Position + " " + unit.MoveProgress);
+
         unit.MoveProgress += speed;
         if (unit.MoveProgress < MOVE_THRESHOLD) return unit;
 
@@ -15,6 +17,7 @@ public static class Movement
         int dy = Math.Sign(destination.Y - unit.Position.Y);
 
         unit.Position = new Vector2Int(unit.Position.X + dx, unit.Position.Y + dy);
+        Console.WriteLine("NewPos: " + unit.Position);
         return unit;
     }
 }
@@ -27,6 +30,7 @@ public class WalkForwards(int speed) : IUnitBehaviour
 {
     public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
     {
+        Console.WriteLine("We are moving forward!");
         List<UnitState> enemies = UnitSim.GetEnemyUnits(unit, state);
 
         Vector2Int? destination = null;
