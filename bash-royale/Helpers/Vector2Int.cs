@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace faitingu.scripts;
+namespace bash_royale;
 
 public record struct Vector2Int(int X, int Y)
 {
