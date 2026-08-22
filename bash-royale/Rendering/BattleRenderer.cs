@@ -306,8 +306,15 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
                     _unitLayer.Surface[renderX, renderY].Foreground = glyph.Foreground;
                     _unitLayer.Surface[renderX, renderY].Background = teamColor;
-                    _unitLayer.Surface[renderX, renderY].GlyphCharacter = glyph.GlyphCharacter;
-
+                    //_unitLayer.Surface[renderX, renderY].GlyphCharacter = glyph.GlyphCharacter;
+                    _unitLayer.Surface[renderX, renderY].GlyphCharacter = unit.CurrentBehaviour switch
+                    {
+                        Behaviour.Neutral => 'N',
+                        Behaviour.Attack => 'A',
+                        Behaviour.Chase => 'C',
+                    };
+                    _unitLayer.Surface[renderX, renderY - 1].GlyphCharacter = unit.Id.ToString()[0];
+                  
                     if ((unit.Ticks - unit.LastAttackTick) < 1)
                     {
                         _unitLayer.Surface[renderX, renderY].GlyphCharacter = ' ';
