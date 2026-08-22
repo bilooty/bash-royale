@@ -10,6 +10,7 @@ public enum UnitType
     Goblin,
     Wizard,
     HogRider,
+    BabyDragon
 
 }
 public record UnitInfo(
@@ -143,6 +144,19 @@ public static class UnitInfos
                 new AttackBehaviour(75),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
+            UnitType.BabyDragon => new UnitInfo(
+                UnitType.BabyDragon,
+                "Baby_Dragon",
+                700,
+                1,
+                6,
+                20,
+                true,
+                new WalkForwards(5),
+                new ChaseBehaviour(5), 
+                new AttackBehaviour(75),
+                new Vector2Int(1,1),
+                MovementLayer.Air),
                 
             _ => throw new ArgumentOutOfRangeException(nameof(unitType), unitType, null)
         };
