@@ -13,9 +13,9 @@ public static class Movement
 
         Vector2Int size = UnitInfos.GetUnitInfo(unit.Type).Size;
 
-        Vector2Int? next = Pathfinder.NextStep(unit.Position, destination, size, destinationSize, layer, state);
+        Vector2Int? next = Pathfinder.NextStep(unit.Position, destination, size, destinationSize, unit.Type, state);
         if (next is null) return unit;
-        if (UnitSim.FootprintBlocked(state, next.Value, size, layer, unit.Position)) return unit;
+        if (UnitSim.FootprintBlocked(state, next.Value, size, unit.Type, unit.Position)) return unit;
 
         unit.MoveProgress -= MOVE_THRESHOLD;
         unit.Position = next.Value;

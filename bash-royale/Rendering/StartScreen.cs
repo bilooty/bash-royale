@@ -4,6 +4,7 @@ using SadConsole.UI;
 using SadConsole.UI.Controls;
 using SadRogue.Primitives;
 using System.Linq;
+using bash_royale.Music;
 
 namespace bash_royale.Rendering
 {
@@ -11,6 +12,9 @@ namespace bash_royale.Rendering
     {
         public StartScreen() : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
         {
+            AudioManager.LoadAll();
+            AudioManager.PlayMenuMusic();
+
             // 1. Title Label
             var title = new Label("BASH ROYALE")
             {
