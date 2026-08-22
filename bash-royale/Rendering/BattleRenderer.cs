@@ -8,8 +8,8 @@ namespace bash_royale.Scenes;
 public class BattleRenderer : SadConsole.ScreenSurface
 {
     private static readonly Keys[] HandSlotKeys = { Keys.D1, Keys.D2, Keys.D3, Keys.D4 };
-    private Color p1Color = Color.Blue;
-    private Color p2Color = Color.Red;
+    private Color p1Color = Color.DarkBlue;
+    private Color p2Color = Color.DarkRed;
     private GameState _gameState;
     private ScreenSurface _unitLayer;
     private ScreenSurface _guiLayer;
@@ -115,6 +115,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
     public void DrawUnits(PlayerState player)
     {
+        Color teamColor = (player.Id == PlayerId.One) == _isHost ? p1Color : p2Color;
         foreach (UnitState unit in player.Units)
         {
             Vector2Int pos = unit.Position;
@@ -125,19 +126,27 @@ public class BattleRenderer : SadConsole.ScreenSurface
                 for (int y = 0; y < size.Y; y++)
                 {
                     ColoredGlyph glyph = display.Glyphs[y][x];
-                    _unitLayer.Surface[pos.X, pos.Y].Background = glyph.Background;
-                    _unitLayer.Surface[pos.X, pos.Y].Foreground = player.Id == PlayerId.One ? p1Color : p2Color;
-                    //_unitLayer.Surface[pos.X, pos.Y].Foreground = glyph.Foreground;
-                    _unitLayer.Surface[pos.X, pos.Y].GlyphCharacter = glyph.GlyphCharacter;
-                    //System.Console.WriteLine("[" + glyph.GlyphCharacter + "] ticks: " + unit.Ticks + " last tick:" + unit.LastAttackTick);
-                    if ((unit.Ticks - unit.LastAttackTick) < 5)
-                    {
-                        _unitLayer.Surface[pos.X, pos.Y].GlyphCharacter = ' ';
-                    }
-                    if ((unit.Ticks - unit.LastDamageTick) < 5)
-                    {
+                    int renderX = pos.X + x;
+                    int renderY = pos.Y + y;
 
-                        _unitLayer.Surface[pos.X, pos.Y].Background = Color.Red;
+                    if (!_isHost)
+                    {
+                        renderX = ArenaMap.Width - 1 - renderX;
+                        renderY = ArenaMap.Height - 1 - renderY;
+                    }
+
+                    _unitLayer.Surface[renderX, renderY].Foreground = glyph.Foreground;
+                    _unitLayer.Surface[renderX, renderY].Background = teamColor;
+                    _unitLayer.Surface[renderX, renderY].GlyphCharacter = glyph.GlyphCharacter;
+
+                    if ((unit.Ticks - unit.LastAttackTick) < 2)
+                    {
+                        _unitLayer.Surface[renderX, renderY].GlyphCharacter = ' ';
+                    }
+
+                    if ((unit.Ticks - unit.LastDamageTick) < 2)
+                    {
+                        _unitLayer.Surface[renderX, renderY].Background = Color.Red;
                     }
                 }
             }
