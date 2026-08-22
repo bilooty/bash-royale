@@ -1,3 +1,5 @@
+using System.Numerics;
+
 namespace bash_royale;
 
 public enum ProjectileType
@@ -7,6 +9,9 @@ public enum ProjectileType
     ZapEffect,
     Arrow,
     CannonBall,
+    WizardBall,
+    WizardBoom
+    
 }
 
 public enum TargetType
@@ -37,6 +42,7 @@ public struct ProjectileState
 
     public static Dictionary<ProjectileType, ProjectileInfo> Infos = new Dictionary<ProjectileType, ProjectileInfo>
     {
+        [ProjectileType.WizardBoom] = new ProjectileInfo([ new Linger(4), new InstantDamage(new Vector2Int(3,3), 450)], size:new Vector2Int(3,3), targetType:TargetType.Location),
         [ProjectileType.ZapEffect] = new ProjectileInfo(
             [
             new Linger(4)], size:new Vector2Int(3, 3), targetType:TargetType.Location),
@@ -45,10 +51,11 @@ public struct ProjectileState
             new InstantDamage(new Vector2Int(3, 3), 120),
             new SummonProj(ProjectileType.ZapEffect),
             
-        ], targetType: TargetType.Location),
+        ], targetType: TargetType.Location, size:new Vector2Int(3,3)),
         [ProjectileType.FireBall] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 450)], targetType: TargetType.Location),
-        [ProjectileType.Arrow] = new ProjectileInfo([new Missile(1000, 20)], null, TargetType.Unit),
-        [ProjectileType.CannonBall] = new ProjectileInfo([new Missile(1000, 40)], null, TargetType.Unit),
+        [ProjectileType.Arrow] = new ProjectileInfo([new Missile(1000, 100)], null, TargetType.Unit),
+        [ProjectileType.CannonBall] = new ProjectileInfo([new Missile(1000, 200)], null, TargetType.Unit),
+        [ProjectileType.WizardBall] = new ProjectileInfo([new Splash(1000, ProjectileType.WizardBoom)])
 
     };
 }
@@ -70,7 +77,18 @@ public interface IProjectileBehaviour
 {
     public ProjectileResult Update(ProjectileState state, GameState gameState);
 }
-
+public class Splash(int speed, ProjectileType toCreate) : MoveTowards(speed)
+{
+    public override ProjectileResult OnArrive(ProjectileState state, GameState gameState)
+    {
+        state.ShouldDie = true;
+        PlayerId targetPlayer = state.Owner == PlayerId.Two ? PlayerId.One :  PlayerId.Two;
+        Vector2Int size = ProjectileState.Infos[toCreate].Size ?? new Vector2Int(1, 1);
+        Vector2Int offset = new Vector2Int(size.X / 2, size.Y / 2);
+      
+        return new ProjectileResult(state, [], [new ProjectileState(toCreate, state.Owner, state.Position - offset)]);
+    }
+}
 public class Missile(int speed, int damage) : MoveTowards(speed)
 {
     public override ProjectileResult OnArrive(ProjectileState state, GameState gameState)
@@ -169,6 +187,10 @@ public class InstantDamage(Vector2Int size, int damage) : IProjectileBehaviour
     public ProjectileResult Update(ProjectileState state, GameState gameState)
     {
 
+        if (state.Ticks > 0)
+        {
+            return new ProjectileResult(state, [], []);
+        }
         PlayerState enemy = GameState.GetPlayerState(gameState, state.Owner == PlayerId.One ? PlayerId.Two : PlayerId.One);
         List<UnitState> units = enemy.Units;
         List<DamageInstance> damageInstances = new();

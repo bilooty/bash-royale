@@ -27,7 +27,7 @@ public interface IUnitBehaviour
 {
     public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId);
 }
-// FOR ALL NON ATTACKS ENSURE ACTIONRESULT.ISATTACK IS FALSE
+
 public class WalkForwards(int speed) : IUnitBehaviour
 {
     public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId)
@@ -42,40 +42,29 @@ public class WalkForwards(int speed) : IUnitBehaviour
     }
 
     private static UnitState? NearestBuilding(UnitState unit, GameState state)
-    {
-        UnitState? destination = null;
-        long best = long.MaxValue;
-
-        bool castleUnlocked = CountTowers(unit, state) < 2;
-
-        foreach (UnitState enemy in UnitSim.GetEnemyUnits(unit, state))
         {
-            if (!UnitInfos.GetUnitInfo(enemy.Type).IsBuilding) continue;
-
-            // The castle only becomes a target once a tower has fallen.
-            if (enemy.Type == UnitType.Castle && !castleUnlocked) continue;
-
-            long d = UnitSim.FootprintDistance(unit, enemy);
-            if (d >= best) continue;
-
-            best = d;
-            destination = enemy;
+            List<UnitState> enemies = UnitSim.GetEnemyUnits(unit, state);
+    
+            // Same rule as targeting: the castle is off-limits until a tower falls.
+            bool castleLocked = UnitSim.CountTowers(enemies) >= 2;
+    
+            UnitState? destination = null;
+            long best = long.MaxValue;
+    
+            foreach (UnitState enemy in enemies)
+            {
+                if (!UnitInfos.GetUnitInfo(enemy.Type).IsBuilding) continue;
+                if (enemy.Type == UnitType.Castle && castleLocked) continue;
+    
+                long d = UnitSim.FootprintDistance(unit, enemy);
+                if (d >= best) continue;
+    
+                best = d;
+                destination = enemy;
+            }
+    
+            return destination;
         }
-
-        return destination;
-    }
-
-    private static int CountTowers(UnitState unit, GameState state)
-    {
-        int count = 0;
-
-        foreach (UnitState enemy in UnitSim.GetEnemyUnits(unit, state))
-        {
-            if (enemy.Type == UnitType.Tower) count++;
-        }
-
-        return count;
-    }
 }
 
 public class ChaseBehaviour(int speed) : IUnitBehaviour
@@ -104,7 +93,7 @@ public class AttackBehaviour(int damage) : IUnitBehaviour
         return new ActionResult(unit, targetId, damage, true);
     }
 }
-public class RangedAttack(int damage, ProjectileType projectileType) : IUnitBehaviour
+public class RangedAttack(ProjectileType projectileType) : IUnitBehaviour
 {
      
     public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId)
