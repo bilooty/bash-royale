@@ -6,17 +6,18 @@ public struct GameState
 {
     public PlayerState PlayerOne;
     public PlayerState PlayerTwo;
-    
+    public bool IsDraw;
     public bool IsGameOver;
     public PlayerId? Winner;
     public int Tick;
+    public bool IsOvertime => Tick > GameSettings.REGULATION_END_TICK;
     public static GameState CreateNew()
     {
         return new GameState
         {
             PlayerOne = PlayerState.CreateNew(PlayerId.One),
             PlayerTwo = PlayerState.CreateNew(PlayerId.Two),
-            
+            IsDraw = false,
             IsGameOver = false,
             Winner = null,
         };
@@ -25,7 +26,79 @@ public struct GameState
 
 public record PlayerResult(PlayerState playerState, List<ActionResult> results);
 public static class GameSim
-{
+{   
+    private static bool HasCastle(List<UnitState> units)
+    {
+        foreach (UnitState unit in units)
+        {
+            if (unit.Type == UnitType.Castle) return true;
+        }
+
+        return false;
+    }
+
+    private static int BuildingCount(List<UnitState> units)
+    {
+        int count = 0;
+
+        foreach (UnitState unit in units)
+        {
+            if (!UnitInfos.GetUnitInfo(unit.Type).IsBuilding) continue;
+            count++;
+        }
+
+        return count;
+    }
+    
+    private static int LowestBuildingHealth(List<UnitState> units)
+    {
+        int lowest = int.MaxValue;
+
+        foreach (UnitState unit in units)
+        {
+            if (!UnitInfos.GetUnitInfo(unit.Type).IsBuilding) continue;
+            if (unit.Health >= lowest) continue;
+
+            lowest = unit.Health;
+        }
+
+        return lowest;
+    }
+    
+        private static GameState CheckGameOver(GameState state)
+        {
+            bool p1Alive = HasCastle(state.PlayerOne.Units);
+            bool p2Alive = HasCastle(state.PlayerTwo.Units);
+    
+            if (!p1Alive || !p2Alive)
+            {
+                state.IsGameOver = true;
+                state.IsDraw = !p1Alive && !p2Alive;
+                state.Winner = state.IsDraw ? null : (p1Alive ? PlayerId.One : PlayerId.Two);
+                return state;
+            }
+    
+            if (state.Tick < GameSettings.OVERTIME_END_TICK) return state;
+    
+            // Time's up. More buildings standing wins; otherwise the weakest building loses.
+            int p1Count = BuildingCount(state.PlayerOne.Units);
+            int p2Count = BuildingCount(state.PlayerTwo.Units);
+    
+            state.IsGameOver = true;
+    
+            if (p1Count != p2Count)
+            {
+                state.Winner = p1Count > p2Count ? PlayerId.One : PlayerId.Two;
+                return state;
+            }
+    
+            int p1Lowest = LowestBuildingHealth(state.PlayerOne.Units);
+            int p2Lowest = LowestBuildingHealth(state.PlayerTwo.Units);
+    
+            state.IsDraw = p1Lowest == p2Lowest;
+            state.Winner = state.IsDraw ? null : (p1Lowest > p2Lowest ? PlayerId.One : PlayerId.Two);
+            return state;
+        }
     private static PlayerResult UpdatePlayer(PlayerState playerState, GameState gameState)
     {
         List<UnitState> units = playerState.Units;
@@ -33,7 +106,7 @@ public static class GameSim
         for (int i = 0; i < units.Count; i++)
         {
             ActionResult result = UnitSim.Update(units[i], gameState);
-            //Console.WriteLine(result.unit.Position.X + " " + result.unit.Position.Y);
+            
             units[i] = result.unit;
             results.Add(result);
         }
@@ -41,7 +114,8 @@ public static class GameSim
         return new PlayerResult(playerState, results);
     }
     public static GameState Update(GameState state, NetworkAction p1Action, NetworkAction p2Action)
-    {
+    {   
+        if (state.IsGameOver) return state;
         if (p1Action.Action == ActionType.DeployCard)
         {
             state = CardSim.PlayFromHand(state, PlayerId.One, p1Action.CardIdx, new Vector2Int(p1Action.X, p1Action.Y));
@@ -65,7 +139,7 @@ public static class GameSim
         
         state.PlayerOne.Units.RemoveAll(u => u.Health <= 0);
         state.PlayerTwo.Units.RemoveAll(u => u.Health <= 0);
-
+        state = CheckGameOver(state);
         state.Tick++;
         return state;
     }
