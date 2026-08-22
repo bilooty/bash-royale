@@ -142,31 +142,66 @@ public static class GameSim
             state.PlayerOne.Elixir = Math.Min(state.PlayerOne.Elixir + 1, GameSettings.MAX_ELIXIR);
             state.PlayerTwo.Elixir = Math.Min(state.PlayerTwo.Elixir + 1, GameSettings.MAX_ELIXIR);
         }
+             
+        List<DamageInstance> damageInstances = new();
         var p1Result = UpdatePlayer(state.PlayerOne, state);
+        foreach (ActionResult result in p1Result.results)
+        {
+            if (result.didDamage)
+            {
+                damageInstances.Add(new DamageInstance(result.targetIdx, result.damage, PlayerId.Two));
+            }
+        }
         var p2Result = UpdatePlayer(state.PlayerTwo, state);
-
+        foreach (ActionResult result in p2Result.results)
+        {
+            if (result.didDamage)
+            {
+                damageInstances.Add(new DamageInstance(result.targetIdx, result.damage, PlayerId.One));
+            }
+        }
         state.PlayerOne = p1Result.playerState;
         state.PlayerTwo = p2Result.playerState;
-        ApplyDamage(p1Result.results, state.PlayerTwo.Units);
-        ApplyDamage(p2Result.results, state.PlayerOne.Units);
+        List<ProjectileState> aliveProjectiles = new();
+        for (int i = 0; i < state.Projectiles.Count; i++)
+        {
+            System.Console.WriteLine("Projectiling!");
+            ProjectileState proj = state.Projectiles[i];
+            ProjectileInfo info = ProjectileState.Infos[proj.Type];
+            ProjectileResult result = info.Behaviour.Update(proj, state);
+            proj = result.State;
+            foreach (DamageInstance instance in result.DamageInstances)
+            {
+                damageInstances.Add(instance);
+            }
+            state.Projectiles[i] = proj;
+            if (!proj.ShouldDie)
+            {
+                aliveProjectiles.Add(proj);
+            }
+        }
+        
         
         state.PlayerOne.Units.RemoveAll(u => u.Health <= 0);
         state.PlayerTwo.Units.RemoveAll(u => u.Health <= 0);
         state = CheckGameOver(state);
         state.Tick++;
+        ApplyDamage(PlayerId.Two, damageInstances, state.PlayerTwo.Units);
+        ApplyDamage(PlayerId.One, damageInstances, state.PlayerOne.Units);
+        state.Projectiles = aliveProjectiles;
         return state;
     }
         
-    private static void ApplyDamage(List<ActionResult> results, List<UnitState> enemies)
+    private static void ApplyDamage(PlayerId player, List<DamageInstance> instances, List<UnitState> enemies)
     {
-        foreach (ActionResult result in results)
+        foreach (DamageInstance instance in instances)
         {
-            if (!result.didDamage) continue;
-            UnitState target = enemies[result.targetIdx];
-            target.Health -= result.damage;
+            if (instance.targetPlayer != player) continue;
+            UnitState target = enemies[instance.Index];
+            target.Health -= instance.Damage;
             target.LastDamageTick = target.Ticks;
             //Console.WriteLine(target.Type + " " + target.Health);
-            enemies[result.targetIdx] = target;
+            enemies[instance.Index] = target;
         }
     } 
 }
