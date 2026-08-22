@@ -24,6 +24,7 @@ public record UnitInfo(
     IUnitBehaviour ChaseBehaviour,
     IUnitBehaviour AttackBehaviour,
     Vector2Int Size,
+    MovementLayer Layer,
     bool IsBuilding = false);
     
 
@@ -43,11 +44,12 @@ public static class UnitInfos
                 new WalkForwards(5),
                 new ChaseBehaviour(5), 
                 new AttackBehaviour(75),
-                new Vector2Int(1,1)),
+                new Vector2Int(1,1),
+                MovementLayer.Ground),
             UnitType.Tower => new UnitInfo(
                 UnitType.Tower,
                 "Tower",
-                3000,
+                2000,
                 5,
                 5,
                 10,
@@ -55,6 +57,7 @@ public static class UnitInfos
                 new DoNothing(),
                 new AttackBehaviour(5),
                 new Vector2Int(3,3),
+                MovementLayer.Ground,
                 true),
             UnitType.Castle => new UnitInfo(
                 UnitType.Castle,
@@ -67,6 +70,7 @@ public static class UnitInfos
                 new DoNothing(),
                 new AttackBehaviour(5),
                 new Vector2Int(1,1),
+                MovementLayer.Ground,
                 true),
                 UnitType.Giant => new UnitInfo(
                 UnitType.Giant,
