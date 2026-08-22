@@ -124,7 +124,14 @@ public class BattleRenderer : SadConsole.ScreenSurface
         DrawUnits(_gameState.PlayerOne);
         DrawUnits(_gameState.PlayerTwo);
         DrawGUI();
+
     
+        if (!_networkManager.IsConnected)
+        {
+            _guiLayer.Surface.Print(2, 6, "Waiting for opponent...", Color.Yellow, Color.Black);
+            base.Update(delta);
+            return; 
+        }        
         _timer -= delta.TotalSeconds;
     
         if (_timer <= 0f)
