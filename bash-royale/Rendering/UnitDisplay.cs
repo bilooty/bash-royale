@@ -25,6 +25,9 @@ public class UnitDisplay(ColoredGlyph[][] glyphs)
         [UnitType.Castle] = new UnitDisplay(
             [
             [new ColoredGlyph(Color.White, Color.DarkGray, 'C')]]),
+        [UnitType.Tower] = new UnitDisplay(
+        [
+            [new ColoredGlyph(Color.White, Color.DarkGray, 'T')]]),
         [UnitType.Archer] = new UnitDisplay(
             [
                 [new ColoredGlyph(Color.LightGreen, Color.DarkGray, 'A')]
