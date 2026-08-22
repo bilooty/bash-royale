@@ -129,7 +129,7 @@ public static class CardInfos
         CardId.Archer => new UnitCard(id, 3, UnitType.Archer),
         CardId.Goblin => new UnitCard(id, 2, UnitType.Goblin),
         CardId.Wizard => new UnitCard(id, 6, UnitType.Wizard),
-        CardId.Hog => new UnitCard(id, 8, UnitType.HogRider),
+        CardId.Hog => new UnitCard(id, 4, UnitType.HogRider),
         CardId.Barbarian => new UnitCard(id, 4, UnitType.Barbarian),
         CardId.Musketeer => new UnitCard(id, 4, UnitType.Musketeer),
         CardId.MiniPekka => new UnitCard(id, 4, UnitType.MiniPekka),
