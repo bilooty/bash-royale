@@ -338,7 +338,6 @@ public override void Update(TimeSpan delta)
             new Rectangle(0, 0, _guiLayer.Surface.Width, _guiLayer.Surface.Height),
             ShapeParameters.CreateBorder(new ColoredGlyph(Color.Black, Color.Gray)));
         
-        _guiLayer.Surface.Print(2, 1, "=== HAND ===", Color.Yellow);
         int cardWidth = 5;
         int cardHeight = 3;
         int spacing = 2;
@@ -353,15 +352,38 @@ public override void Update(TimeSpan delta)
             Color color = isSelected ? Color.White : (player.Elixir >= card.Cost ? Color.Cyan : Color.Gray);
             int cardX = startX + (i * (cardWidth + spacing));
             int cardY = startY;
-            _guiLayer.Surface.Print(cardX, cardY, "+" + new string('-', cardWidth - 2) + "+", color);
-            _guiLayer.Surface.Print(cardX, cardY + cardHeight - 1, "+" + new string('-', cardWidth - 2) + "+", color);
+            string label = card.Id switch
+            {
+                CardId.Knight  => "KNGHT",
+                CardId.Giant   => "GIANT",
+                CardId.Archer  => "ARCHR",
+                CardId.Goblin  => "GOBLN",
+                CardId.Wizard  => "WIZRD",
+                CardId.Horde   => "HORDE",
+                CardId.FireBall => "FRBAL",
+                _ => card.Id.ToString()[..5],
+                };
+            _guiLayer.Surface.SetGlyph(cardX, cardY, 218 , color);
+            _guiLayer.Surface.SetGlyph(cardX+cardWidth-1, cardY, 191 , color);
+
+            _guiLayer.Surface.SetGlyph(cardX, cardY + cardHeight-1,192, color);
+            _guiLayer.Surface.SetGlyph(cardX+cardWidth-1, cardY + cardHeight - 1,217, color);
+
             for (int row = 1; row < cardHeight - 1; row++)
             {
-                _guiLayer.Surface.SetGlyph(cardX, cardY + row, '|', color);
-                _guiLayer.Surface.SetGlyph(cardX + cardWidth - 1, cardY + row, '|', color);
+                _guiLayer.Surface.SetGlyph(cardX, cardY + row,179, color);
+                _guiLayer.Surface.SetGlyph(cardX + cardWidth - 1, cardY + row, 179, color);
             }
 
-            _guiLayer.Surface.Print(cardX, cardY, card.Cost.ToString(), Color.Magenta);
+            for (int col = 1; col < cardWidth - 1; col++)
+            {
+                _guiLayer.Surface.SetGlyph(cardX +col, cardY,196, color);
+                _guiLayer.Surface.SetGlyph(cardX + col, cardY+cardHeight-1, 196, color);
+            }
+            _guiLayer.Surface.Print(cardX, cardY-1, label, color);
+
+
+            _guiLayer.Surface.Print(cardX+cardWidth-1, cardY+cardHeight-1, card.Cost.ToString(), Color.Magenta);
             int centerX = cardX + (cardWidth / 2);
             int centerY = cardY + (cardHeight / 2);
             if (card is UnitCard unitCard && UnitDisplay.Displays.TryGetValue(unitCard.UnitType, out var display))
@@ -376,13 +398,15 @@ public override void Update(TimeSpan delta)
             }
         }
         
+        _guiLayer.Surface.Print(2, 2, "=== HAND ===", Color.Yellow);
+        _guiLayer.Surface.Print(2, 1, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
 
-        _guiLayer.Surface.Print(2, 2, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
-
+        // Shares row 2 with the HAND label: row 1 is the elixir readout, row 3 the card
+        // name labels and rows 4-6 the card boxes, so this is the only space left.
         if (_selectedHandIdx is int sel && sel < player.Hand.Count)
-            _guiLayer.Surface.Print(2, 3, $"{player.Hand[sel]}: CLICK ARENA", Color.White);
+            _guiLayer.Surface.Print(15, 2, "CLICK ARENA", Color.White);
         else
-            _guiLayer.Surface.Print(2, 3, "Press 1-4 to pick a card", Color.Gray);
+            _guiLayer.Surface.Print(15, 2, "PRESS 1-4", Color.Gray);
         
     }
     private void SetupTestBattle()
