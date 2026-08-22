@@ -126,6 +126,12 @@ public class BattleRenderer : SadConsole.ScreenSurface
                     _unitLayer.Surface[pos.X, pos.Y].Foreground = player.Id == PlayerId.One ? p1Color : p2Color;
                     //_unitLayer.Surface[pos.X, pos.Y].Foreground = glyph.Foreground;
                     _unitLayer.Surface[pos.X, pos.Y].GlyphCharacter = glyph.GlyphCharacter;
+                    //System.Console.WriteLine("[" + glyph.GlyphCharacter + "] ticks: " + unit.Ticks + " last tick:" + unit.LastAttackTick);
+                    if ((unit.Ticks - unit.LastAttackTick) < 10)
+                    {
+                       
+                        _unitLayer.Surface[pos.X, pos.Y].GlyphCharacter = ' ';
+                    }
                 }
             }
         }
@@ -203,7 +209,7 @@ public override void Update(TimeSpan delta)
                 
                 _pendingLocalAction = null; // Clear the keyboard buffer
                 _inputTick++;
-            
+                tick++;
                 _timer = 0.05;
             }
         }
@@ -302,12 +308,12 @@ public override void Update(TimeSpan delta)
 
         // Five knights a side, spread across the width so none share a spawn cell.
         // Well back from the river so you can watch them route to the bridges.
-        for (int i = 0; i < 5; i++)
-        {
-            int x = 4 + i * 5;
-            p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(x, 21)));
-            p2.Units.Add(new UnitState(UnitType.Knight, PlayerId.Two, new Vector2Int(x, 10)));
-        }
+        // for (int i = 0; i < 5; i++)
+        // {
+        //     int x = 4 + i * 5;
+        //     p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(x, 21)));
+        //     p2.Units.Add(new UnitState(UnitType.Knight, PlayerId.Two, new Vector2Int(x, 10)));
+        // }
 
         _gameState.PlayerOne = p1;
         _gameState.PlayerTwo = p2;
