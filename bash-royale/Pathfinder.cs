@@ -30,7 +30,7 @@ public static class Pathfinder
 
                 // The goal is exempt, it will always be occupied. Exempt its whole
                 // footprint, or a big unit can never reach a big target.
-                if (!InGoal(neighbour, to, goalSize) && UnitSim.FootprintBlocked(state, neighbour, size, layer, from)) continue;
+                if (UnitSim.FootprintBlocked(state, neighbour, size, layer, from, to, goalSize)) continue;
 
                 if (costSoFar.TryGetValue(neighbour, out int known) && known <= nextCost) continue;
 
