@@ -182,6 +182,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
                 new Rectangle(cardX, cardY, cardWidth, cardHeight),
                 ShapeParameters.CreateBorder(new ColoredGlyph(Color.White, Color.Black, 0))
             );  
+            _guiLayer.Surface.Print(cardX, cardY, "asd", Color.Magenta);
         }
 
         _guiLayer.Surface.Print(2, 2, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
