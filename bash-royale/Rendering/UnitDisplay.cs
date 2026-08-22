@@ -1,4 +1,4 @@
-﻿namespace bash_royale.Scenes;
+namespace bash_royale.Scenes;
 
 public class UnitDisplay(ColoredGlyph[][] glyphs)
 {
@@ -46,6 +46,37 @@ public class UnitDisplay(ColoredGlyph[][] glyphs)
         [UnitType.HogRider] = new UnitDisplay(
             [
                 [new ColoredGlyph(Color.Orange, Color.DarkGray, 'h')]
+            ]
+        ),
+
+        [UnitType.Barbarian] = new UnitDisplay(
+            [
+                [new ColoredGlyph(Color.Brown, Color.DarkGray, 'B')]
+            ]
+        ),
+        [UnitType.Musketeer] = new UnitDisplay(
+            [
+                [new ColoredGlyph(Color.LightBlue, Color.DarkGray, 'M')]
+            ]
+        ),
+        [UnitType.MiniPekka] = new UnitDisplay(
+            [
+                [new ColoredGlyph(Color.Silver, Color.DarkGray, 'P')]
+            ]
+        ),
+        [UnitType.Valkyrie] = new UnitDisplay(
+            [
+                [new ColoredGlyph(Color.Pink, Color.DarkGray, 'V')]
+            ]
+        ),
+        [UnitType.Skeleton] = new UnitDisplay(
+            [
+                [new ColoredGlyph(Color.White, Color.DarkGray, 's')]
+            ]
+        ),
+        [UnitType.Dragon] = new UnitDisplay(
+            [
+                [new ColoredGlyph(Color.LightGreen, Color.DarkGray, 'D')]
             ]
         ),
 
