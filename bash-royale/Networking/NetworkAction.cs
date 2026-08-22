@@ -8,13 +8,13 @@ public enum ActionType : byte
 }
 public class NetworkAction : INetSerializable
 {
-    public int Tick;
-    public byte PlayerId;
-    public ActionType Action;
+    public int Tick { get; set; }
+    public byte PlayerId { get; set; }
+    public ActionType Action { get; set; }
 
-    public byte CardIdx;
-    public byte X;
-    public byte Y;
+    public byte CardIdx { get; set; }
+    public byte X { get; set; }
+    public byte Y { get; set; }
 
     public void Serialize(NetDataWriter writer)
     {
