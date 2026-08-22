@@ -25,7 +25,7 @@ public struct ProjectileState
     public ProjectileType Type;
     public bool ShouldDie;
     public Vector2Int Position;
-    public int Ticks;
+
     public PlayerId Owner;
     public Vector2Int TargetLoc;
     public int TargetIndex;
@@ -53,6 +53,8 @@ public class Linger(int duration)
 {
     
 }
+
+
 public class InstantDamage(Vector2Int size, int damage) : IProjectileBehaviour
 {
     public ProjectileResult Update(ProjectileState state, GameState gameState)
@@ -64,10 +66,8 @@ public class InstantDamage(Vector2Int size, int damage) : IProjectileBehaviour
         for (int i = 0; i < units.Count; i++)
         {   
             UnitState unit = units[i];
-            if (unit.Position.X >= state.Position.X
-                && unit.Position.Y >= state.Position.Y
-                && unit.Position.X < state.Position.X + size.X
-                && unit.Position.Y < state.Position.Y + size.Y)
+            if (Vector2Int.Intersects(unit.Position, UnitInfos.GetUnitInfo(unit.Type).Size, 
+                    state.Position, size))
             {
                 System.Console.WriteLine("Hit!!!");
                 damageInstances.Add(new DamageInstance(i, damage, enemy.Id));
