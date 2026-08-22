@@ -33,7 +33,7 @@ public static class GameSim
         for (int i = 0; i < units.Count; i++)
         {
             ActionResult result = UnitSim.Update(units[i], gameState);
-            Console.WriteLine(result.unit.Position.X + " " + result.unit.Position.Y);
+            //Console.WriteLine(result.unit.Position.X + " " + result.unit.Position.Y);
             units[i] = result.unit;
             results.Add(result);
         }
@@ -79,7 +79,7 @@ public static class GameSim
             if (!result.didDamage) continue;
             UnitState target = enemies[result.targetIdx];
             target.Health -= result.damage;
-            Console.WriteLine(target.Type + " " + target.Health);
+            //Console.WriteLine(target.Type + " " + target.Health);
             enemies[result.targetIdx] = target;
         }
     } 
