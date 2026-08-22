@@ -2,6 +2,7 @@ using System.Numerics;
 
 namespace bash_royale;
 
+
 public struct PlayerState
 {
     public PlayerId Id;
@@ -10,6 +11,7 @@ public struct PlayerState
     public List<CardId> Hand;
     public int NextUnitId; 
     public List<CardId> Deck;
+    
     
 
 
