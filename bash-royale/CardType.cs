@@ -68,6 +68,47 @@ public static class CardSim
 
         return gameState;
     }
+
+    public static GameState PlayFromHand(GameState gameState, PlayerId playerId, int handIndex, Vector2Int position)
+    {
+        PlayerState player = playerId == PlayerId.One ? gameState.PlayerOne : gameState.PlayerTwo;
+
+        if (handIndex < 0 || handIndex >= player.Hand.Count)
+        {
+            return gameState;
+        }
+
+        CardId cardId = player.Hand[handIndex];
+        CardInfo card = CardInfos.GetCardInfo(cardId);
+
+        if (player.Elixir - card.Cost < 0)
+        {
+            return gameState;
+        }
+
+        gameState = PlayCard(card, gameState, playerId, position);
+
+        player = playerId == PlayerId.One ? gameState.PlayerOne : gameState.PlayerTwo;
+        player.Hand.RemoveAt(handIndex);
+        player.Deck.Add(cardId);
+        if (player.Deck.Count > 0)
+        {
+            CardId nextCard = player.Deck[0];
+            player.Deck.RemoveAt(0);
+            player.Hand.Insert(handIndex, nextCard);
+        }
+
+        if (playerId == PlayerId.One)
+        {
+            gameState.PlayerOne = player;
+        }
+        else
+        {
+            gameState.PlayerTwo = player;
+        }
+
+        return gameState;
+    }
 }
 public static class CardInfos
 {
@@ -75,6 +116,11 @@ public static class CardInfos
     {
         CardId.Knight => new UnitCard(id, 3, UnitType.Knight),
         CardId.FireBall => new SpellCard(id, 4, SpellType.FireBall),
+        CardId.Giant => new UnitCard(id, 5, UnitType.Giant),
+        CardId.Archer => new UnitCard(id, 3, UnitType.Archer),
+        CardId.Goblin => new UnitCard(id, 2, UnitType.Goblin),
+        CardId.Wizard => new UnitCard(id, 6, UnitType.Wizard),
+        CardId.Horde => new UnitCard(id, 8, UnitType.Horde),
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
     };
 }
