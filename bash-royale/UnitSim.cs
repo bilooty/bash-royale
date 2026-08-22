@@ -97,7 +97,9 @@ public static class UnitSim
 
     private static bool InRange(Vector2Int curPosition, Vector2Int target, int range)
     {
-        return DistanceSquared(curPosition, target) <= (long)range * range;
+        int dx = Math.Abs(target.X - curPosition.X);
+        int dy = Math.Abs(target.Y - curPosition.Y);
+        return Math.Max(dx, dy) <= range;
     }
 
     internal static List<UnitState> GetEnemyUnits(UnitState curUnit, GameState gameState)
