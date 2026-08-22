@@ -13,37 +13,24 @@ public static class UnitSim
     public static ActionResult Update(UnitState curUnit, GameState gameState)
     {
         UnitInfo info = UnitInfos.GetUnitInfo(curUnit.Type);
-        int? targetId = FindNearestEnemy(curUnit, gameState, info.AggroRange);
+        UnitState? target = FindNearestEnemy(curUnit, gameState, info.AggroRange);
 
         IUnitBehaviour behaviour;
-        UnitState? target = null;
-
-        if (targetId is null)
+        if (target is null)
         {
             behaviour = info.NeutralBehaviour;
         }
         else
         {
-            List<UnitState> enemies = GetEnemyUnits(curUnit, gameState);
-            int idx = enemies.FindIndex(u => u.Id == targetId.Value);
-            target = idx >= 0 ? enemies[idx] : null;
-
-            if (target is null)
-            {
-                // Target vanished between search and lookup (shouldn't happen within one
-                // call, but this keeps it a graceful no-op instead of a crash if that ever changes).
-                behaviour = info.NeutralBehaviour;
-            }
-            else
-            {
-                bool inAttackRange = InRange(curUnit, target.Value, info.AttackRange);
-                behaviour = inAttackRange ? info.AttackBehaviour : info.ChaseBehaviour;
-            }
+            bool inAttackRange = InRange(curUnit, target.Value, info.AttackRange);
+            behaviour = inAttackRange ? info.AttackBehaviour : info.ChaseBehaviour;
         }
 
         curUnit.Ticks++;
-        return behaviour.Update(curUnit, gameState, target, target?.Id ?? -1);
+        int targetId = target?.Id ?? -1;
+        return behaviour.Update(curUnit, gameState, target, targetId);
     }
+
     internal static bool IsOccupied(GameState state, Vector2Int position, MovementLayer layer, Vector2Int ignore)
     {
         return HasUnitAt(state.PlayerOne.Units, position, layer, ignore)
@@ -71,7 +58,9 @@ public static class UnitSim
         return false;
     }
 
-    private static int? FindNearestEnemy(UnitState curUnit, GameState gameState, int aggroRange)
+    // Single pass over enemies, tracking the closest UnitState directly rather than an
+    // index or a second lookup — avoids scanning twice for the same answer.
+    private static UnitState? FindNearestEnemy(UnitState curUnit, GameState gameState, int aggroRange)
     {
         bool targetsBuildingOnly = UnitInfos.GetUnitInfo(curUnit.Type).targetsBuildingsOnly;
         bool ranged = UnitInfos.GetUnitInfo(curUnit.Type).ranged;
@@ -79,7 +68,7 @@ public static class UnitSim
         long rangeSquared = (long)aggroRange * aggroRange;
         List<UnitState> enemies = GetEnemyUnits(curUnit, gameState);
 
-        int? closestId = null;
+        UnitState? closest = null;
         long closestDistanceSquared = long.MaxValue;
 
         foreach (UnitState enemy in enemies)
@@ -89,14 +78,15 @@ public static class UnitSim
             if (distanceSquared > rangeSquared) continue;
             if (distanceSquared >= closestDistanceSquared) continue;
             // if targets layer is air and unit is not ranged, continue
-            if (UnitInfos.GetUnitInfo(enemy.Type).Layer == MovementLayer.Air && ranged == false) continue;
+            if (UnitInfos.GetUnitInfo(enemy.Type).Layer == MovementLayer.Air && !ranged) continue;
             // Buildings-only units ignore troops and only target towers/castles.
             if (targetsBuildingOnly && !UnitInfos.GetUnitInfo(enemy.Type).IsBuilding) continue;
+
             closestDistanceSquared = distanceSquared;
-            closestId = enemy.Id;
+            closest = enemy;
         }
 
-        return closestId;
+        return closest;
     }
 
     internal static long DistanceSquared(Vector2Int a, Vector2Int b)
@@ -138,22 +128,9 @@ public static class UnitSim
             _ => throw new ArgumentOutOfRangeException(nameof(curUnit), curUnit.Owner, null)
         };
     }
-    internal static bool FootprintBlocked(GameState state, Vector2Int topLeft,
-        Vector2Int size, MovementLayer layer, Vector2Int ignore)
-    {
-        for (int y = 0; y < size.Y; y++)
-        {
-            for (int x = 0; x < size.X; x++)
-            {
-                Vector2Int cell = new(topLeft.X + x, topLeft.Y + y);
 
-                if (!ArenaMap.IsPassable(cell, layer)) return true;
-                if (IsOccupied(state, cell, layer, ignore)) return true;
-            }
-        }
 
-        return false;
-    }
+
     internal static bool FootprintBlocked(GameState state, Vector2Int topLeft,
         Vector2Int size, UnitType unitType, Vector2Int ignore)
     {
@@ -172,27 +149,9 @@ public static class UnitSim
 
         return false;
     }
-    internal static bool FootprintBlocked(GameState state, Vector2Int topLeft, Vector2Int size,
-        MovementLayer layer, Vector2Int ignore, Vector2Int goal, Vector2Int goalSize)
-    {
-        for (int y = 0; y < size.Y; y++)
-        {
-            for (int x = 0; x < size.X; x++)
-            {
-                Vector2Int cell = new(topLeft.X + x, topLeft.Y + y);
 
-                if (!ArenaMap.IsPassable(cell, layer)) return true;
+  
 
-                // The goal's own cells don't block; that's the thing we're walking at.
-                if (cell.X >= goal.X && cell.X < goal.X + goalSize.X
-                                     && cell.Y >= goal.Y && cell.Y < goal.Y + goalSize.Y) continue;
-
-                if (IsOccupied(state, cell, layer, ignore)) return true;
-            }
-        }
-
-        return false;
-    }
     internal static bool FootprintBlocked(GameState state, Vector2Int topLeft, Vector2Int size,
         UnitType unitType, Vector2Int ignore, Vector2Int goal, Vector2Int goalSize)
     {
@@ -206,7 +165,7 @@ public static class UnitSim
 
                 if (!ArenaMap.IsPassable(cell, unitType)) return true;
 
-                // The goal's own cells don't block - that's the thing we're walking at.
+                // The goal's own cells don't block; that's the thing we're walking at.
                 if (cell.X >= goal.X && cell.X < goal.X + goalSize.X
                                      && cell.Y >= goal.Y && cell.Y < goal.Y + goalSize.Y) continue;
 
@@ -217,8 +176,3 @@ public static class UnitSim
         return false;
     }
 }
-    
-
-
-
-   
