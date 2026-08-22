@@ -7,19 +7,20 @@ public static class Movement
 
     public static UnitState StepTo(UnitState unit, Vector2Int destination, int speed, GameState state, MovementLayer layer)
     {
-        // Clamp so a blocked unit doesn't bank progress and teleport when freed.
+        
         unit.MoveProgress = Math.Min(unit.MoveProgress + speed, MOVE_THRESHOLD);
         if (unit.MoveProgress < MOVE_THRESHOLD) return unit;
 
-        Vector2Int? next = Pathfinder.NextStep(unit.Position, destination, layer, state);
+        Vector2Int size = UnitInfos.GetUnitInfo(unit.Type).Size;
+
+        Vector2Int? next = Pathfinder.NextStep(unit.Position, destination, size, layer, state);
         if (next is null) return unit;
-        if (UnitSim.IsOccupied(state, next.Value, layer)) return unit;
+        if (UnitSim.FootprintBlocked(state, next.Value, size, layer, unit.Position)) return unit;
 
         unit.MoveProgress -= MOVE_THRESHOLD;
         unit.Position = next.Value;
         return unit;
     }
-    
 }
 public interface IUnitBehaviour
 {

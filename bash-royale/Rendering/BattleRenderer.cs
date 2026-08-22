@@ -8,8 +8,8 @@ namespace bash_royale.Scenes;
 public class BattleRenderer : SadConsole.ScreenSurface
 {
     private static readonly Keys[] HandSlotKeys = { Keys.D1, Keys.D2, Keys.D3, Keys.D4 };
-    private Color p1Color = Color.Blue;
-    private Color p2Color = Color.Red;
+    private Color p1Color = Color.DarkBlue;
+    private Color p2Color = Color.DarkRed;
     private GameState _gameState;
     private ScreenSurface _unitLayer;
     private ScreenSurface _guiLayer;
@@ -52,7 +52,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
         // Purely visual overlays. SadConsole walks children top-down and stops at the first
         // one that handles the mouse, so leaving these on would swallow every arena click.
         _unitLayer.UseMouse = false;
-        _guiLayer = new ScreenSurface(28, 8);
+        _guiLayer = new ScreenSurface(ArenaMap.Width, 8);
         _guiLayer.Surface.DefaultBackground = Color.Transparent;
         _guiLayer.UseMouse = false;
         _guiLayer.Position = new Point(0, ArenaMap.Height); 
@@ -74,6 +74,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
         UseKeyboard = true;
         UseMouse = true;
         IsFocused = true;
+        UseMouse = true; 
     }
 
     public override bool ProcessKeyboard(Keyboard keyboard)
@@ -159,6 +160,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
         _unitLayer.Surface[cell.X, cell.Y].Background = valid ? Color.White : Color.DarkRed;
     }
 
+
     private bool ShouldDrawSprout(int x, int y)
     {
         // Use large prime numbers to create a chaotic but repeatable hash
@@ -175,6 +177,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
     public void DrawUnits(PlayerState player)
     {
+        Color teamColor = (player.Id == PlayerId.One) == _isHost ? p1Color : p2Color;
         foreach (UnitState unit in player.Units)
         {
             Vector2Int pos = unit.Position;
@@ -185,19 +188,27 @@ public class BattleRenderer : SadConsole.ScreenSurface
                 for (int y = 0; y < size.Y; y++)
                 {
                     ColoredGlyph glyph = display.Glyphs[y][x];
-                    _unitLayer.Surface[pos.X, pos.Y].Background = glyph.Background;
-                    _unitLayer.Surface[pos.X, pos.Y].Foreground = player.Id == PlayerId.One ? p1Color : p2Color;
-                    //_unitLayer.Surface[pos.X, pos.Y].Foreground = glyph.Foreground;
-                    _unitLayer.Surface[pos.X, pos.Y].GlyphCharacter = glyph.GlyphCharacter;
-                    //System.Console.WriteLine("[" + glyph.GlyphCharacter + "] ticks: " + unit.Ticks + " last tick:" + unit.LastAttackTick);
-                    if ((unit.Ticks - unit.LastAttackTick) < 5)
-                    {
-                        _unitLayer.Surface[pos.X, pos.Y].GlyphCharacter = ' ';
-                    }
-                    if ((unit.Ticks - unit.LastDamageTick) < 5)
-                    {
+                    int renderX = pos.X + x;
+                    int renderY = pos.Y + y;
 
-                        _unitLayer.Surface[pos.X, pos.Y].Background = Color.Red;
+                    if (!_isHost)
+                    {
+                        renderX = ArenaMap.Width - 1 - renderX;
+                        renderY = ArenaMap.Height - 1 - renderY;
+                    }
+
+                    _unitLayer.Surface[renderX, renderY].Foreground = glyph.Foreground;
+                    _unitLayer.Surface[renderX, renderY].Background = teamColor;
+                    _unitLayer.Surface[renderX, renderY].GlyphCharacter = glyph.GlyphCharacter;
+
+                    if ((unit.Ticks - unit.LastAttackTick) < 2)
+                    {
+                        _unitLayer.Surface[renderX, renderY].GlyphCharacter = ' ';
+                    }
+
+                    if ((unit.Ticks - unit.LastDamageTick) < 2)
+                    {
+                        _unitLayer.Surface[renderX, renderY].Background = Color.Red;
                     }
                 }
             }
@@ -333,10 +344,7 @@ public override void Update(TimeSpan delta)
 
     private void DrawGUI()
     {
-        _guiLayer.Surface.Clear();
-        _guiLayer.Surface.DrawBox(
-            new Rectangle(0, 0, _guiLayer.Surface.Width, _guiLayer.Surface.Height),
-            ShapeParameters.CreateBorder(new ColoredGlyph(Color.Black, Color.Gray)));
+
         
         int cardWidth = 5;
         int cardHeight = 3;
@@ -398,16 +406,27 @@ public override void Update(TimeSpan delta)
             }
         }
         
-        _guiLayer.Surface.Print(2, 2, "=== HAND ===", Color.Yellow);
-        _guiLayer.Surface.Print(2, 1, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
+        _guiLayer.Surface.Print(0, 3, "=========== HAND ===========", Color.Yellow);
+        int barY = 1;
+        string barlabel = $" {player.Elixir:0}/{GameSettings.MAX_ELIXIR:0}";
+        int totalWidth = ArenaMap.Width;
+        int barWidth = totalWidth - barlabel.Length -1;
+        int filled = barWidth * player.Elixir / GameSettings.MAX_ELIXIR;
+        for (int i = 0; i < barWidth; i++)
+        {
+            if (i < filled)
+                _guiLayer.Surface.SetGlyph(1 + i, barY, 219, Color.Magenta);
+            else
+                _guiLayer.Surface.SetGlyph(1 + i, barY, 176, Color.DarkMagenta);
+        }
+        _guiLayer.Surface.Print(1 + barWidth, barY, barlabel, Color.Magenta);
 
-        // Shares row 2 with the HAND label: row 1 is the elixir readout, row 3 the card
-        // name labels and rows 4-6 the card boxes, so this is the only space left.
+        // Row 2 is the only line left: row 1 is the elixir bar, row 3 the HAND banner
+        // and rows 4-6 the card boxes.
         if (_selectedHandIdx is int sel && sel < player.Hand.Count)
-            _guiLayer.Surface.Print(15, 2, "CLICK ARENA", Color.White);
+            _guiLayer.Surface.Print(1, 2, $"{player.Hand[sel]} -> CLICK ARENA", Color.White);
         else
-            _guiLayer.Surface.Print(15, 2, "PRESS 1-4", Color.Gray);
-        
+            _guiLayer.Surface.Print(1, 2, "Press 1-4 to pick a card", Color.Gray);
     }
     private void SetupTestBattle()
     {
