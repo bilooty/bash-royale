@@ -11,6 +11,7 @@ public class NetworkManager : INetEventListener
     private readonly NetDataWriter _writer = new NetDataWriter();
     public bool IsConnected => _serverPeer != null;
     public Dictionary<int, NetworkAction> RemoteInputs { get; private set; } = new();
+    public Queue<NetworkAction> RemoteEmotes { get; private set; } = new();
 
     /// <summary>The opponent's deck, or null until their handshake packet arrives.</summary>
     public List<CardId>? RemoteDeck { get; private set; }
@@ -64,7 +65,10 @@ public class NetworkManager : INetEventListener
 
     private void OnPlayerActionReceived(NetworkAction action)
     {
-        RemoteInputs[action.Tick] = action;
+        if (action.Action == ActionType.Emote)
+            RemoteEmotes.Enqueue(action);
+        else
+            RemoteInputs[action.Tick] = action;
     }
     public void OnPeerConnected(NetPeer peer) { _serverPeer = peer; }
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo) { _serverPeer = null; RemoteDeck = null; }

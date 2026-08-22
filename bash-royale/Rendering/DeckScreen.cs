@@ -1,7 +1,7 @@
 using System;
 using SadConsole.Input;
 
-namespace bash_royale.Scenes;
+namespace bash_royale.Rendering;
 
 /// <summary>
 /// Clash Royale style deck builder: the eight cards you take into battle sit at the

@@ -20,21 +20,18 @@ public class EmoteDisplay
     
     public void Draw(ScreenSurface surface, bool isHost)
     {
-        // Show emote on the sender's half of the arena
         bool isLocalPlayer = (Owner == PlayerId.One) == isHost;
-        int y = isLocalPlayer ? ArenaMap.Height - 2 : 1;
-        int x = ArenaMap.Width / 2 - 1;
         string label = EmoteInfo.GetLabel(Emote);
-        Color  color = EmoteInfo.GetColor(Emote);
-        
-        // Fade effect: dim the colour in the last 0.5s
+        Color color = EmoteInfo.GetColor(Emote);
+        int y = ArenaMap.Height - 2;
+        int x = isLocalPlayer ? 1 : ArenaMap.Width - label.Length - 1;
         int FADE_TICKS = 10;
         if (TicksLeft < FADE_TICKS)
         {
             float alpha = (float)TicksLeft / FADE_TICKS;
             color = color * alpha;
         }
-        surface.Print(x, y, label, color, Color.Transparent);
+        surface.Print(x, y, label, color, Color.Black);
     }
     
     
