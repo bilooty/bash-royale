@@ -5,6 +5,8 @@ public struct UnitState
     public UnitType Type;
     public PlayerId Owner;
     public Vector2Int Position;
+    public int LastAttackTick = 0;
+    public int LastDamageTick = 0;
     public IEnumerable<Vector2Int> Positions(){
         UnitInfo info = UnitInfos.GetUnitInfo(Type);
         for (int x = 0; x < info.Size.X; x++)

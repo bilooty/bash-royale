@@ -9,6 +9,7 @@ public struct PlayerState
     public int Elixir;
     public List<CardId> Hand;
     public List<CardId> Deck;
+    
 
 
     private const int HAND_SIZE = 4;
