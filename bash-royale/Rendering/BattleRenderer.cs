@@ -302,7 +302,7 @@ public override void Update(TimeSpan delta)
                 CardId.Archer  => "ARCHR",
                 CardId.Goblin  => "GOBLN",
                 CardId.Wizard  => "WIZRD",
-                CardId.Horde   => "HORDE",
+                CardId.Hog   => "RIDER",
                 CardId.FireBall => "FRBAL",
                 _ => card.Id.ToString()[..5],
                 };
@@ -341,7 +341,7 @@ public override void Update(TimeSpan delta)
             }
         }
         
-        _guiLayer.Surface.Print(0, 3, "=========== HAND ===========", Color.Yellow);
+        _guiLayer.Surface.Print(0, 2, "=========== HAND ===========", Color.Yellow);
         int barY = 1;
         string barlabel = $" {player.Elixir:0}/{GameSettings.MAX_ELIXIR:0}";
         int totalWidth = ArenaMap.Width;
