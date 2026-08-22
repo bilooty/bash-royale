@@ -584,8 +584,32 @@ public override void Update(TimeSpan delta)
             _guiLayer.Surface.Clear();
             DrawUnits(_gameState.PlayerOne);
             DrawUnits(_gameState.PlayerTwo);
+            DrawBuildingHealth(_gameState.PlayerOne);
+            DrawBuildingHealth(_gameState.PlayerTwo);
             DrawDeployCursor();
             DrawGUI();
             DrawEndScreen();
+        }
+        
+        
+        private void DrawBuildingHealth(PlayerState player)
+        {
+            Color teamColor = (player.Id == PlayerId.One) == _isHost ? p1Color : p2Color;
+
+            foreach (UnitState unit in player.Units)
+            {
+                UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
+                if (!info.IsBuilding) continue;
+
+                Vector2Int render = Flip(unit.Position);
+                string text = unit.Health.ToString().PadLeft(5);
+
+                int labelX = Math.Clamp(render.X - text.Length / 2, 0, ArenaMap.Width - text.Length);
+                int labelY = render.Y > ArenaMap.Height / 2 ? render.Y + info.Size.Y : render.Y - 1;
+
+                if (labelY < 0 || labelY >= ArenaMap.Height) continue;
+
+                _unitLayer.Surface.Print(labelX, labelY, text, Color.White, teamColor);
+            }
         }
 }
