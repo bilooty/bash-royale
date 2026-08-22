@@ -10,7 +10,7 @@ public enum EmoteId
     Cry,
 }
 
-public static class EmoteType
+public static class EmoteInfo
 {
     public static string GetLabel(EmoteId id) => id
         switch

@@ -96,6 +96,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
                 return true;
             }
         }
+        
 
         return base.ProcessKeyboard(keyboard);
     }
