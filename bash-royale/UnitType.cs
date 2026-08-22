@@ -81,7 +81,7 @@ public static class UnitInfos
                 new DoNothing(),
                 new DoNothing(),
                 new AttackBehaviour(110),
-                new Vector2Int(3,3),
+                new Vector2Int(3,2),
                 MovementLayer.Ground,
                 true),
                 UnitType.Giant => new UnitInfo(

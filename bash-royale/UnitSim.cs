@@ -25,7 +25,7 @@ public static class UnitSim
         else
         {
             target = GetEnemyUnits(curUnit, gameState)[targetIdx.Value];
-            bool inAttackRange = InRange(curUnit.Position, target.Value.Position, info.AttackRange);
+            bool inAttackRange = InRange(curUnit, target.Value, info.AttackRange);
             if (inAttackRange)
             {
                 behaviour = info.AttackBehaviour;
@@ -103,12 +103,28 @@ public static class UnitSim
         return dx * dx + dy * dy;
     }
 
-    private static bool InRange(Vector2Int curPosition, Vector2Int target, int range)
+    // Chebyshev gap between two footprints. 0 means touching or overlapping, so a
+    // range-1 melee unit connects from any edge or corner regardless of unit size.
+    private static int FootprintDistance(UnitState a, UnitState b)
     {
-        int dx = Math.Abs(target.X - curPosition.X);
-        int dy = Math.Abs(target.Y - curPosition.Y);
-        return Math.Max(dx, dy) <= range;
+        Vector2Int sizeA = UnitInfos.GetUnitInfo(a.Type).Size;
+        Vector2Int sizeB = UnitInfos.GetUnitInfo(b.Type).Size;
+
+        int aMaxX = a.Position.X + sizeA.X - 1;
+        int aMaxY = a.Position.Y + sizeA.Y - 1;
+        int bMaxX = b.Position.X + sizeB.X - 1;
+        int bMaxY = b.Position.Y + sizeB.Y - 1;
+
+        int dx = Math.Max(0, Math.Max(b.Position.X - aMaxX, a.Position.X - bMaxX));
+        int dy = Math.Max(0, Math.Max(b.Position.Y - aMaxY, a.Position.Y - bMaxY));
+
+        return Math.Max(dx, dy);
     }
+
+    private static bool InRange(UnitState attacker, UnitState target, int range)
+    {
+        return FootprintDistance(attacker, target) <= range;
+    }   
 
     internal static List<UnitState> GetEnemyUnits(UnitState curUnit, GameState gameState)
     {

@@ -78,40 +78,45 @@ public static class GameSim
         return lowest;
     }
     
-        private static GameState CheckGameOver(GameState state)
+    private static GameState CheckGameOver(GameState state)
+    {
+        bool p1Alive = HasCastle(state.PlayerOne.Units);
+        bool p2Alive = HasCastle(state.PlayerTwo.Units);
+
+        if (!p1Alive || !p2Alive)
         {
-            bool p1Alive = HasCastle(state.PlayerOne.Units);
-            bool p2Alive = HasCastle(state.PlayerTwo.Units);
-    
-            if (!p1Alive || !p2Alive)
-            {
-                state.IsGameOver = true;
-                state.IsDraw = !p1Alive && !p2Alive;
-                state.Winner = state.IsDraw ? null : (p1Alive ? PlayerId.One : PlayerId.Two);
-                return state;
-            }
-    
-            if (state.Tick < GameSettings.OVERTIME_END_TICK) return state;
-    
-            // Time's up. More buildings standing wins; otherwise the weakest building loses.
-            int p1Count = BuildingCount(state.PlayerOne.Units);
-            int p2Count = BuildingCount(state.PlayerTwo.Units);
-    
             state.IsGameOver = true;
-    
-            if (p1Count != p2Count)
-            {
-                state.Winner = p1Count > p2Count ? PlayerId.One : PlayerId.Two;
-                return state;
-            }
-    
-            int p1Lowest = LowestBuildingHealth(state.PlayerOne.Units);
-            int p2Lowest = LowestBuildingHealth(state.PlayerTwo.Units);
-    
-            state.IsDraw = p1Lowest == p2Lowest;
-            state.Winner = state.IsDraw ? null : (p1Lowest > p2Lowest ? PlayerId.One : PlayerId.Two);
+            state.IsDraw = !p1Alive && !p2Alive;
+            state.Winner = state.IsDraw ? null : (p1Alive ? PlayerId.One : PlayerId.Two);
             return state;
         }
+
+        if (state.Tick < GameSettings.REGULATION_END_TICK) return state;
+
+        int p1Count = BuildingCount(state.PlayerOne.Units);
+        int p2Count = BuildingCount(state.PlayerTwo.Units);
+
+        // Uneven towers at the end of regulation decides it outright — overtime
+        // only happens when both players are level.
+        if (p1Count != p2Count)
+        {
+            state.IsGameOver = true;
+            state.Winner = p1Count > p2Count ? PlayerId.One : PlayerId.Two;
+            return state;
+        }
+
+        // Level on towers, so we're in overtime: next building to fall loses.
+        if (state.Tick < GameSettings.OVERTIME_END_TICK) return state;
+
+        state.IsGameOver = true;
+
+        int p1Lowest = LowestBuildingHealth(state.PlayerOne.Units);
+        int p2Lowest = LowestBuildingHealth(state.PlayerTwo.Units);
+
+        state.IsDraw = p1Lowest == p2Lowest;
+        state.Winner = state.IsDraw ? null : (p1Lowest > p2Lowest ? PlayerId.One : PlayerId.Two);
+        return state;
+    }
     private static PlayerResult UpdatePlayer(PlayerState playerState, GameState gameState)
     {
         List<UnitState> units = playerState.Units;
@@ -137,12 +142,16 @@ public static class GameSim
         {
             state = CardSim.PlayFromHand(state, PlayerId.Two, p2Action.CardIdx, new Vector2Int(p2Action.X, p2Action.Y));
         }
-        if (state.Tick % GameSettings.ELIXIR_TICK_INTERVAL == 0)
+        int elixirInterval = state.IsOvertime
+            ? GameSettings.ELIXIR_TICK_INTERVAL / 2
+            : GameSettings.ELIXIR_TICK_INTERVAL;
+
+        if (state.Tick % elixirInterval == 0)
         {
             state.PlayerOne.Elixir = Math.Min(state.PlayerOne.Elixir + 1, GameSettings.MAX_ELIXIR);
             state.PlayerTwo.Elixir = Math.Min(state.PlayerTwo.Elixir + 1, GameSettings.MAX_ELIXIR);
         }
-             
+
         List<DamageInstance> damageInstances = new();
         List<ProjectileState> aliveProjectiles = new();
         for (int i = 0; i < state.Projectiles.Count; i++)
@@ -188,14 +197,15 @@ public static class GameSim
         state.PlayerTwo = p2Result.playerState;
         
         
+        ApplyDamage(PlayerId.Two, damageInstances, state.PlayerTwo.Units);
+        ApplyDamage(PlayerId.One, damageInstances, state.PlayerOne.Units);
         
         state.PlayerOne.Units.RemoveAll(u => u.Health <= 0);
         state.PlayerTwo.Units.RemoveAll(u => u.Health <= 0);
+        
+        state.Projectiles = aliveProjectiles;
         state = CheckGameOver(state);
         state.Tick++;
-        ApplyDamage(PlayerId.Two, damageInstances, state.PlayerTwo.Units);
-        ApplyDamage(PlayerId.One, damageInstances, state.PlayerOne.Units);
-        state.Projectiles = aliveProjectiles;
         return state;
     }
         
@@ -207,7 +217,7 @@ public static class GameSim
             UnitState target = enemies[instance.Index];
             target.Health -= instance.Damage;
             target.LastDamageTick = target.Ticks;
-            //Console.WriteLine(target.Type + " " + target.Health);
+            
             enemies[instance.Index] = target;
         }
     } 
