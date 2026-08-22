@@ -193,7 +193,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
         foreach (UnitState unit in player.Units)
         {
             Vector2Int pos = unit.Position;
-            UnitDisplay display = UnitDisplay.Displays[unit.Type];
+            EntityDisplay display = EntityDisplay.Displays[unit.Type];
             Vector2Int size = UnitInfos.GetUnitInfo(unit.Type).Size;
             for (int x = 0; x < size.X; x++)
             {
@@ -231,7 +231,8 @@ public override void Update(TimeSpan delta)
         DrawUnits(_gameState.PlayerTwo);
         DrawDeployCursor();
         DrawGUI();
-
+        // roughly we need a timer also timer need sto swap to overtime after 2 mins
+        
         if (!_networkManager.IsConnected)
         {
             _guiLayer.Surface.Print(2, 6, "Waiting for opponent...", Color.Yellow, Color.Black);
@@ -376,7 +377,11 @@ public override void Update(TimeSpan delta)
 
     private void DrawGUI()
     {
-
+        // we want a timer, that swaps to overtime after isOvertime
+        // we want a victory screen for active player if winner
+        // we want a defeat screen for opposite player
+        // if ishost and win = player 1 then victory else lose
+        // if isclient and win = player 2 then victory else lose
         
         int cardWidth = 5;
         int cardHeight = 3;
@@ -416,7 +421,7 @@ public override void Update(TimeSpan delta)
             _guiLayer.Surface.Print(cardX+cardWidth-1, cardY+cardHeight-1, card.Cost.ToString(), Color.Magenta);
             int centerX = cardX + (cardWidth / 2);
             int centerY = cardY + (cardHeight / 2);
-            if (card is UnitCard unitCard && UnitDisplay.Displays.TryGetValue(unitCard.UnitType, out var display))
+            if (card is UnitCard unitCard && EntityDisplay.Displays.TryGetValue(unitCard.UnitType, out var display))
             {
                 ColoredGlyph g = display.Glyphs[0][0];
                 _guiLayer.Surface[centerX, centerY].GlyphCharacter = g.GlyphCharacter;
