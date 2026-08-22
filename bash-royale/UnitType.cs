@@ -177,7 +177,7 @@ public static class UnitInfos
                 true,
                 new WalkForwards(6),
                 new ChaseBehaviour(6),
-                new AttackBehaviour(165),
+                new RangedAttack(165, ProjectileType.CannonBall),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
             UnitType.Cannon => new UnitInfo(
