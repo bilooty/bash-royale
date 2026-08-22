@@ -187,7 +187,7 @@ public static class CardInfos
         CardId.Archer => new UnitCard(id, 3, UnitType.Archer),
         CardId.Goblin => new SwarmCard(id, 2, UnitType.Goblin, SwarmFormations.ThreeRing),        CardId.Wizard => new UnitCard(id, 5, UnitType.Wizard),
         CardId.Hog => new UnitCard(id, 4, UnitType.HogRider),
-        CardId.Barbarian => new SwarmCard(id, 1, UnitType.Barbarian, SwarmFormations.FourSquare),
+        CardId.Barbarian => new SwarmCard(id, 5, UnitType.Barbarian, SwarmFormations.FourSquare),
         CardId.Musketeer => new UnitCard(id, 4, UnitType.Musketeer),
         CardId.MiniPekka => new UnitCard(id, 4, UnitType.MiniPekka),
         CardId.Pekka => new UnitCard(id, 7, UnitType.Pekka),
