@@ -55,7 +55,9 @@ public static class CardSim
         {
             player.Units.Add(new UnitState(
                 unitCard.UnitType, playerId, position, player.NextUnitId+1));
-            player.NextUnitId++;
+            PlayerState p = player;
+            p.NextUnitId = player.NextUnitId + 1;
+            player = p;
         }
         
 
@@ -94,9 +96,8 @@ public static class CardSim
         }
         player.Elixir -= card.Cost;
         System.Console.WriteLine("Card cost was +" + card.Cost);
-      
-        gameState = PlayCard(cardId, gameState, playerId, position);
-
+        
+        
        
         player.Hand.RemoveAt(handIndex);
         player.Deck.Add(cardId);
@@ -116,7 +117,7 @@ public static class CardSim
             gameState.PlayerTwo = player;
         }
 
-        return gameState;
+        return PlayCard(cardId, gameState, playerId, position);
     }
 }
 public static class CardInfos
