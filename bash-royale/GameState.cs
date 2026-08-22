@@ -50,10 +50,10 @@ public static class GameSim
         {
             state = CardSim.PlayFromHand(state, PlayerId.Two, p2Action.CardIdx, new Vector2Int(p2Action.X, p2Action.Y));
         }
-        if (state.Tick % 20 == 0)
+        if (state.Tick % GameSettings.ELIXIR_TICK_INTERVAL == 0)
         {
-            state.PlayerOne.Elixir += 1;
-            state.PlayerTwo.Elixir += 1;
+            state.PlayerOne.Elixir = Math.Min(state.PlayerOne.Elixir + 1, GameSettings.MAX_ELIXIR);
+            state.PlayerTwo.Elixir = Math.Min(state.PlayerTwo.Elixir + 1, GameSettings.MAX_ELIXIR);
         }
         var p1Result = UpdatePlayer(state.PlayerOne, state);
         var p2Result = UpdatePlayer(state.PlayerTwo, state);
