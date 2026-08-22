@@ -165,11 +165,11 @@ public class BattleRenderer : SadConsole.ScreenSurface
             ShapeParameters.CreateBorder(new ColoredGlyph(Color.Black, Color.Gray)));
         
         _guiLayer.Surface.Print(2, 1, "=== HAND ===", Color.Yellow);
-        int cardWidth = 7;
-        int cardHeight = 5;
+        int cardWidth = 5;
+        int cardHeight = 3;
         int spacing = 2;
         int startX = 2;
-        int startY = 2;
+        int startY = 4;
 
         PlayerState player = _gameState.PlayerOne;
         for (int i = 0; i < player.Hand.Count; i++)
@@ -180,9 +180,9 @@ public class BattleRenderer : SadConsole.ScreenSurface
             int cardY = startY;
             _guiLayer.Surface.DrawBox(
                 new Rectangle(cardX, cardY, cardWidth, cardHeight),
-                ShapeParameters.CreateBorder(new ColoredGlyph(Color.White, Color.Black, 0))
+                ShapeParameters.CreateBorder(new ColoredGlyph(Color.Red, Color.Blue, 0))
             );  
-            _guiLayer.Surface.Print(cardX, cardY, "asd", Color.Magenta);
+            _guiLayer.Surface.Print(cardX, cardY, card.Id.ToString(), Color.Green);
         }
 
         _guiLayer.Surface.Print(2, 2, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
