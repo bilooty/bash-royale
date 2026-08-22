@@ -485,14 +485,18 @@ public override void Update(TimeSpan delta)
         int startY = 4;
 
         PlayerState player = _isHost ? _gameState.PlayerOne : _gameState.PlayerTwo;
-        int secondsElapsed = _gameState.Tick / GameSettings.TICKS_PER_SECOND;
-        int totalSeconds = GameSettings.OVERTIME_END_TICK / GameSettings.TICKS_PER_SECOND;
-        int remaining = Math.Max(0, totalSeconds - secondsElapsed);
-        bool isOvertime = _gameState.Tick >= GameSettings.REGULATION_END_TICK;
+        bool isOvertime = _gameState.IsOvertime;
+
+        int phaseEndTick = isOvertime
+            ? GameSettings.OVERTIME_END_TICK
+            : GameSettings.REGULATION_END_TICK;
+
+        // Count down within the current phase, so overtime restarts from 1:00.
+        int remaining = Math.Max(0, (phaseEndTick - _gameState.Tick) / GameSettings.TICKS_PER_SECOND);
 
         string clock = $"{remaining / 60}:{remaining % 60:00}";
         string phase = isOvertime ? "OVERTIME " : "";
-        Color clockColor = isOvertime ? Color.Orange : Color.White;
+        Color clockColor = isOvertime ? Color.Red : Color.White;
 
         _guiLayer.Surface.Print(ArenaMap.Width - phase.Length - clock.Length - 1, 0, phase + clock, clockColor);
 
@@ -575,15 +579,6 @@ public override void Update(TimeSpan delta)
         p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(4, 24)));
         p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(22, 24)));
 
-        // Five knights a side, spread across the width so none share a spawn cell.
-        // Well back from the river so you can watch them route to the bridges.
-        // for (int i = 0; i < 5; i++)
-        // {
-        //     int x = 4 + i * 5;
-        //     p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(x, 21)));
-        //     p2.Units.Add(new UnitState(UnitType.Knight, PlayerId.Two, new Vector2Int(x, 10)));
-        // }
-
         _gameState.PlayerOne = p1;
         _gameState.PlayerTwo = p2;
     }
@@ -660,15 +655,21 @@ public override void Update(TimeSpan delta)
                 UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
                 if (!info.IsBuilding) continue;
 
-                Vector2Int render = Flip(unit.Position);
                 string text = unit.Health.ToString().PadLeft(5);
 
-                int labelX = Math.Clamp(render.X - text.Length / 2, 0, ArenaMap.Width - text.Length);
-                int labelY = render.Y > ArenaMap.Height / 2 ? render.Y + info.Size.Y : render.Y - 1;
+                // Work out the label's anchor in world space, then flip once. Position is
+                // the top-left corner, so centre on the footprint's middle column.
+                int worldCenterX = unit.Position.X + info.Size.X / 2;
+                int worldY = unit.Position.Y > ArenaMap.Height / 2
+                    ? unit.Position.Y + info.Size.Y
+                    : unit.Position.Y - 1;
 
-                if (labelY < 0 || labelY >= ArenaMap.Height) continue;
+                Vector2Int anchor = Flip(new Vector2Int(worldCenterX, worldY));
 
-                _unitLayer.Surface.Print(labelX, labelY, text, Color.White, teamColor);
+                int labelX = Math.Clamp(anchor.X - text.Length / 2, 0, ArenaMap.Width - text.Length);
+                if (anchor.Y < 0 || anchor.Y >= ArenaMap.Height) continue;
+
+                _unitLayer.Surface.Print(labelX, anchor.Y, text, Color.White, Color.Black);
             }
         }
 }
