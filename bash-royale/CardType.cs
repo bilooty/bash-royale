@@ -29,13 +29,13 @@ public enum CardType
 {
     Unit,
     Spell,
+    Swarm,
 }
 
 public record UnitCard(CardId Id, int Cost, UnitType UnitType)
     : CardInfo(Id, CardType.Unit, Cost, ValidLocation.YourSide);
-
 public record SpellCard(CardId Id, int Cost, ProjectileType ProjectileType, Vector2Int Offset, Vector2Int Size) : CardInfo(Id, CardType.Spell, Cost, ValidLocation.BothSides);
-
+public record SwarmCard(CardId Id, int Cost, UnitType UnitType, List<Vector2Int> Offsets) :  CardInfo(Id, CardType.Swarm, Cost, ValidLocation.YourSide);
 public record CardInfo(
     CardId Id,
     CardType Type,

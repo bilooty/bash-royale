@@ -53,7 +53,7 @@ public struct ProjectileState
             new Linger(4)], size:new Vector2Int(3, 3), targetType:TargetType.Location),
         
         [ProjectileType.Zap] = new ProjectileInfo([
-            new InstantDamage(new Vector2Int(3, 3), 120),
+            new InstantDamage(new Vector2Int(3, 3), 200),
             new SummonProj(ProjectileType.ZapEffect),
             
         ], targetType: TargetType.Location, size:new Vector2Int(3,3)),

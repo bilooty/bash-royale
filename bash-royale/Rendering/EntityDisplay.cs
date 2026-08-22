@@ -34,7 +34,7 @@ public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false, 
         [UnitType.Giant] = new EntityDisplay(
             [
                 [
-                    new ColoredGlyph(Color.Red, Color.DarkGray, 'G'),
+                    new ColoredGlyph(Color.Beige, Color.DarkGray, 'G'),
                     new ColoredGlyph(Color.Red, Color.DarkGray, 'G')
                 ],
                 [
