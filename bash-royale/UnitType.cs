@@ -77,7 +77,7 @@ public static class UnitInfos
                 "Giant",
                 1500,
                 1,
-                0,
+                5,
                 20,
                 new WalkForwards(5),
                 new ChaseBehaviour(5), 
