@@ -22,6 +22,10 @@ public class BattleRenderer : SadConsole.ScreenSurface
     private const int COMMAND_DELAY = 10;
 
     private bool _isPrimed = false;
+    // The two decks have to be swapped before the first tick: both machines simulate
+    // both players, so each needs to know the cards the other one brought.
+    private bool _deckSent = false;
+    private bool _matchStarted = false;
     private int? _selectedHandIdx = null;
     private Vector2Int? _hoverCell = null;
     private Dictionary<int, NetworkAction> _localInputs = new();
@@ -280,6 +284,30 @@ public override void Update(TimeSpan delta)
             return; 
         }        
 
+        // --- DECK HANDSHAKE ---
+        if (!_deckSent)
+        {
+            _networkManager.SendDeck(Decks.Current);
+            _deckSent = true;
+        }
+
+        if (!_matchStarted)
+        {
+            if (_networkManager.RemoteDeck is not List<CardId> remoteDeck)
+            {
+                _guiLayer.Surface.Print(2, 6, "Exchanging decks...", Color.Yellow, Color.Black);
+                base.Update(delta);
+                return;
+            }
+
+            // Player One is always the host, so the decks go in host-first order.
+            _gameState = _isHost
+                ? GameState.CreateNew(Decks.Current, remoteDeck)
+                : GameState.CreateNew(remoteDeck, Decks.Current);
+            SetupTestBattle();
+            _matchStarted = true;
+        }
+
         // --- PRIME THE PUMP ---
         // The moment we connect, send 10 future ticks of NoAction so both 
         // clients have a buffer to start playing immediately without freezing.
@@ -413,17 +441,7 @@ public override void Update(TimeSpan delta)
             Color color = isSelected ? Color.White : (player.Elixir >= card.Cost ? Color.Cyan : Color.Gray);
             int cardX = startX + (i * (cardWidth + spacing));
             int cardY = startY;
-            string label = card.Id switch
-            {
-                CardId.Knight  => "KNGHT",
-                CardId.Giant   => "GIANT",
-                CardId.Archer  => "ARCHR",
-                CardId.Goblin  => "GOBLN",
-                CardId.Wizard  => "WIZRD",
-                CardId.Hog   => "RIDER",
-                CardId.Zap => "ZAP",
-                _ => card.Id.ToString()[..5],
-                };
+            string label = CardInfos.GetShortLabel(card.Id);
             _guiLayer.Surface.SetGlyph(cardX, cardY, 218 , color);
             _guiLayer.Surface.SetGlyph(cardX+cardWidth-1, cardY, 191 , color);
 
