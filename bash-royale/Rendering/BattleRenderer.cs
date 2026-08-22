@@ -288,7 +288,7 @@ public override void Update(TimeSpan delta)
         int startX = 1;
         int startY = 4;
 
-        PlayerState player = _gameState.PlayerOne;
+        PlayerState player = _isHost ? _gameState.PlayerOne :  _gameState.PlayerTwo;
         for (int i = 0; i < player.Hand.Count; i++)
         {
             CardInfo card = CardInfos.GetCardInfo(player.Hand[i]);
