@@ -351,11 +351,11 @@ public override void Update(TimeSpan delta)
         PlayerState p2 = _gameState.PlayerTwo;
 
         // Player Two defends the top, Player One the bottom.
-        p2.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(13, 2)));
+        p2.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(13, 3)));
         p2.Units.Add(new UnitState(UnitType.Tower,  PlayerId.Two, new Vector2Int(4, 6)));
         p2.Units.Add(new UnitState(UnitType.Tower,  PlayerId.Two, new Vector2Int(22, 6)));
 
-        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.One, new Vector2Int(13, 29)));
+        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.One, new Vector2Int(13, 27)));
         p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(4, 25)));
         p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(22, 25)));
 
