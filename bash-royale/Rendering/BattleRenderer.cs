@@ -156,21 +156,65 @@ public class BattleRenderer : SadConsole.ScreenSurface
     
     // Highlights the cell under the cursor while a card is armed: white if the spot is legal,
     // dark red if it isn't. Draw this after DrawUnits so it sits on top.
+// Highlights the cell(s) under the cursor while a card is armed: white if the spot is legal,
+    // dark red if it isn't. Draw this after DrawUnits so it sits on top.
     private void DrawDeployCursor()
     {
         if (_selectedHandIdx is not int handIdx) return;
-        if (_hoverCell is not Vector2Int cell) return;
-        if (cell.X < 0 || cell.X >= _unitLayer.Surface.Width) return;
-        if (cell.Y < 0 || cell.Y >= _unitLayer.Surface.Height) return;
+        if (_hoverCell is not Vector2Int visualCell) return;
+        
+        // We still want to bounds check the mouse position
+        if (visualCell.X < 0 || visualCell.X >= _unitLayer.Surface.Width) return;
+        if (visualCell.Y < 0 || visualCell.Y >= _unitLayer.Surface.Height) return;
 
         PlayerState player = _isHost ? _gameState.PlayerOne : _gameState.PlayerTwo;
         if (handIdx >= player.Hand.Count) return;
 
         CardInfo card = CardInfos.GetCardInfo(player.Hand[handIdx]);
-        // cell is a screen coordinate: validate in world space, but draw where the cursor is.
-        bool valid = IsValidDeploySpot(Flip(cell), card.ValidLocation);
+        
+        // 1. Get the center of the deployment in logical space to check validity
+        Vector2Int logicalCenter = Flip(visualCell);
+        bool valid = IsValidDeploySpot(logicalCenter, card.ValidLocation);
+        Color highlightColor = valid ? Color.White : Color.DarkRed;
 
-        _unitLayer.Surface[cell.X, cell.Y].Background = valid ? Color.White : Color.DarkRed;
+        // 2. Default to a 1x1 footprint for standard units
+        int sizeX = 1;
+        int sizeY = 1;
+        int offsetX = 0;
+        int offsetY = 0;
+
+        // 3. If it's a spell, grab its specific area of effect
+        if (card is SpellCard spellCard)
+        {
+            sizeX = spellCard.Size.X;
+            sizeY = spellCard.Size.Y;
+            offsetX = spellCard.Offset.X;
+            offsetY = spellCard.Offset.Y;
+        }
+
+        // 4. Draw the footprint
+        for (int x = 0; x < sizeX; x++)
+        {
+            for (int y = 0; y < sizeY; y++)
+            {
+                // Calculate where this specific piece of the spell lands on the logical game board
+                Vector2Int logicalPart = new Vector2Int(
+                    logicalCenter.X + offsetX + x, 
+                    logicalCenter.Y + offsetY + y
+                );
+                
+                // Translate it back to the visual screen for rendering!
+                // (This automatically handles spinning the spell 180 degrees for Player 2)
+                Vector2Int renderPart = Flip(logicalPart);
+
+                // Prevent drawing outside the boundaries of the console window
+                if (renderPart.X >= 0 && renderPart.X < _unitLayer.Surface.Width &&
+                    renderPart.Y >= 0 && renderPart.Y < _unitLayer.Surface.Height)
+                {
+                    _unitLayer.Surface[renderPart.X, renderPart.Y].Background = highlightColor;
+                }
+            }
+        }
     }
 
 
@@ -225,21 +269,21 @@ public class BattleRenderer : SadConsole.ScreenSurface
 public override void Update(TimeSpan delta)
     {
         _networkManager.PollEvents();
-    
-        _unitLayer.Surface.Clear();
-        _guiLayer.Surface.Clear();
-        DrawUnits(_gameState.PlayerOne);
-        DrawUnits(_gameState.PlayerTwo);
-        DrawDeployCursor();
-        DrawGUI();
-        // roughly we need a timer also timer need sto swap to overtime after 2 mins
-        
+
         if (!_networkManager.IsConnected)
         {
+            Redraw();
             _guiLayer.Surface.Print(2, 6, "Waiting for opponent...", Color.Yellow, Color.Black);
             base.Update(delta);
-            return; 
-        }        
+            return;
+        }
+
+        if (_gameState.IsGameOver)
+        {
+            Redraw();
+            base.Update(delta);
+            return;
+        }   
 
         // --- DECK HANDSHAKE ---
         if (!_deckSent)
@@ -326,10 +370,9 @@ public override void Update(TimeSpan delta)
             }
         }
     
-        DrawUnits(_gameState.PlayerOne);
-        DrawUnits(_gameState.PlayerTwo);
-        DrawDeployCursor();
+        Redraw();
         base.Update(delta);
+        
     }
     private void DrawArena()
     {
@@ -378,12 +421,6 @@ public override void Update(TimeSpan delta)
 
     private void DrawGUI()
     {
-        // we want a timer, that swaps to overtime after isOvertime
-        // we want a victory screen for active player if winner
-        // we want a defeat screen for opposite player
-        // if ishost and win = player 1 then victory else lose
-        // if isclient and win = player 2 then victory else lose
-        
         int cardWidth = 5;
         int cardHeight = 3;
         int spacing = 2;
@@ -391,6 +428,17 @@ public override void Update(TimeSpan delta)
         int startY = 4;
 
         PlayerState player = _isHost ? _gameState.PlayerOne : _gameState.PlayerTwo;
+        int secondsElapsed = _gameState.Tick / GameSettings.TICKS_PER_SECOND;
+        int totalSeconds = GameSettings.OVERTIME_END_TICK / GameSettings.TICKS_PER_SECOND;
+        int remaining = Math.Max(0, totalSeconds - secondsElapsed);
+        bool isOvertime = _gameState.Tick >= GameSettings.REGULATION_END_TICK;
+
+        string clock = $"{remaining / 60}:{remaining % 60:00}";
+        string phase = isOvertime ? "OVERTIME " : "";
+        Color clockColor = isOvertime ? Color.Orange : Color.White;
+
+        _guiLayer.Surface.Print(ArenaMap.Width - phase.Length - clock.Length - 1, 0, phase + clock, clockColor);
+
         for (int i = 0; i < player.Hand.Count; i++)
         {
             CardInfo card = CardInfos.GetCardInfo(player.Hand[i]);
@@ -490,4 +538,55 @@ public override void Update(TimeSpan delta)
         
         
     }
+    
+    private void DrawEndScreen()
+    {
+        if (!_gameState.IsGameOver) return;
+
+        PlayerId localPlayer = _isHost ? PlayerId.One : PlayerId.Two;
+
+        string message;
+        Color color;
+
+        if (_gameState.IsDraw)
+        {
+            message = "DRAW";
+            color = Color.Yellow;
+        }
+        else if (_gameState.Winner == localPlayer)
+        {
+            message = "VICTORY";
+            color = Color.Gold;
+        }
+        else
+        {
+            message = "DEFEAT";
+            color = Color.Red;
+        }
+
+        int bannerY = ArenaMap.Height / 2 - 1;
+        int bannerX = (ArenaMap.Width - message.Length) / 2;
+
+        for (int x = 0; x < ArenaMap.Width; x++)
+        {
+            for (int y = bannerY - 1; y <= bannerY + 1; y++)
+            {
+                _unitLayer.Surface[x, y].Background = Color.Black;
+                _unitLayer.Surface[x, y].GlyphCharacter = ' ';
+            }
+        }
+
+        _unitLayer.Surface.Print(bannerX, bannerY, message, color);
+    }
+    
+        private void Redraw()
+        {
+            _unitLayer.Surface.Clear();
+            _guiLayer.Surface.Clear();
+            DrawUnits(_gameState.PlayerOne);
+            DrawUnits(_gameState.PlayerTwo);
+            DrawDeployCursor();
+            DrawGUI();
+            DrawEndScreen();
+        }
 }

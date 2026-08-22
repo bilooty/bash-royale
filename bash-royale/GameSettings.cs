@@ -9,7 +9,8 @@
 
     public const int KING_TOWER_HEALTH = 2400;
     public const int PRINCESS_TOWER_HEALTH = 1400;
-
+    
+    public const int TICKS_PER_SECOND = 20;
     public const int REGULATION_END_TICK = 2400;   // 2 minutes 
     public const int OVERTIME_END_TICK   = 3600;   // 3 minutes 
 }
