@@ -19,6 +19,7 @@ public enum CardId
     Cannon,
     GoblinCage,
     Pekka,
+    ThreeM,
     Skarmy,
 }
 
@@ -195,7 +196,9 @@ public static class CardInfos
         CardId.Skeleton => new SwarmCard(id, 1, UnitType.Skeleton, SwarmFormations.ThreeRing),        CardId.Dragon => new UnitCard(id, 5, UnitType.Dragon),
         CardId.Cannon => new UnitCard(id, 4, UnitType.Cannon),
         CardId.GoblinCage => new UnitCard(id, 4, UnitType.GoblinCage),
+        CardId.ThreeM => new SwarmCard(id, 9, UnitType.Musketeer, SwarmFormations.ThreeRing),
         CardId.Skarmy => new SwarmCard(id, 3, UnitType.Skeleton, SwarmFormations.EightBlock),
+
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
     };
 
@@ -220,6 +223,7 @@ public static class CardInfos
         CardId.Valkyrie  => "VALK",
         CardId.Skeleton  => "SKLTN",
         CardId.Skarmy => "SKRMY",
+        CardId.ThreeM => "3MUSK",
         CardId.Dragon    => "DRAGN",
         CardId.Cannon    => "CNNON",
         CardId.GoblinCage  => "GCAGE",
