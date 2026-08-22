@@ -10,12 +10,12 @@ public struct PlayerState
     public int Elixir;
     public List<CardId> Hand;
     public List<CardId> Deck;
-    
+    public Vector2Int CrownTowerLoc => Units[0].Position;
     
 
 
     private const int HAND_SIZE = 4;
-
+    
     public static PlayerState CreateNew(PlayerId id) => CreateNew(id, Decks.CreateDefault());
 
     public static PlayerState CreateNew(PlayerId id, List<CardId> chosenDeck)

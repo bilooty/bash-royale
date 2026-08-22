@@ -39,6 +39,8 @@ public class BattleRenderer : SadConsole.ScreenSurface
     private NetworkManager _networkManager;
     private NetworkAction? _pendingLocalAction;
     private EmoteManager _emoteManager = new();
+    private bool[,] _groundOccupied;
+    private const float ShadowDarkness = 0.95f;
     public BattleRenderer(string ipAddress, bool isHost) : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
     {
         _isHost = isHost;
@@ -63,6 +65,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
         // Purely visual overlays. SadConsole walks children top-down and stops at the first
         // one that handles the mouse, so leaving these on would swallow every arena click.
         _unitLayer.UseMouse = false;
+        _groundOccupied = new bool[GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT];
         _guiLayer = new ScreenSurface(ArenaMap.Width, 8);
         _guiLayer.Surface.DefaultBackground = Color.Transparent;
         _guiLayer.UseMouse = false;
@@ -193,6 +196,39 @@ public class BattleRenderer : SadConsole.ScreenSurface
             }
         }
     }
+    private static List<(Vector2Int topLeft, Vector2Int size)> DeployFootprints(CardInfo card, Vector2Int origin)
+    {
+        List<(Vector2Int, Vector2Int)> footprints = new();
+
+        switch (card)
+        {
+            case SpellCard spell:
+                footprints.Add((origin + spell.Offset, spell.Size));
+                break;
+
+            case SwarmCard swarm:
+            {
+                // Members are spawned as top-left origins at origin + offset, matching
+                // CardSim.SpawnGroup, so the preview lines up with where they land.
+                Vector2Int size = UnitInfos.GetUnitInfo(swarm.UnitType).Size;
+                foreach (Vector2Int offset in swarm.Offsets)
+                {
+                    footprints.Add((origin + offset, size));
+                }
+                break;
+            }
+
+            case UnitCard unit:
+                footprints.Add((origin, UnitInfos.GetUnitInfo(unit.UnitType).Size));
+                break;
+
+            default:
+                footprints.Add((origin, new Vector2Int(1, 1)));
+                break;
+        }
+
+        return footprints;
+    }
     public override bool ProcessMouse(MouseScreenObjectState state)
     {
         _hoverCell = state.IsOnScreenObject
@@ -210,7 +246,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
             if (handIdx >= player.Hand.Count) return base.ProcessMouse(state);
             CardInfo card = CardInfos.GetCardInfo(player.Hand[handIdx]);
 
-            if (IsValidDeploySpot(deployPosition, card.ValidLocation))
+            if (IsValidDeployment(card, deployPosition))
             {
                 // Just save the intent. The Update loop assigns the Tick and PlayerId.
                 _pendingLocalAction = new NetworkAction
@@ -234,18 +270,36 @@ public class BattleRenderer : SadConsole.ScreenSurface
     private Vector2Int Flip(Vector2Int p) =>
         _isHost ? p : new Vector2Int(ArenaMap.Width - 1 - p.X, ArenaMap.Height - 1 - p.Y);
 
-    private bool IsValidDeploySpot(Vector2Int position, ValidLocation validLocation)
+    private bool IsValidDeployment(CardInfo card, Vector2Int origin)
+    {
+        foreach ((Vector2Int topLeft, Vector2Int size) in DeployFootprints(card, origin))
+        {
+            for (int x = 0; x < size.X; x++)
+            {
+                for (int y = 0; y < size.Y; y++)
+                {
+                    if (!IsValidCell(new Vector2Int(topLeft.X + x, topLeft.Y + y), card)) return false;
+                }
+            }
+        }
+
+        return true;
+    }
+    private bool IsValidCell(Vector2Int position, CardInfo card)
     {
         if (position.X < 0 || position.X >= ArenaMap.Width) return false;
         if (position.Y < 0 || position.Y >= ArenaMap.Height) return false;
+ 
+        // Spells land anywhere in bounds — a fireball should reach troops on a bridge or
+        // a tower behind water. Only bodies need somewhere to stand.
+        if (card.ValidLocation == ValidLocation.BothSides) return true;
+ 
         if (!ArenaMap.IsPassable(position, MovementLayer.Ground)) return false;
-
-        if (validLocation == ValidLocation.BothSides) return true;
-
+ 
         // Units can only be deployed on your own side of the river until you've crossed it.
         return _isHost ? position.Y > ArenaMap.RiverEndRow : position.Y < ArenaMap.RiverStartRow;
     }
-    
+
     private void DrawDeployCursor()
     {
         if (_selectedHandIdx is not int handIdx) return;
@@ -259,47 +313,22 @@ public class BattleRenderer : SadConsole.ScreenSurface
         if (handIdx >= player.Hand.Count) return;
 
         CardInfo card = CardInfos.GetCardInfo(player.Hand[handIdx]);
-        
-        // 1. Get the center of the deployment in logical space to check validity
-        Vector2Int logicalCenter = Flip(visualCell);
-        bool valid = IsValidDeploySpot(logicalCenter, card.ValidLocation);
-        Color highlightColor = valid ? Color.White : Color.DarkRed;
 
-        // 2. Default to a 1x1 footprint for standard units
-        int sizeX = 1;
-        int sizeY = 1;
-        int offsetX = 0;
-        int offsetY = 0;
+        Vector2Int origin = Flip(visualCell);
+        Color highlightColor = IsValidDeployment(card, origin) ? Color.White : Color.DarkRed;
 
-        // 3. If it's a spell, grab its specific area of effect
-        if (card is SpellCard spellCard)
+        foreach ((Vector2Int topLeft, Vector2Int size) in DeployFootprints(card, origin))
         {
-            sizeX = spellCard.Size.X;
-            sizeY = spellCard.Size.Y;
-            offsetX = spellCard.Offset.X;
-            offsetY = spellCard.Offset.Y;
-        }
-
-        // 4. Draw the footprint
-        for (int x = 0; x < sizeX; x++)
-        {
-            for (int y = 0; y < sizeY; y++)
+            for (int x = 0; x < size.X; x++)
             {
-                // Calculate where this specific piece of the spell lands on the logical game board
-                Vector2Int logicalPart = new Vector2Int(
-                    logicalCenter.X + offsetX + x, 
-                    logicalCenter.Y + offsetY + y
-                );
-                
-                // Translate it back to the visual screen for rendering!
-                // (This automatically handles spinning the spell 180 degrees for Player 2)
-                Vector2Int renderPart = Flip(logicalPart);
-
-                // Prevent drawing outside the boundaries of the console window
-                if (renderPart.X >= 0 && renderPart.X < _unitLayer.Surface.Width &&
-                    renderPart.Y >= 0 && renderPart.Y < _unitLayer.Surface.Height)
+                for (int y = 0; y < size.Y; y++)
                 {
-                    _unitLayer.Surface[renderPart.X, renderPart.Y].Background = highlightColor;
+                    Vector2Int render = Flip(new Vector2Int(topLeft.X + x, topLeft.Y + y));
+
+                    if (render.X < 0 || render.X >= _unitLayer.Surface.Width) continue;
+                    if (render.Y < 0 || render.Y >= _unitLayer.Surface.Height) continue;
+
+                    _unitLayer.Surface[render.X, render.Y].Background = highlightColor;
                 }
             }
         }
@@ -320,14 +349,17 @@ public class BattleRenderer : SadConsole.ScreenSurface
     }
     
 
-    public void DrawUnits(PlayerState player)
+    public void DrawUnits(PlayerState player, MovementLayer layer)
     {
         Color teamColor = (player.Id == PlayerId.One) == _isHost ? p1Color : p2Color;
         foreach (UnitState unit in player.Units)
         {
+            UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
+            if (info.Layer != layer) continue;
+
             Vector2Int pos = unit.Position;
             EntityDisplay display = EntityDisplay.Displays[unit.Type];
-            Vector2Int size = UnitInfos.GetUnitInfo(unit.Type).Size;
+            Vector2Int size = info.Size;
             for (int x = 0; x < size.X; x++)
             {
                 for (int y = 0; y < size.Y; y++)
@@ -337,18 +369,19 @@ public class BattleRenderer : SadConsole.ScreenSurface
                     int renderX = render.X;
                     int renderY = render.Y;
 
+                    if (renderX < 0 || renderX >= _unitLayer.Surface.Width) continue;
+                    if (renderY < 0 || renderY >= _unitLayer.Surface.Height) continue;
+
+                    bool coveringGround = layer == MovementLayer.Air && _groundOccupied[renderX, renderY];
+
                     _unitLayer.Surface[renderX, renderY].Foreground = glyph.Foreground;
-                    _unitLayer.Surface[renderX, renderY].Background = teamColor;
+                    if (!coveringGround)
+                        _unitLayer.Surface[renderX, renderY].Background = teamColor;
                     _unitLayer.Surface[renderX, renderY].GlyphCharacter = glyph.GlyphCharacter;
-                    // _unitLayer.Surface[renderX, renderY].GlyphCharacter = unit.CurrentBehaviour switch
-                    // {
-                    //     Behaviour.Neutral => 'N',
-                    //     Behaviour.Attack => 'A',
-                    //     Behaviour.Chase => 'C',
-                    // };
-                    //System.Console.WriteLine(player.NextUnitId);
-                    //_unitLayer.Surface[renderX, renderY - 1].GlyphCharacter = unit.Id.ToString()[0];
-                    
+
+                    if (layer == MovementLayer.Ground)
+                        _groundOccupied[renderX, renderY] = true;
+
                     if ((unit.Ticks - unit.LastAttackTick) < 1)
                     {
                         _unitLayer.Surface[renderX, renderY].GlyphCharacter = ' ';
@@ -362,59 +395,74 @@ public class BattleRenderer : SadConsole.ScreenSurface
             }
         }
     }
+    public void DrawShadows(PlayerState player)
+    {
+        Color shadowColor = (player.Id == PlayerId.One) == _isHost ? p1Color : p2Color;
+        foreach (UnitState unit in player.Units)
+        {
+            UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
+            if (info.Layer != MovementLayer.Air) continue;
+
+            for (int x = 0; x < info.Size.X; x++)
+            {
+                for (int y = 0; y < info.Size.Y; y++)
+                {
+                    Vector2Int render = Flip(new Vector2Int(unit.Position.X + x, unit.Position.Y + y));
+
+                    int shadowX = render.X;
+                    int shadowY = render.Y + 1;
+
+                    if (shadowX < 0 || shadowX >= _unitLayer.Surface.Width) continue;
+                    if (shadowY < 0 || shadowY >= _unitLayer.Surface.Height) continue;
+                    if (_groundOccupied[shadowX, shadowY]) continue;
+
+                    _unitLayer.Surface[shadowX, shadowY].Background =
+                        Surface[shadowX, shadowY].Background * ShadowDarkness;
+                }
+            }
+        }
+    }
     public void DrawUnitHP(PlayerState player)
     {
         foreach (UnitState unit in player.Units)
         {
-            if (unit.Type ==  UnitType.Tower || unit.Type == UnitType.Castle) continue;
+            if (unit.Type == UnitType.Tower || unit.Type == UnitType.Castle) continue;
+
             UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
             if (unit.Health >= info.MaxHealth) continue;
+
             float healthPct = (float)unit.Health / info.MaxHealth;
-            
+
             Color barColor;
-            if (healthPct > 0.6f)
-                barColor = Color.LimeGreen;
-            else if (healthPct > 0.3f)
-                barColor = Color.Yellow;
-            else
-                barColor = Color.Red;
-            
-            int barWidth = info.Size.X;
-            int barWorldY = unit.Position.Y + info.Size.Y;
-            int filled = Math.Max(1, (int)Math.Ceiling(barWidth * healthPct));
+            if (healthPct > 0.6f) barColor = Color.LimeGreen;
+            else if (healthPct > 0.3f) barColor = Color.Yellow;
+            else barColor = Color.Red;
 
-            for (int x = 0; x < barWidth; x++)
+            Vector2Int cornerA = Flip(unit.Position);
+            Vector2Int cornerB = Flip(new Vector2Int(
+                unit.Position.X + info.Size.X - 1,
+                unit.Position.Y + info.Size.Y - 1));
+
+            int barX = Math.Max(cornerA.X, cornerB.X) + 1;
+            int topY = Math.Min(cornerA.Y, cornerB.Y);
+
+            int barHeight = info.Size.Y;
+            int filled = Math.Max(1, (int)Math.Ceiling(barHeight * healthPct));
+
+            for (int i = 0; i < barHeight; i++)
             {
-                int pos;
-                PlayerId myId = _isHost ? PlayerId.One : PlayerId.Two;
-                if (unit.Owner == myId)
-                {
-                    pos = unit.Position.X -1;
-                    System.Console.WriteLine($"{pos }p1");
-                }
-                else
-                {
-                    pos = unit.Position.X + 1;
-                    System.Console.WriteLine($"{pos }p2");
+                int rowY = topY + i;
 
-                }
-                Vector2Int render = Flip(new Vector2Int(pos, barWorldY ));
-                if (render.X < 0 || render.X >= _unitLayer.Surface.Width) continue;
-                if (render.Y < 0 || render.Y >= _unitLayer.Surface.Height) continue;
-                if (x < filled)
-                {
-                    _unitLayer.Surface[render.X, render.Y].GlyphCharacter = (char)220;
-                    _unitLayer.Surface[render.X, render.Y].Foreground = barColor;
-                }
-                else
-                {
-                    _unitLayer.Surface[render.X, render.Y].GlyphCharacter = (char)220;
-                    _unitLayer.Surface[render.X, render.Y].Foreground = Color.DarkGray;
-                }
+                if (barX < 0 || barX >= _unitLayer.Surface.Width) continue;
+                if (rowY < 0 || rowY >= _unitLayer.Surface.Height) continue;
+
+                _unitLayer.Surface[barX, rowY].GlyphCharacter = (char)221;
+                _unitLayer.Surface[barX, rowY].Foreground = i >= barHeight - filled ? barColor : Color.DarkGray;
             }
-
         }
     }
+
+
 public override void Update(TimeSpan delta)
     {
         _networkManager.PollEvents();
@@ -625,15 +673,16 @@ public override void Update(TimeSpan delta)
             _guiLayer.Surface.Print(cardX+cardWidth-1, cardY+cardHeight-1, card.Cost.ToString(), Color.Magenta);
             int centerX = cardX + (cardWidth / 2);
             int centerY = cardY + (cardHeight / 2);
-            if (card is UnitCard unitCard && EntityDisplay.Displays.TryGetValue(unitCard.UnitType, out var display))
+            ColoredGlyph? g = CardInfos.GetDisplayGlyph(card.Id);
+            if (g is { } gg)
             {
-                ColoredGlyph g = display.Glyphs[0][0];
-                _guiLayer.Surface[centerX, centerY].GlyphCharacter = g.GlyphCharacter;
-                _guiLayer.Surface[centerX, centerY].Foreground = g.Foreground;
+                _guiLayer.Surface.SetCellAppearance(centerX, centerY, gg);
+                _guiLayer.Surface[centerX, centerY].Background = Color.Black;
             }
             else
             {
                 _guiLayer.Surface.Print(centerX, centerY, "*", Color.Red);
+                
             }
         }
         
@@ -726,8 +775,13 @@ public override void Update(TimeSpan delta)
         {
             _unitLayer.Surface.Clear();
             _guiLayer.Surface.Clear();
-            DrawUnits(_gameState.PlayerOne);
-            DrawUnits(_gameState.PlayerTwo);
+            Array.Clear(_groundOccupied, 0, _groundOccupied.Length);
+            DrawUnits(_gameState.PlayerOne, MovementLayer.Ground);
+            DrawUnits(_gameState.PlayerTwo, MovementLayer.Ground);
+            DrawShadows(_gameState.PlayerOne);
+            DrawShadows(_gameState.PlayerTwo);
+            DrawUnits(_gameState.PlayerOne, MovementLayer.Air);
+            DrawUnits(_gameState.PlayerTwo, MovementLayer.Air);
             DrawProjectiles();
             DrawBuildingHealth(_gameState.PlayerOne);
             DrawBuildingHealth(_gameState.PlayerTwo);
