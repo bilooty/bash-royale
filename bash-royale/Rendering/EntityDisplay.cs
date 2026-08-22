@@ -43,7 +43,7 @@ public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false)
         ),
         [UnitType.Goblin] = new EntityDisplay(
             [
-                [new ColoredGlyph(Color.Green, Color.DarkGray, 'g')]
+                [new ColoredGlyph(Color.Lime, Color.DarkGray, 'g')]
             ]
         ),
         [UnitType.Wizard] = new EntityDisplay(

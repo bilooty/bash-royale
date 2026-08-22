@@ -253,12 +253,12 @@ public class BattleRenderer : SadConsole.ScreenSurface
                     _unitLayer.Surface[renderX, renderY].Background = teamColor;
                     _unitLayer.Surface[renderX, renderY].GlyphCharacter = glyph.GlyphCharacter;
 
-                    if ((unit.Ticks - unit.LastAttackTick) < 2)
+                    if ((unit.Ticks - unit.LastAttackTick) < 1)
                     {
                         _unitLayer.Surface[renderX, renderY].GlyphCharacter = ' ';
                     }
 
-                    if ((unit.Ticks - unit.LastDamageTick) < 2)
+                    if ((unit.Ticks - unit.LastDamageTick) < 1)
                     {
                         _unitLayer.Surface[renderX, renderY].Background = Color.Red;
                     }
