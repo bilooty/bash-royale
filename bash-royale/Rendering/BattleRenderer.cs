@@ -111,8 +111,16 @@ public class BattleRenderer : SadConsole.ScreenSurface
         {
             if (keyboard.IsKeyPressed(HandSlotKeys[i]))
             {
-                _selectedHandIdx = (_selectedHandIdx == i) ? null : i;
-                return true;
+                PlayerId id = _isHost ? PlayerId.One : PlayerId.Two;
+                PlayerState state = GameState.GetPlayerState(_gameState, id);
+                CardInfo card = CardInfos.GetCardInfo(state.Hand[i]);
+                if (state.Elixir >= card.Cost)
+                {
+                    _selectedHandIdx = (_selectedHandIdx == i) ? null : i;
+                    return true;
+                }
+             
+               
             }
         }
         return base.ProcessKeyboard(keyboard);
@@ -121,15 +129,16 @@ public class BattleRenderer : SadConsole.ScreenSurface
     {
         foreach (ProjectileState proj in _gameState.Projectiles)
         {
+            
             if (!EntityDisplay.Projectiles.TryGetValue(proj.Type, out EntityDisplay display))
                 continue; // no visual for this projectile type, skip it
-
+            if (display.isFlashing && tick % 2 == 0) continue;
             ColoredGlyph glyph = display.Glyphs[0][0];
-
+            //System.Console.WriteLine(proj.Type + "<-- drawing this");
             Vector2Int? sizeHuh = ProjectileState.Infos[proj.Type].Size;
 
             Vector2Int size = sizeHuh ?? new Vector2Int(1, 1);
-            System.Console.WriteLine("Size: " + size.X + ", " + size.Y + proj.Type);
+            //System.Console.WriteLine("Size: " + size.X + ", " + size.Y + proj.Type);
             for (int x = 0; x < size.X; x++)
             {
                 for (int y = 0; y < size.Y; y++)
