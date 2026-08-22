@@ -75,7 +75,7 @@ public class AttackBehaviour(int damage) : IUnitBehaviour
      
     public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
     {
-        
+        System.Console.WriteLine("bleehhh");
         if (target is null) return ActionResult.NoAttack(unit);
         
         UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);

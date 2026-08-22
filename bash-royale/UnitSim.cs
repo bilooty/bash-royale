@@ -28,7 +28,7 @@ public static class UnitSim
             bool inAttackRange = InRange(curUnit.Position, target.Value.Position, info.AttackRange);
             if (inAttackRange)
             {
-                behaviour = info.NeutralBehaviour;
+                behaviour = info.AttackBehaviour;
             
             }
             else

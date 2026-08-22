@@ -127,10 +127,14 @@ public class BattleRenderer : SadConsole.ScreenSurface
                     //_unitLayer.Surface[pos.X, pos.Y].Foreground = glyph.Foreground;
                     _unitLayer.Surface[pos.X, pos.Y].GlyphCharacter = glyph.GlyphCharacter;
                     //System.Console.WriteLine("[" + glyph.GlyphCharacter + "] ticks: " + unit.Ticks + " last tick:" + unit.LastAttackTick);
-                    if ((unit.Ticks - unit.LastAttackTick) < 10)
+                    if ((unit.Ticks - unit.LastAttackTick) < 5)
                     {
-                       
                         _unitLayer.Surface[pos.X, pos.Y].GlyphCharacter = ' ';
+                    }
+                    if ((unit.Ticks - unit.LastDamageTick) < 5)
+                    {
+
+                        _unitLayer.Surface[pos.X, pos.Y].Background = Color.Red;
                     }
                 }
             }
