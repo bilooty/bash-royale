@@ -1,10 +1,9 @@
-using Microsoft.VisualBasic;
-
 namespace bash_royale;
 
 public enum ProjectileType
 {
     Zap,
+    FireBall,
     ZapEffect
 }
 
@@ -41,6 +40,9 @@ public struct ProjectileState
         [ProjectileType.ZapEffect] = new ProjectileInfo(
             [
             new Linger(10)])
+        [ProjectileType.Zap] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 120)]),
+        [ProjectileType.FireBall] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 450)]),
+        [ProjectileType.ZapEffect] = new ProjectileInfo([])
     };
 }
 
@@ -107,4 +109,4 @@ public record ProjectileResult(
     ProjectileState State,
     List<DamageInstance> DamageInstances,
     List<ProjectileState> NewProjectiles
-    ); 
+    );

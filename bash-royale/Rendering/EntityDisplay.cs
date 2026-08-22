@@ -1,4 +1,4 @@
-namespace bash_royale.Scenes;
+namespace bash_royale.Rendering;
 
 
 

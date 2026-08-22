@@ -191,12 +191,12 @@ public static class GameSim
         
         
         
+        ApplyDamage(PlayerId.Two, damageInstances, state.PlayerTwo.Units);
+        ApplyDamage(PlayerId.One, damageInstances, state.PlayerOne.Units);
         state.PlayerOne.Units.RemoveAll(u => u.Health <= 0);
         state.PlayerTwo.Units.RemoveAll(u => u.Health <= 0);
         state = CheckGameOver(state);
         state.Tick++;
-        ApplyDamage(PlayerId.Two, damageInstances, state.PlayerTwo.Units);
-        ApplyDamage(PlayerId.One, damageInstances, state.PlayerOne.Units);
         state.Projectiles = aliveProjectiles;
         return state;
     }
