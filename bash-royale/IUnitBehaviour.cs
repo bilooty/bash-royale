@@ -1,5 +1,5 @@
 ﻿namespace bash_royale;
-
+using System;
 public static class Movement
 {
     public const int MOVE_THRESHOLD = 100;   // 100 progress = one cell

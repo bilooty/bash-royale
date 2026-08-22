@@ -1,29 +1,65 @@
 using System.Runtime.CompilerServices;
+using bash_royale.Networking;
+using SadConsole.Input;
 
 namespace bash_royale.Scenes;
 
 // UI/BattleRenderer.cs
 public class BattleRenderer : SadConsole.ScreenSurface
 {
-    private GameState _gameState;
-    private ScreenSurface _unitLayer; 
-    private ScreenSurface _guiLayer;
+    private static readonly Keys[] HandSlotKeys = { Keys.D1, Keys.D2, Keys.D3, Keys.D4 };
 
-    public BattleRenderer() : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
+    private GameState _gameState;
+    private ScreenSurface _unitLayer;
+    private ScreenSurface _guiLayer;
+    private double _timer = 0.05f;
+    private string _ipAddress = "127.0.0.1";
+    private bool _isHost;
+    private int tick = 0;
+    private NetworkManager _networkManager;
+    public BattleRenderer(string ipAddress, bool isHost) : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
     {
+        _isHost = isHost;
+        _ipAddress = ipAddress;
+        
         // 1. Initialize your deterministic engine
-        _gameState = new GameState();
+        _gameState = GameState.CreateNew();
         _unitLayer = new ScreenSurface(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT);
         _unitLayer.Surface.DefaultBackground = Color.Transparent;
-        _guiLayer = new ScreenSurface(GameSettings.GAME_WIDTH, 8);
+        _guiLayer = new ScreenSurface(28, 8);
         _guiLayer.Surface.DefaultBackground = Color.Transparent;
+        _guiLayer.Position = new Point(0, ArenaMap.Height); 
         Children.Add(_guiLayer);
-
+        _gameState = GameState.CreateNew();
+         PlayerState p1 = _gameState.PlayerOne;
+        // p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(10, 4)));
+        // p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(5, 5)));
+        PlayerState p2 = _gameState.PlayerTwo;
+        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.One, new Vector2Int(10, 30)));
+        p2.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(10, 5)));
+         _gameState.PlayerOne = p1;
+         _gameState.PlayerTwo = p2;
         Children.Add(_unitLayer);
         // 3. Draw the static map onto the base surface once
         DrawArena();
 
+        UseKeyboard = true;
+        IsFocused = true;
+    }
 
+    public override bool ProcessKeyboard(Keyboard keyboard)
+    {
+        for (int i = 0; i < HandSlotKeys.Length; i++)
+        {
+            if (keyboard.IsKeyPressed(HandSlotKeys[i]))
+            {
+                Vector2Int deployPosition = new Vector2Int(ArenaMap.Width / 2, ArenaMap.Height - 5);
+                _gameState = CardSim.PlayFromHand(_gameState, PlayerId.One, i, deployPosition);
+                return true;
+            }
+        }
+
+        return base.ProcessKeyboard(keyboard);
     }
     private bool ShouldDrawSprout(int x, int y)
     {
@@ -60,11 +96,21 @@ public class BattleRenderer : SadConsole.ScreenSurface
     }
     public override void Update(TimeSpan delta)
     {
+
         _unitLayer.Surface.Clear();
         _guiLayer.Surface.Clear();
+        DrawUnits(_gameState.PlayerOne);
+        DrawUnits(_gameState.PlayerTwo);
         DrawGUI();
-        
-     
+        _timer -= delta.TotalSeconds;
+        if (_timer <= 0f)
+        {
+            _timer = 0.05;
+            tick++;
+            _gameState = GameSim.Update(_gameState);
+        }
+        DrawUnits(_gameState.PlayerOne);
+        DrawUnits(_gameState.PlayerTwo);
         base.Update(delta);
     }
     private void DrawArena()
@@ -113,17 +159,32 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
     private void DrawGUI()
     {
-        new ColoredGlyph(Color.White, Color.Black, 0);
-
         _guiLayer.Surface.Clear();
         _guiLayer.Surface.DrawBox(
             new Rectangle(0, 0, _guiLayer.Surface.Width, _guiLayer.Surface.Height),
-            ShapeParameters.CreateBorder(new ColoredGlyph(Color.Black)));
+            ShapeParameters.CreateBorder(new ColoredGlyph(Color.Black, Color.Gray)));
         
-            _guiLayer.Surface.Print(2, 1, "=== HAND ===", Color.Yellow);
-        _guiLayer.Surface.Print(2, 3, "[1] Knight (3)", Color.Cyan);
-        _guiLayer.Surface.Print(2, 4, "[2] Fireball (4)", Color.Orange);
-        _guiLayer.Surface.Print(25, 2, "Elixir: 5 / 10", Color.Magenta);
+        _guiLayer.Surface.Print(2, 1, "=== HAND ===", Color.Yellow);
+        int cardWidth = 7;
+        int cardHeight = 5;
+        int spacing = 2;
+        int startX = 2;
+        int startY = 2;
+
+        PlayerState player = _gameState.PlayerOne;
+        for (int i = 0; i < player.Hand.Count; i++)
+        {
+            CardInfo card = CardInfos.GetCardInfo(player.Hand[i]);
+            Color color = player.Elixir >= card.Cost ? Color.Cyan : Color.Gray;
+            int cardX = startX + (i * (cardWidth + spacing));
+            int cardY = startY;
+            _guiLayer.Surface.DrawBox(
+                new Rectangle(cardX, cardY, cardWidth, cardHeight),
+                ShapeParameters.CreateBorder(new ColoredGlyph(Color.White, Color.Black, 0))
+            );  
+        }
+
+        _guiLayer.Surface.Print(2, 2, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
     }
     private void DrawState()
     {
