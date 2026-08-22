@@ -26,13 +26,45 @@ public static class UnitSim
         {
             target = GetEnemyUnits(curUnit, gameState)[targetIdx.Value];
             bool inAttackRange = InRange(curUnit.Position, target.Value.Position, info.AttackRange);
-            behaviour = inAttackRange ? info.AttackBehaviour : info.ChaseBehaviour;
+            if (inAttackRange)
+            {
+                behaviour = info.AttackBehaviour;
+            
+            }
+            else
+            {
+               behaviour =  info.ChaseBehaviour;
+            }
+         
+            
         }
 
         curUnit.Ticks++;
         return behaviour.Update(curUnit, gameState, target, targetIdx ?? -1);
     }
-    
+    internal static bool IsOccupied(GameState state, Vector2Int position, MovementLayer layer)
+    {
+        return HasUnitAt(state.PlayerOne.Units, position, layer)
+               || HasUnitAt(state.PlayerTwo.Units, position, layer);
+    }
+
+    private static bool HasUnitAt(List<UnitState> units, Vector2Int position, MovementLayer layer)
+    {
+        foreach (UnitState unit in units)
+        {
+            UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
+            if (info.Layer != layer) continue;
+
+            if (position.X < unit.Position.X) continue;
+            if (position.X >= unit.Position.X + info.Size.X) continue;
+            if (position.Y < unit.Position.Y) continue;
+            if (position.Y >= unit.Position.Y + info.Size.Y) continue;
+
+            return true;
+        }
+
+        return false;
+    }
     private static int? FindNearestEnemy(UnitState curUnit, GameState gameState, int aggroRange)
     {
         Vector2Int curPosition = curUnit.Position;
@@ -65,7 +97,9 @@ public static class UnitSim
 
     private static bool InRange(Vector2Int curPosition, Vector2Int target, int range)
     {
-        return DistanceSquared(curPosition, target) <= (long)range * range;
+        int dx = Math.Abs(target.X - curPosition.X);
+        int dy = Math.Abs(target.Y - curPosition.Y);
+        return Math.Max(dx, dy) <= range;
     }
 
     internal static List<UnitState> GetEnemyUnits(UnitState curUnit, GameState gameState)

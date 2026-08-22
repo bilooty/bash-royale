@@ -42,7 +42,7 @@ public static class UnitInfos
                 3,
                 20,
                 new WalkForwards(5),
-                new ChaseBehaviour(5), 
+                new ChaseBehaviour(10), 
                 new AttackBehaviour(75),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
