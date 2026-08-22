@@ -104,7 +104,7 @@ public class AttackBehaviour(int damage) : IUnitBehaviour
         return new ActionResult(unit, targetId, damage, true);
     }
 }
-public class RangedAttack(int damage, ProjectileType projectileType) : IUnitBehaviour
+public class RangedAttack(ProjectileType projectileType) : IUnitBehaviour
 {
      
     public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId)
