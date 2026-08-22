@@ -42,6 +42,8 @@ public static class UnitSim
     private static UnitState? ResolveTarget(UnitState curUnit, UnitInfo curInfo,
         List<UnitState> enemies, bool castleLocked)
     {
+        // A unit commits to its target only while it's actually in range to hit it.
+        // Chasers re-evaluate every tick, so anything that gets closer steals the aggro.
         if (curUnit.TargetId != UnitState.NoTarget)
         {
             foreach (UnitState enemy in enemies)
@@ -49,7 +51,7 @@ public static class UnitSim
                 if (enemy.Id != curUnit.TargetId) continue;
 
                 if (!IsTargetable(curInfo, enemy, castleLocked)) break;
-                if (!WithinRange(FootprintDistanceSquared(curUnit, enemy), curInfo.AggroRange + RetargetMargin)) break;
+                if (!WithinRange(FootprintDistanceSquared(curUnit, enemy), curInfo.AttackRange)) break;
 
                 return enemy;
             }

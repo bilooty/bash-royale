@@ -17,6 +17,7 @@ public enum CardId
     Skeleton,
     Dragon,
     Cannon,
+    Pekka,
 }
 
 public enum ValidLocation
@@ -29,13 +30,13 @@ public enum CardType
 {
     Unit,
     Spell,
+    Swarm,
 }
 
 public record UnitCard(CardId Id, int Cost, UnitType UnitType)
     : CardInfo(Id, CardType.Unit, Cost, ValidLocation.YourSide);
-
 public record SpellCard(CardId Id, int Cost, ProjectileType ProjectileType, Vector2Int Offset, Vector2Int Size) : CardInfo(Id, CardType.Spell, Cost, ValidLocation.BothSides);
-
+public record SwarmCard(CardId Id, int Cost, UnitType UnitType, List<Vector2Int> Offsets) :  CardInfo(Id, CardType.Swarm, Cost, ValidLocation.YourSide);
 public record CardInfo(
     CardId Id,
     CardType Type,
@@ -136,6 +137,7 @@ public static class CardInfos
         CardId.Barbarian => new UnitCard(id, 4, UnitType.Barbarian),
         CardId.Musketeer => new UnitCard(id, 4, UnitType.Musketeer),
         CardId.MiniPekka => new UnitCard(id, 4, UnitType.MiniPekka),
+        CardId.Pekka => new UnitCard(id, 7, UnitType.Pekka),
         CardId.Valkyrie => new UnitCard(id, 4, UnitType.Valkyrie),
         CardId.Skeleton => new UnitCard(id, 1, UnitType.Skeleton),
         CardId.Dragon => new UnitCard(id, 5, UnitType.Dragon),
@@ -159,7 +161,8 @@ public static class CardInfos
         CardId.FireBall  => "FRBAL",
         CardId.Barbarian => "BARBR",
         CardId.Musketeer => "MUSKT",
-        CardId.MiniPekka => "PEKKA",
+        CardId.MiniPekka => "M.PKA",
+        CardId.Pekka => "PEKKA",
         CardId.Valkyrie  => "VALKR",
         CardId.Skeleton  => "SKELE",
         CardId.Dragon    => "DRAGN",

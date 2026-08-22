@@ -137,8 +137,9 @@ public class RangedAttack(ProjectileType projectileType) : IUnitBehaviour
         if (!AttackTiming.Ready(unit, info)) return ActionResult.NoAttack(unit);
 
         unit.LastAttackTick = unit.Ticks;
-
-        ProjectileState newProj = new ProjectileState(projectileType, unit.Owner, unit.Position)
+        Vector2Int projSize = ProjectileState.Infos[projectileType].Size ?? new Vector2Int(1, 1);
+        Vector2Int offset = projSize / 2;
+        ProjectileState newProj = new ProjectileState(projectileType, unit.Owner, unit.Position - offset)
         {
             TargetId = targetId
         };

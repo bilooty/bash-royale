@@ -18,7 +18,9 @@ public enum UnitType
     Dragon,
     Skeleton,
     Cannon,
-    
+    GoblinCage,
+    Brawler,
+    Pekka,
 
 }
 public record UnitInfo(
@@ -44,12 +46,25 @@ public static class UnitInfos
     {
         return unitType switch
         {
+            UnitType.Brawler => new UnitInfo(
+                UnitType.Brawler,
+                "Brawler",
+                600,
+                1,
+                7,
+                24,
+                false,
+                new WalkForwards(8),
+                new ChaseBehaviour(8), 
+                new AttackBehaviour(230),
+                new Vector2Int(1,1),
+                MovementLayer.Ground),
             UnitType.Knight => new UnitInfo(
                 UnitType.Knight,
                 "Knight",
-                1150,
+                1000,
                 1,
-                12,
+                7,
                 24,
                 false,
                 new WalkForwards(6),
@@ -60,7 +75,7 @@ public static class UnitInfos
             UnitType.Tower => new UnitInfo(
                 UnitType.Tower,
                 "Tower",
-                1900,
+                2000,
                 6,
                 6,
                 20,
@@ -116,7 +131,7 @@ public static class UnitInfos
                 UnitType.Goblin => new UnitInfo(
                 UnitType.Goblin,
                 "Goblin",
-                190,
+                210,
                 1,
                 8,
                 14,
@@ -129,7 +144,7 @@ public static class UnitInfos
                 UnitType.Wizard => new UnitInfo(
                 UnitType.Wizard,
                 "Wizard",
-                720,
+                700,
                 5,
                 9,
                 32,
@@ -170,7 +185,7 @@ public static class UnitInfos
                 UnitType.Musketeer => new UnitInfo(
                 UnitType.Musketeer,
                 "Musketeer",
-                720,
+                620,
                 6,
                 9,
                 30,
@@ -184,7 +199,7 @@ public static class UnitInfos
                 UnitType.Cannon,
                 "Cannon",
                 600,
-                6,
+                9,
                 9,
                 28,
                 true,
@@ -206,17 +221,30 @@ public static class UnitInfos
                 new AttackBehaviour(360),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
+            UnitType.Pekka => new UnitInfo(
+                UnitType.Pekka,
+                "Pekka",
+                2500,
+                1,
+                13,
+                38,
+                false,
+                new WalkForwards(5),
+                new ChaseBehaviour(5),
+                new AttackBehaviour(550),
+                new Vector2Int(2,2),
+                MovementLayer.Ground),
                 UnitType.Valkyrie => new UnitInfo(
                 UnitType.Valkyrie,
                 "Valkyrie",
                 1450,
                 1,
                 9,
-                30,
+                50,
                 false,
                 new WalkForwards(6),
                 new ChaseBehaviour(6),
-                new AttackBehaviour(165),
+                new RangedAttack(ProjectileType.Zap),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
             UnitType.Skeleton => new UnitInfo(
