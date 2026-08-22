@@ -6,7 +6,7 @@ public struct GameState
 {
     public PlayerState PlayerOne;
     public PlayerState PlayerTwo;
-    public Occupancy Occupancy;
+    
     public bool IsGameOver;
     public PlayerId? Winner;
     public int Tick;
@@ -42,8 +42,6 @@ public static class GameSim
     }
     public static GameState Update(GameState state, NetworkAction p1Action, NetworkAction p2Action)
     {
-        state.Occupancy = Occupancy.Build(state);
-        
         if (p1Action.Action == ActionType.DeployCard)
         {
             state = CardSim.PlayFromHand(state, PlayerId.One, p1Action.CardIdx, new Vector2Int(p1Action.X, p1Action.Y));
