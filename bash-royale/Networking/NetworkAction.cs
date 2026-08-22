@@ -12,7 +12,7 @@ public class NetworkAction : INetSerializable
     public byte PlayerId;
     public ActionType Action;
 
-    public byte CardType;
+    public byte CardIdx;
     public byte X;
     public byte Y;
 
@@ -24,7 +24,7 @@ public class NetworkAction : INetSerializable
 
         if (Action == ActionType.DeployCard)
         {
-            writer.Put(CardType);
+            writer.Put(CardIdx);
             writer.Put(X);
             writer.Put(Y);
         }
@@ -37,7 +37,7 @@ public class NetworkAction : INetSerializable
         Action = (ActionType)reader.GetByte();
         if (Action == ActionType.DeployCard)
         {
-            CardType = reader.GetByte();
+            CardIdx = reader.GetByte();
             X = reader.GetByte();
             Y = reader.GetByte();
         }
