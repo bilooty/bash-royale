@@ -7,7 +7,7 @@ public enum CardId
     Archer,
     Goblin,
     Wizard,
-    Horde,
+    Hog,
     FireBall,
 }
 
@@ -120,7 +120,7 @@ public static class CardInfos
         CardId.Archer => new UnitCard(id, 3, UnitType.Archer),
         CardId.Goblin => new UnitCard(id, 2, UnitType.Goblin),
         CardId.Wizard => new UnitCard(id, 6, UnitType.Wizard),
-        CardId.Horde => new UnitCard(id, 8, UnitType.HogRider),
+        CardId.Hog => new UnitCard(id, 8, UnitType.HogRider),
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
     };
 }
