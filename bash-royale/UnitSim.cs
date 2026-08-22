@@ -13,9 +13,18 @@ public static class UnitSim
     public static ActionResult Update(UnitState curUnit, GameState gameState)
     {
         UnitInfo info = UnitInfos.GetUnitInfo(curUnit.Type);
-        UnitState? target = FindNearestEnemy(curUnit, gameState, info.AggroRange);
+        int? targetId = FindNearestEnemy(curUnit, gameState, info.AggroRange);
 
         IUnitBehaviour behaviour;
+        UnitState? target = null;
+
+        if (targetId is not null)
+        {
+            List<UnitState> enemies = GetEnemyUnits(curUnit, gameState);
+            int idx = enemies.FindIndex(u => u.Id == targetId.Value);
+            if (idx >= 0) target = enemies[idx];
+        }
+
         if (target is null)
         {
             behaviour = info.NeutralBehaviour;
@@ -27,8 +36,7 @@ public static class UnitSim
         }
 
         curUnit.Ticks++;
-        int targetId = target?.Id ?? -1;
-        return behaviour.Update(curUnit, gameState, target, targetId);
+        return behaviour.Update(curUnit, gameState, target, target?.Id ?? -1);
     }
 
     internal static bool IsOccupied(GameState state, Vector2Int position, MovementLayer layer, Vector2Int ignore)
@@ -60,33 +68,44 @@ public static class UnitSim
 
     // Single pass over enemies, tracking the closest UnitState directly rather than an
     // index or a second lookup — avoids scanning twice for the same answer.
-    private static UnitState? FindNearestEnemy(UnitState curUnit, GameState gameState, int aggroRange)
+    private static int? FindNearestEnemy(UnitState curUnit, GameState gameState, int aggroRange)
     {
-        bool targetsBuildingOnly = UnitInfos.GetUnitInfo(curUnit.Type).targetsBuildingsOnly;
-        bool ranged = UnitInfos.GetUnitInfo(curUnit.Type).ranged;
-        Vector2Int curPosition = curUnit.Position;
-        long rangeSquared = (long)aggroRange * aggroRange;
+        UnitInfo curInfo = UnitInfos.GetUnitInfo(curUnit.Type);
         List<UnitState> enemies = GetEnemyUnits(curUnit, gameState);
 
-        UnitState? closest = null;
+        // The castle is untargetable while both towers still stand.
+        bool castleLocked = CountTowers(enemies) >= 2;
+
+        int? closestId = null;
         long closestDistanceSquared = long.MaxValue;
 
         foreach (UnitState enemy in enemies)
         {
-            long distanceSquared = DistanceSquared(curPosition, enemy.Position);
+            UnitInfo enemyInfo = UnitInfos.GetUnitInfo(enemy.Type);
 
-            if (distanceSquared > rangeSquared) continue;
+            if (enemy.Type == UnitType.Castle && castleLocked) continue;
+            if (enemyInfo.Layer == MovementLayer.Air && !curInfo.ranged) continue;
+            if (curInfo.targetsBuildingsOnly && !enemyInfo.IsBuilding) continue;
+
+            long distanceSquared = DistanceSquared(curUnit.Position, enemy.Position);
+            if (distanceSquared > (long)aggroRange * aggroRange) continue;
             if (distanceSquared >= closestDistanceSquared) continue;
-            // if targets layer is air and unit is not ranged, continue
-            if (UnitInfos.GetUnitInfo(enemy.Type).Layer == MovementLayer.Air && !ranged) continue;
-            // Buildings-only units ignore troops and only target towers/castles.
-            if (targetsBuildingOnly && !UnitInfos.GetUnitInfo(enemy.Type).IsBuilding) continue;
 
             closestDistanceSquared = distanceSquared;
-            closest = enemy;
+            closestId = enemy.Id;
         }
 
-        return closest;
+        return closestId;
+    }
+
+    internal static int CountTowers(List<UnitState> units)
+    {
+        int count = 0;
+        foreach (UnitState unit in units)
+        {
+            if (unit.Type == UnitType.Tower) count++;
+        }
+        return count;
     }
 
     internal static long DistanceSquared(Vector2Int a, Vector2Int b)
