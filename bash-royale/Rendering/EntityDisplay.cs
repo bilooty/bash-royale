@@ -59,6 +59,11 @@ public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false, 
                 [new ColoredGlyph(Color.Lime, Color.DarkGray, 'g')]
             ]
         ),
+        [UnitType.Brawler] = new EntityDisplay(
+            [
+                [new ColoredGlyph(Color.Lime, Color.DarkGray, 'G')]
+            ]
+        ),
         [UnitType.Wizard] = new EntityDisplay(
             [
                 [new ColoredGlyph(Color.Magenta, Color.DarkGray, 'W')]
@@ -87,7 +92,12 @@ public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false, 
         ),
         [UnitType.MiniPekka] = new EntityDisplay(
             [
-                [new ColoredGlyph(Color.Silver, Color.DarkGray, 'P')]
+                [new ColoredGlyph(Color.MediumPurple, Color.DarkGray, 'p')]
+            ]
+        ),
+        [UnitType.Pekka] = new EntityDisplay(
+            [
+                [new ColoredGlyph(Color.MediumPurple, Color.DarkGray, 'P')]
             ]
         ),
         [UnitType.Valkyrie] = new EntityDisplay(

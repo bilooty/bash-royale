@@ -18,7 +18,9 @@ public enum UnitType
     Dragon,
     Skeleton,
     Cannon,
-    
+    GoblinCage,
+    Brawler,
+    Pekka,
 
 }
 public record UnitInfo(
@@ -44,6 +46,19 @@ public static class UnitInfos
     {
         return unitType switch
         {
+            UnitType.Brawler => new UnitInfo(
+                UnitType.Brawler,
+                "Brawler",
+                600,
+                1,
+                7,
+                24,
+                false,
+                new WalkForwards(8),
+                new ChaseBehaviour(8), 
+                new AttackBehaviour(230),
+                new Vector2Int(1,1),
+                MovementLayer.Ground),
             UnitType.Knight => new UnitInfo(
                 UnitType.Knight,
                 "Knight",
@@ -205,6 +220,19 @@ public static class UnitInfos
                 new ChaseBehaviour(8),
                 new AttackBehaviour(360),
                 new Vector2Int(1,1),
+                MovementLayer.Ground),
+            UnitType.Pekka => new UnitInfo(
+                UnitType.Pekka,
+                "Pekka",
+                2500,
+                1,
+                13,
+                38,
+                false,
+                new WalkForwards(5),
+                new ChaseBehaviour(5),
+                new AttackBehaviour(550),
+                new Vector2Int(2,2),
                 MovementLayer.Ground),
                 UnitType.Valkyrie => new UnitInfo(
                 UnitType.Valkyrie,

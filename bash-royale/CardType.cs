@@ -17,6 +17,7 @@ public enum CardId
     Skeleton,
     Dragon,
     Cannon,
+    Pekka,
 }
 
 public enum ValidLocation
@@ -136,6 +137,7 @@ public static class CardInfos
         CardId.Barbarian => new UnitCard(id, 4, UnitType.Barbarian),
         CardId.Musketeer => new UnitCard(id, 4, UnitType.Musketeer),
         CardId.MiniPekka => new UnitCard(id, 4, UnitType.MiniPekka),
+        CardId.Pekka => new UnitCard(id, 7, UnitType.Pekka),
         CardId.Valkyrie => new UnitCard(id, 4, UnitType.Valkyrie),
         CardId.Skeleton => new UnitCard(id, 1, UnitType.Skeleton),
         CardId.Dragon => new UnitCard(id, 5, UnitType.Dragon),
@@ -159,7 +161,8 @@ public static class CardInfos
         CardId.FireBall  => "FRBAL",
         CardId.Barbarian => "BARBR",
         CardId.Musketeer => "MUSKT",
-        CardId.MiniPekka => "PEKKA",
+        CardId.MiniPekka => "M.PKA",
+        CardId.Pekka => "PEKKA",
         CardId.Valkyrie  => "VALKR",
         CardId.Skeleton  => "SKELE",
         CardId.Dragon    => "DRAGN",
