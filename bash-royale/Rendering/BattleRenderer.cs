@@ -239,7 +239,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
         int cardWidth = 5;
         int cardHeight = 3;
         int spacing = 2;
-        int startX = 2;
+        int startX = 1;
         int startY = 4;
 
         PlayerState player = _gameState.PlayerOne;
@@ -249,14 +249,32 @@ public class BattleRenderer : SadConsole.ScreenSurface
             Color color = player.Elixir >= card.Cost ? Color.Cyan : Color.Gray;
             int cardX = startX + (i * (cardWidth + spacing));
             int cardY = startY;
-            _guiLayer.Surface.DrawBox(
-                new Rectangle(cardX, cardY, cardWidth, cardHeight),
-                ShapeParameters.CreateBorder(new ColoredGlyph(Color.Red, Color.Blue, 0))
-            );  
-            _guiLayer.Surface.Print(cardX, cardY, card.Id.ToString(), Color.Green);
+            _guiLayer.Surface.Print(cardX, cardY, "+" + new string('-', cardWidth - 2) + "+", color);
+            _guiLayer.Surface.Print(cardX, cardY + cardHeight - 1, "+" + new string('-', cardWidth - 2) + "+", color);
+            for (int row = 1; row < cardHeight - 1; row++)
+            {
+                _guiLayer.Surface.SetGlyph(cardX, cardY + row, '|', color);
+                _guiLayer.Surface.SetGlyph(cardX + cardWidth - 1, cardY + row, '|', color);
+            }
+
+            _guiLayer.Surface.Print(cardX, cardY, card.Cost.ToString(), Color.Magenta);
+            int centerX = cardX + (cardWidth / 2);
+            int centerY = cardY + (cardHeight / 2);
+            if (card is UnitCard unitCard && UnitDisplay.Displays.TryGetValue(unitCard.UnitType, out var display))
+            {
+                ColoredGlyph g = display.Glyphs[0][0];
+                _guiLayer.Surface[centerX, centerY].GlyphCharacter = g.GlyphCharacter;
+                _guiLayer.Surface[centerX, centerY].Foreground = g.Foreground;
+            }
+            else
+            {
+                _guiLayer.Surface.Print(centerX, centerY, card.Cost.ToString(), Color.Red);
+            }
         }
+        
 
         _guiLayer.Surface.Print(2, 2, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
+        
     }
     private void DrawState()
     {
