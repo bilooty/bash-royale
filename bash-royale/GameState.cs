@@ -157,6 +157,7 @@ public static class GameSim
         for (int i = 0; i < state.Projectiles.Count; i++)
         { 
             ProjectileState proj = state.Projectiles[i];
+            System.Console.WriteLine(proj.Type);
             ProjectileInfo info = ProjectileState.Infos[proj.Type];
             foreach (IProjectileBehaviour behaviour in info.Behaviours)
             {
@@ -171,6 +172,8 @@ public static class GameSim
                     damageInstances.Add(instance);
                 }
             }
+
+            proj.Ticks++;
             state.Projectiles[i] = proj;
             if (!proj.ShouldDie)
             {
@@ -200,12 +203,15 @@ public static class GameSim
         ApplyDamage(PlayerId.Two, damageInstances, state.PlayerTwo.Units);
         ApplyDamage(PlayerId.One, damageInstances, state.PlayerOne.Units);
         
+        ApplyDamage(PlayerId.Two, damageInstances, state.PlayerTwo.Units);
+        ApplyDamage(PlayerId.One, damageInstances, state.PlayerOne.Units);
         state.PlayerOne.Units.RemoveAll(u => u.Health <= 0);
         state.PlayerTwo.Units.RemoveAll(u => u.Health <= 0);
         
         state.Projectiles = aliveProjectiles;
         state = CheckGameOver(state);
         state.Tick++;
+        state.Projectiles = aliveProjectiles;
         return state;
     }
         

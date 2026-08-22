@@ -5,7 +5,7 @@ using SadConsole.UI.Controls;
 using SadRogue.Primitives;
 using System.Linq;
 
-namespace bash_royale.Scenes
+namespace bash_royale.Rendering
 {
     public class StartScreen : ControlsConsole
     {

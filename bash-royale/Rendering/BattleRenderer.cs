@@ -2,7 +2,10 @@ using System.Runtime.CompilerServices;
 using bash_royale.Networking;
 using SadConsole.Input;
 using System;
-namespace bash_royale.Scenes;
+using bash_royale.Emotes;
+
+namespace bash_royale.Rendering;
+
 
 // UI/BattleRenderer.cs
 public class BattleRenderer : SadConsole.ScreenSurface
@@ -33,6 +36,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
     private bool _hasSentAction = false;
     private NetworkManager _networkManager;
     private NetworkAction? _pendingLocalAction;
+    private EmoteManager _emoteManager = new();
     public BattleRenderer(string ipAddress, bool isHost) : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
     {
         _isHost = isHost;
@@ -83,24 +87,66 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
     public override bool ProcessKeyboard(Keyboard keyboard)
     {
+        // Emote menu takes priority — if open it swallows 1-4 so cards aren't selected
+        if (_emoteManager.HandleInput(keyboard, out EmoteId? emote))
+        {
+            if (emote != null)
+            {
+                _emoteManager.Show(emote.Value, _isHost ? PlayerId.One : PlayerId.Two);
+                var emoteAction = new NetworkAction
+                {
+                    Tick = _inputTick,
+                    PlayerId = _isHost ? (byte)0 : (byte)1,
+                    Action = ActionType.Emote,
+                    EmoteId = (byte)emote.Value,
+                };
+                _networkManager.SendAction(emoteAction);
+            }
+            return true;
+        }
         // Prevent selecting a new card while one is already waiting to be sent
         if (_pendingLocalAction != null && _pendingLocalAction.Action != ActionType.NoAction)
             return base.ProcessKeyboard(keyboard);
-
         for (int i = 0; i < HandSlotKeys.Length; i++)
         {
             if (keyboard.IsKeyPressed(HandSlotKeys[i]))
             {
-                // Arm this card for deployment; the next left click on the arena places it there.
                 _selectedHandIdx = (_selectedHandIdx == i) ? null : i;
                 return true;
             }
         }
-        
-
         return base.ProcessKeyboard(keyboard);
     }
+    private void DrawProjectiles()
+    {
+        foreach (ProjectileState proj in _gameState.Projectiles)
+        {
+            if (!EntityDisplay.Projectiles.TryGetValue(proj.Type, out EntityDisplay display))
+                continue; // no visual for this projectile type, skip it
 
+            ColoredGlyph glyph = display.Glyphs[0][0];
+
+            Vector2Int? sizeHuh = ProjectileState.Infos[proj.Type].Size;
+
+            Vector2Int size = sizeHuh ?? new Vector2Int(1, 1);
+            System.Console.WriteLine("Size: " + size.X + ", " + size.Y + proj.Type);
+            for (int x = 0; x < size.X; x++)
+            {
+                for (int y = 0; y < size.Y; y++)
+                {
+                    Vector2Int render = Flip(new Vector2Int(proj.Position.X + x, proj.Position.Y + y));
+
+                    if (render.X < 0 || render.X >= _unitLayer.Surface.Width) continue;
+                    if (render.Y < 0 || render.Y >= _unitLayer.Surface.Height) continue;
+
+                    _unitLayer.Surface[render.X, render.Y].Foreground = glyph.Foreground;
+                    if (!display.IsTransparent)
+                        _unitLayer.Surface[render.X, render.Y].Background = glyph.Background;
+                    _unitLayer.Surface[render.X, render.Y].GlyphCharacter = glyph.GlyphCharacter;
+                }
+            }
+        }
+    }
     public override bool ProcessMouse(MouseScreenObjectState state)
     {
         _hoverCell = state.IsOnScreenObject
@@ -253,12 +299,12 @@ public class BattleRenderer : SadConsole.ScreenSurface
                     _unitLayer.Surface[renderX, renderY].Background = teamColor;
                     _unitLayer.Surface[renderX, renderY].GlyphCharacter = glyph.GlyphCharacter;
 
-                    if ((unit.Ticks - unit.LastAttackTick) < 2)
+                    if ((unit.Ticks - unit.LastAttackTick) < 1)
                     {
                         _unitLayer.Surface[renderX, renderY].GlyphCharacter = ' ';
                     }
 
-                    if ((unit.Ticks - unit.LastDamageTick) < 2)
+                    if ((unit.Ticks - unit.LastDamageTick) < 1)
                     {
                         _unitLayer.Surface[renderX, renderY].Background = Color.Red;
                     }
@@ -269,6 +315,12 @@ public class BattleRenderer : SadConsole.ScreenSurface
 public override void Update(TimeSpan delta)
     {
         _networkManager.PollEvents();
+        while (_networkManager.RemoteEmotes.Count > 0)
+        {
+            var emoteAction = _networkManager.RemoteEmotes.Dequeue();
+            _emoteManager.Show((EmoteId)emoteAction.EmoteId,
+            _isHost ? PlayerId.Two : PlayerId.One);
+        }
 
         if (!_networkManager.IsConnected)
         {
@@ -340,6 +392,9 @@ public override void Update(TimeSpan delta)
                 // 1. GET BOTH ACTIONS FOR CURRENT TICK
                 NetworkAction remoteAction = _networkManager.RemoteInputs[_executionTick];
                 NetworkAction localAction = _localInputs[_executionTick];
+                if (remoteAction.Action == ActionType.Emote)
+                    _emoteManager.Show((EmoteId)remoteAction.EmoteId,
+                        _isHost ? PlayerId.Two : PlayerId.One);
                 
                 if (remoteAction.Action != ActionType.NoAction)
                     System.Console.WriteLine("Received: pid: " + remoteAction.PlayerId + " x" + remoteAction.X + " y" + remoteAction.Y);
@@ -372,6 +427,8 @@ public override void Update(TimeSpan delta)
     
         Redraw();
         base.Update(delta);
+        _emoteManager.Update(_unitLayer, _isHost);
+
         
     }
     private void DrawArena()
@@ -482,7 +539,7 @@ public override void Update(TimeSpan delta)
             }
             else
             {
-                _guiLayer.Surface.Print(centerX, centerY, card.Cost.ToString(), Color.Red);
+                _guiLayer.Surface.Print(centerX, centerY, "*", Color.Red);
             }
         }
         
@@ -580,14 +637,15 @@ public override void Update(TimeSpan delta)
             _guiLayer.Surface.Clear();
             DrawUnits(_gameState.PlayerOne);
             DrawUnits(_gameState.PlayerTwo);
+            DrawProjectiles();
             DrawBuildingHealth(_gameState.PlayerOne);
             DrawBuildingHealth(_gameState.PlayerTwo);
             DrawDeployCursor();
             DrawGUI();
             DrawEndScreen();
         }
-        
-        
+
+
         private void DrawBuildingHealth(PlayerState player)
         {
             Color teamColor = (player.Id == PlayerId.One) == _isHost ? p1Color : p2Color;

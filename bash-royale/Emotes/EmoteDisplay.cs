@@ -6,7 +6,7 @@ public class EmoteDisplay
     public PlayerId Owner { get; }
     public int TicksLeft { get; private set; }
     
-    private const int DisplayDuration = 40; // 2secs
+    private const int DisplayDuration = 50; 
     public bool TicksUp =>  TicksLeft <= 0;
 
     public EmoteDisplay(EmoteId emote, PlayerId owner)
@@ -20,21 +20,24 @@ public class EmoteDisplay
     
     public void Draw(ScreenSurface surface, bool isHost)
     {
-        // Show emote on the sender's half of the arena
         bool isLocalPlayer = (Owner == PlayerId.One) == isHost;
-        int y = isLocalPlayer ? ArenaMap.Height - 2 : 1;
-        int x = ArenaMap.Width / 2 - 1;
         string label = EmoteInfo.GetLabel(Emote);
-        Color  color = EmoteInfo.GetColor(Emote);
-        
-        // Fade effect: dim the colour in the last 0.5s
-        int FADE_TICKS = 10;
+        Color color = EmoteInfo.GetColor(Emote);
+
+        int elapsed = DisplayDuration - TicksLeft;
+        int baseY = ArenaMap.Height - 2;
+        int y = baseY - (elapsed / 8);
+
+        int x = isLocalPlayer ? 1 : ArenaMap.Width - label.Length - 1;
+
+        int FADE_TICKS = 20;
         if (TicksLeft < FADE_TICKS)
         {
             float alpha = (float)TicksLeft / FADE_TICKS;
             color = color * alpha;
         }
-        surface.Print(x, y, label, color, Color.Transparent);
+
+        surface.Print(x, y, label, color, Color.Black);
     }
     
     

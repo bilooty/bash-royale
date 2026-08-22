@@ -59,7 +59,7 @@ public static class CardSim
 
         if (card is SpellCard spellCard)
         {
-            gameState.Projectiles.Add(new ProjectileState(spellCard.ProjectileType, playerId, position));
+            gameState.Projectiles.Add(new ProjectileState(spellCard.ProjectileType, playerId, position + spellCard.Offset));
         }
 
         if (playerId == PlayerId.One)
@@ -122,8 +122,8 @@ public static class CardInfos
     public static CardInfo GetCardInfo(CardId id) => id switch
     {
         CardId.Knight => new UnitCard(id, 3, UnitType.Knight),
-        CardId.Zap => new SpellCard(id, 4, ProjectileType.Zap, new Vector2Int(-1, -1), new Vector2Int(3, 3)),
-        CardId.FireBall => new SpellCard(id, 4, ProjectileType.Zap, new Vector2Int(-1, -1), new Vector2Int(3, 3)),
+        CardId.Zap => new SpellCard(id, 2, ProjectileType.Zap, new Vector2Int(-1, -1), new Vector2Int(3, 3)),
+        CardId.FireBall => new SpellCard(id, 4, ProjectileType.FireBall, new Vector2Int(-1, -1), new Vector2Int(3, 3)),
 
         CardId.Giant => new UnitCard(id, 5, UnitType.Giant),
         CardId.Archer => new UnitCard(id, 3, UnitType.Archer),
@@ -174,7 +174,7 @@ public static class CardInfos
 
     // The glyph the card is drawn with, so the deck builder looks like the arena.
     public static char GetGlyph(CardId id) =>
-        GetCardInfo(id) is UnitCard unitCard && Scenes.EntityDisplay.Displays.TryGetValue(unitCard.UnitType, out var display)
+        GetCardInfo(id) is UnitCard unitCard && Rendering.EntityDisplay.Displays.TryGetValue(unitCard.UnitType, out var display)
             ? display.Glyphs[0][0].GlyphCharacter
             : '*';
 }
