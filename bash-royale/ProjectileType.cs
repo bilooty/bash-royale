@@ -20,6 +20,7 @@ public struct ProjectileState
         Owner = owner;
         Position = position;
         ShouldDie = false;
+        Ticks = 0;
     }
     public ProjectileType Type;
     public bool ShouldDie;
@@ -33,16 +34,26 @@ public struct ProjectileState
     {
         [ProjectileType.ZapEffect] = new ProjectileInfo(
             [
-            new Linger(10)]),
-        [ProjectileType.Zap] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 120)]),
+            new Linger(4)], size:new Vector2Int(3, 3)),
+        
+        [ProjectileType.Zap] = new ProjectileInfo([
+            new InstantDamage(new Vector2Int(3, 3), 120),
+            new SummonProj(ProjectileType.ZapEffect),
+            
+        ]),
         [ProjectileType.FireBall] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 450)]),
-        [ProjectileType.ZapEffect] = new ProjectileInfo([])
+       
     };
 }
 
-public record ProjectileInfo(
-    List<IProjectileBehaviour> Behaviours
-);
+public class ProjectileInfo(
+    List<IProjectileBehaviour> behaviours,
+    Vector2Int? size = null
+)
+{
+    public List<IProjectileBehaviour> Behaviours => behaviours;
+    public Vector2Int? Size => size;
+}
 
 
 
@@ -57,6 +68,7 @@ public class Linger(int duration) : IProjectileBehaviour
 {
     public ProjectileResult Update(ProjectileState state, GameState gameState)
     {
+        System.Console.WriteLine("Linger at tick: " + state.Ticks + "/" + duration);
         if (state.Ticks > duration)
         {
             state.ShouldDie = true;
@@ -70,6 +82,7 @@ public class SummonProj(ProjectileType type) : IProjectileBehaviour
 {
     public ProjectileResult Update(ProjectileState state, GameState gameState)
     {
+        System.Console.WriteLine("Summon projectile");
         return new ProjectileResult(state, [], [new ProjectileState(type, state.Owner, state.Position)]);
     }
 }

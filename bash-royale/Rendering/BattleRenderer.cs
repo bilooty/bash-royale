@@ -117,7 +117,36 @@ public class BattleRenderer : SadConsole.ScreenSurface
         }
         return base.ProcessKeyboard(keyboard);
     }
+    private void DrawProjectiles()
+    {
+        foreach (ProjectileState proj in _gameState.Projectiles)
+        {
+            if (!EntityDisplay.Projectiles.TryGetValue(proj.Type, out EntityDisplay display))
+                continue; // no visual for this projectile type, skip it
 
+            ColoredGlyph glyph = display.Glyphs[0][0];
+
+            Vector2Int? sizeHuh = ProjectileState.Infos[proj.Type].Size;
+
+            Vector2Int size = sizeHuh ?? new Vector2Int(1, 1);
+            System.Console.WriteLine("Size: " + size.X + ", " + size.Y + proj.Type);
+            for (int x = 0; x < size.X; x++)
+            {
+                for (int y = 0; y < size.Y; y++)
+                {
+                    Vector2Int render = Flip(new Vector2Int(proj.Position.X + x, proj.Position.Y + y));
+
+                    if (render.X < 0 || render.X >= _unitLayer.Surface.Width) continue;
+                    if (render.Y < 0 || render.Y >= _unitLayer.Surface.Height) continue;
+
+                    _unitLayer.Surface[render.X, render.Y].Foreground = glyph.Foreground;
+                    if (!display.IsTransparent)
+                        _unitLayer.Surface[render.X, render.Y].Background = glyph.Background;
+                    _unitLayer.Surface[render.X, render.Y].GlyphCharacter = glyph.GlyphCharacter;
+                }
+            }
+        }
+    }
     public override bool ProcessMouse(MouseScreenObjectState state)
     {
         _hoverCell = state.IsOnScreenObject
@@ -456,14 +485,18 @@ public override void Update(TimeSpan delta)
         int startY = 4;
 
         PlayerState player = _isHost ? _gameState.PlayerOne : _gameState.PlayerTwo;
-        int secondsElapsed = _gameState.Tick / GameSettings.TICKS_PER_SECOND;
-        int totalSeconds = GameSettings.OVERTIME_END_TICK / GameSettings.TICKS_PER_SECOND;
-        int remaining = Math.Max(0, totalSeconds - secondsElapsed);
-        bool isOvertime = _gameState.Tick >= GameSettings.REGULATION_END_TICK;
+        bool isOvertime = _gameState.IsOvertime;
+
+        int phaseEndTick = isOvertime
+            ? GameSettings.OVERTIME_END_TICK
+            : GameSettings.REGULATION_END_TICK;
+
+        // Count down within the current phase, so overtime restarts from 1:00.
+        int remaining = Math.Max(0, (phaseEndTick - _gameState.Tick) / GameSettings.TICKS_PER_SECOND);
 
         string clock = $"{remaining / 60}:{remaining % 60:00}";
         string phase = isOvertime ? "OVERTIME " : "";
-        Color clockColor = isOvertime ? Color.Orange : Color.White;
+        Color clockColor = isOvertime ? Color.Red : Color.White;
 
         _guiLayer.Surface.Print(ArenaMap.Width - phase.Length - clock.Length - 1, 0, phase + clock, clockColor);
 
@@ -546,15 +579,6 @@ public override void Update(TimeSpan delta)
         p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(4, 24)));
         p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(22, 24)));
 
-        // Five knights a side, spread across the width so none share a spawn cell.
-        // Well back from the river so you can watch them route to the bridges.
-        // for (int i = 0; i < 5; i++)
-        // {
-        //     int x = 4 + i * 5;
-        //     p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(x, 21)));
-        //     p2.Units.Add(new UnitState(UnitType.Knight, PlayerId.Two, new Vector2Int(x, 10)));
-        // }
-
         _gameState.PlayerOne = p1;
         _gameState.PlayerTwo = p2;
     }
@@ -613,6 +637,7 @@ public override void Update(TimeSpan delta)
             _guiLayer.Surface.Clear();
             DrawUnits(_gameState.PlayerOne);
             DrawUnits(_gameState.PlayerTwo);
+            DrawProjectiles();
             DrawBuildingHealth(_gameState.PlayerOne);
             DrawBuildingHealth(_gameState.PlayerTwo);
             DrawDeployCursor();
@@ -630,15 +655,21 @@ public override void Update(TimeSpan delta)
                 UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
                 if (!info.IsBuilding) continue;
 
-                Vector2Int render = Flip(unit.Position);
                 string text = unit.Health.ToString().PadLeft(5);
 
-                int labelX = Math.Clamp(render.X - text.Length / 2, 0, ArenaMap.Width - text.Length);
-                int labelY = render.Y > ArenaMap.Height / 2 ? render.Y + info.Size.Y : render.Y - 1;
+                // Work out the label's anchor in world space, then flip once. Position is
+                // the top-left corner, so centre on the footprint's middle column.
+                int worldCenterX = unit.Position.X + info.Size.X / 2;
+                int worldY = unit.Position.Y > ArenaMap.Height / 2
+                    ? unit.Position.Y + info.Size.Y
+                    : unit.Position.Y - 1;
 
-                if (labelY < 0 || labelY >= ArenaMap.Height) continue;
+                Vector2Int anchor = Flip(new Vector2Int(worldCenterX, worldY));
 
-                _unitLayer.Surface.Print(labelX, labelY, text, Color.White, teamColor);
+                int labelX = Math.Clamp(anchor.X - text.Length / 2, 0, ArenaMap.Width - text.Length);
+                if (anchor.Y < 0 || anchor.Y >= ArenaMap.Height) continue;
+
+                _unitLayer.Surface.Print(labelX, anchor.Y, text, Color.White, Color.Black);
             }
         }
 }
