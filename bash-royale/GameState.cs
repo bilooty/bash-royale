@@ -40,7 +40,7 @@ public static class GameSim
     }
     public static GameState Update(GameState state)
     {
-        if (state.Tick % 100 == 0)
+        if (state.Tick % 20 == 0)
         {
             state.PlayerOne.Elixir += 1;
             state.PlayerTwo.Elixir += 1;
