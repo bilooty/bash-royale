@@ -47,7 +47,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
         SetupTestBattle();
         _unitLayer = new ScreenSurface(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT);
         _unitLayer.Surface.DefaultBackground = Color.Transparent;
-        _guiLayer = new ScreenSurface(28, 8);
+        _guiLayer = new ScreenSurface(ArenaMap.Width, 8);
         _guiLayer.Surface.DefaultBackground = Color.Transparent;
         _guiLayer.Position = new Point(0, ArenaMap.Height); 
         Children.Add(_guiLayer);
@@ -67,6 +67,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
         UseKeyboard = true;
         IsFocused = true;
+        UseMouse = true; 
     }
 
     public override bool ProcessKeyboard(Keyboard keyboard)
@@ -95,6 +96,8 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
         return base.ProcessKeyboard(keyboard);
     }
+    
+
     
     private bool ShouldDrawSprout(int x, int y)
     {
@@ -277,10 +280,7 @@ public override void Update(TimeSpan delta)
 
     private void DrawGUI()
     {
-        _guiLayer.Surface.Clear();
-        _guiLayer.Surface.DrawBox(
-            new Rectangle(0, 0, _guiLayer.Surface.Width, _guiLayer.Surface.Height),
-            ShapeParameters.CreateBorder(new ColoredGlyph(Color.Black, Color.Gray)));
+
         
         int cardWidth = 5;
         int cardHeight = 3;
@@ -341,9 +341,20 @@ public override void Update(TimeSpan delta)
             }
         }
         
-        _guiLayer.Surface.Print(2, 2, "=== HAND ===", Color.Yellow);
-        _guiLayer.Surface.Print(2, 1, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
-        
+        _guiLayer.Surface.Print(0, 3, "=========== HAND ===========", Color.Yellow);
+        int barY = 1;
+        string barlabel = $" {player.Elixir:0}/{GameSettings.MAX_ELIXIR:0}";
+        int totalWidth = ArenaMap.Width;
+        int barWidth = totalWidth - barlabel.Length -1;
+        int filled = barWidth * player.Elixir / GameSettings.MAX_ELIXIR;
+        for (int i = 0; i < barWidth; i++)
+        {
+            if (i < filled)
+                _guiLayer.Surface.SetGlyph(1 + i, barY, 219, Color.Magenta);
+            else
+                _guiLayer.Surface.SetGlyph(1 + i, barY, 176, Color.DarkMagenta);
+        }
+        _guiLayer.Surface.Print(1 + barWidth, barY, barlabel, Color.Magenta);
     }
     private void SetupTestBattle()
     {
