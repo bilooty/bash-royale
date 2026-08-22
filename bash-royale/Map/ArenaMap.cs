@@ -39,9 +39,8 @@ public static class ArenaMap
         "............................",
         "............................", // Player King Tower
         "............................",
-        "............................",
-        "............................",
-        "KNGHT SKLTN CNNON FBALL....."  // 32nd row
+        "............................", 
+        // 32nd row
     };
 
     // The actual deterministic data structure used by the engine
