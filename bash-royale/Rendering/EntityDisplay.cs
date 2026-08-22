@@ -11,10 +11,14 @@ public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false, 
     {
         [ProjectileType.ZapEffect] = new EntityDisplay(
             [[new ColoredGlyph(Color.LightBlue, Color.White, 'Z'), new ColoredGlyph(Color.White, Color.White, '#')]], isTransparent:false, flashing:true),
+        [ProjectileType.WizardBoom] = new EntityDisplay(
+            [[new ColoredGlyph(Color.Orange, Color.Yellow, '*')]], isTransparent:false, flashing:true),
         [ProjectileType.Arrow] = new EntityDisplay(
             [[new ColoredGlyph(Color.Black, Color.White, '^'), new ColoredGlyph(Color.White, Color.White, 'o')]], isTransparent:true, flashing:false),
         [ProjectileType.CannonBall] = new EntityDisplay(
-            [[new ColoredGlyph(Color.Black, Color.White, 'o'), new ColoredGlyph(Color.White, Color.White, 'o')]], isTransparent:true, flashing:false)
+            [[new ColoredGlyph(Color.Black, Color.White, 'o'), new ColoredGlyph(Color.White, Color.White, 'o')]], isTransparent:true, flashing:false),
+        [ProjectileType.WizardBall] = new EntityDisplay(
+            [[new ColoredGlyph(Color.Orange, Color.White, 'o'), new ColoredGlyph(Color.White, Color.White, 'o')]], isTransparent:true, flashing:false),
     };
     public static Dictionary<UnitType, EntityDisplay> Displays = new Dictionary<UnitType, EntityDisplay>
     {
