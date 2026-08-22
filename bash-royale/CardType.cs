@@ -2,13 +2,14 @@ namespace bash_royale;
 
 public enum CardId
 {
+    Zap,
     Knight,
     Giant,
     Archer,
     Goblin,
     Wizard,
     Hog,
-    FireBall,
+
 }
 
 public enum ValidLocation
@@ -23,16 +24,16 @@ public enum CardType
     Spell,
 }
 
-public record UnitCard(CardId Id, int Cost, UnitType UnitType) : CardInfo(Id, CardType.Unit, Cost, ValidLocation.YourSide);
+public record UnitCard(CardId Id, int Cost, UnitType UnitType)
+    : CardInfo(Id, CardType.Unit, Cost, ValidLocation.YourSide);
 
-public record SpellCard(CardId Id, int Cost, SpellType SpellType) : CardInfo(Id, CardType.Spell, Cost, ValidLocation.BothSides);
+public record SpellCard(CardId Id, int Cost, ProjectileType ProjectileType, Vector2Int Offset, Vector2Int Size) : CardInfo(Id, CardType.Spell, Cost, ValidLocation.BothSides);
 
 public record CardInfo(
     CardId Id,
     CardType Type,
     int Cost,
-    ValidLocation ValidLocation
-    );
+    ValidLocation ValidLocation);
 
 public static class CardSim
 {
@@ -52,7 +53,7 @@ public static class CardSim
 
         if (card is SpellCard spellCard)
         {
-            //
+            gameState.Projectiles.Add(new ProjectileState(spellCard.ProjectileType, playerId, position));
         }
 
         if (playerId == PlayerId.One)
@@ -115,7 +116,7 @@ public static class CardInfos
     public static CardInfo GetCardInfo(CardId id) => id switch
     {
         CardId.Knight => new UnitCard(id, 3, UnitType.Knight),
-        CardId.FireBall => new SpellCard(id, 4, SpellType.FireBall),
+        CardId.Zap => new SpellCard(id, 4, ProjectileType.Zap, new Vector2Int(-1, -1), new Vector2Int(3, 3)),
         CardId.Giant => new UnitCard(id, 5, UnitType.Giant),
         CardId.Archer => new UnitCard(id, 3, UnitType.Archer),
         CardId.Goblin => new UnitCard(id, 2, UnitType.Goblin),

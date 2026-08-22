@@ -8,6 +8,7 @@ public struct GameState
     public PlayerState PlayerTwo;
     public bool IsDraw;
     public bool IsGameOver;
+    public List<ProjectileState> Projectiles;
     public PlayerId? Winner;
     public int Tick;
     public bool IsOvertime => Tick > GameSettings.REGULATION_END_TICK;
@@ -20,6 +21,7 @@ public struct GameState
             IsDraw = false,
             IsGameOver = false,
             Winner = null,
+            Projectiles = new List<ProjectileState>(),
         };
     }
 
