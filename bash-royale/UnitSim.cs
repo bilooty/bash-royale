@@ -42,16 +42,19 @@ public static class UnitSim
         curUnit.Ticks++;
         return behaviour.Update(curUnit, gameState, target, targetIdx ?? -1);
     }
-    internal static bool IsOccupied(GameState state, Vector2Int position, MovementLayer layer)
+    internal static bool IsOccupied(GameState state, Vector2Int position, MovementLayer layer, Vector2Int ignore)
     {
-        return HasUnitAt(state.PlayerOne.Units, position, layer)
-               || HasUnitAt(state.PlayerTwo.Units, position, layer);
+        return HasUnitAt(state.PlayerOne.Units, position, layer, ignore)
+               || HasUnitAt(state.PlayerTwo.Units, position, layer, ignore);
     }
 
-    private static bool HasUnitAt(List<UnitState> units, Vector2Int position, MovementLayer layer)
+    private static bool HasUnitAt(List<UnitState> units, Vector2Int position, MovementLayer layer, Vector2Int ignore)
     {
         foreach (UnitState unit in units)
         {
+            // Skip the unit doing the moving — its own body isn't an obstacle.
+            if (unit.Position == ignore) continue;
+
             UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
             if (info.Layer != layer) continue;
 
@@ -110,6 +113,23 @@ public static class UnitSim
             PlayerId.Two => gameState.PlayerOne.Units,
             _ => throw new ArgumentOutOfRangeException(nameof(curUnit), curUnit.Owner, null)
         };
+    }
+    
+    internal static bool FootprintBlocked(GameState state, Vector2Int topLeft,
+        Vector2Int size, MovementLayer layer, Vector2Int ignore)
+    {
+        for (int y = 0; y < size.Y; y++)
+        {
+            for (int x = 0; x < size.X; x++)
+            {
+                Vector2Int cell = new(topLeft.X + x, topLeft.Y + y);
+
+                if (!ArenaMap.IsPassable(cell, layer)) return true;
+                if (IsOccupied(state, cell, layer, ignore)) return true;
+            }
+        }
+
+        return false;
     }
 }
 
