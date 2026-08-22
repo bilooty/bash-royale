@@ -227,7 +227,8 @@ public override void Update(TimeSpan delta)
         DrawUnits(_gameState.PlayerTwo);
         DrawDeployCursor();
         DrawGUI();
-
+        // roughly we need a timer also timer need sto swap to overtime after 2 mins
+        
         if (!_networkManager.IsConnected)
         {
             _guiLayer.Surface.Print(2, 6, "Waiting for opponent...", Color.Yellow, Color.Black);
@@ -348,7 +349,11 @@ public override void Update(TimeSpan delta)
 
     private void DrawGUI()
     {
-
+        // we want a timer, that swaps to overtime after isOvertime
+        // we want a victory screen for active player if winner
+        // we want a defeat screen for opposite player
+        // if ishost and win = player 1 then victory else lose
+        // if isclient and win = player 2 then victory else lose
         
         int cardWidth = 5;
         int cardHeight = 3;
