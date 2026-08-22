@@ -1,9 +1,16 @@
 namespace bash_royale.Scenes;
 
+
+
 public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false)
 {
     public ColoredGlyph[][] Glyphs => glyphs;
     public bool IsTransparent => isTransparent;
+    public static Dictionary<ProjectileType, EntityDisplay> Projectiles { get; } = new()
+    {
+        [ProjectileType.ZapEffect] = new EntityDisplay(
+            [[new ColoredGlyph(Color.White, Color.Blue, '#'), new ColoredGlyph(Color.White, Color.Blue, '#')]])
+    };
     public static Dictionary<UnitType, EntityDisplay> Displays = new Dictionary<UnitType, EntityDisplay>
     {
         [UnitType.Knight] = new EntityDisplay(

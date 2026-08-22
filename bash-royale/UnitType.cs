@@ -67,7 +67,7 @@ public static class UnitInfos
                 new DoNothing(),
                 new DoNothing(),
                 new AttackBehaviour(90),
-                new Vector2Int(1,1),
+                new Vector2Int(3,2),
                 MovementLayer.Ground,
                 true),
             UnitType.Castle => new UnitInfo(
@@ -81,7 +81,7 @@ public static class UnitInfos
                 new DoNothing(),
                 new DoNothing(),
                 new AttackBehaviour(110),
-                new Vector2Int(1,1),
+                new Vector2Int(3,3),
                 MovementLayer.Ground,
                 true),
                 UnitType.Giant => new UnitInfo(
