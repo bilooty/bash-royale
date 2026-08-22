@@ -22,6 +22,8 @@ public class BattleRenderer : SadConsole.ScreenSurface
     private const int COMMAND_DELAY = 10;
 
     private bool _isPrimed = false;
+    private int? _selectedHandIdx = null;
+    private Vector2Int? _hoverCell = null;
     private Dictionary<int, NetworkAction> _localInputs = new();
     private int tick = 0;
     private bool _hasSentAction = false;
@@ -47,8 +49,12 @@ public class BattleRenderer : SadConsole.ScreenSurface
         SetupTestBattle();
         _unitLayer = new ScreenSurface(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT);
         _unitLayer.Surface.DefaultBackground = Color.Transparent;
+        // Purely visual overlays. SadConsole walks children top-down and stops at the first
+        // one that handles the mouse, so leaving these on would swallow every arena click.
+        _unitLayer.UseMouse = false;
         _guiLayer = new ScreenSurface(ArenaMap.Width, 8);
         _guiLayer.Surface.DefaultBackground = Color.Transparent;
+        _guiLayer.UseMouse = false;
         _guiLayer.Position = new Point(0, ArenaMap.Height); 
         Children.Add(_guiLayer);
         
@@ -66,13 +72,14 @@ public class BattleRenderer : SadConsole.ScreenSurface
         DrawArena();
 
         UseKeyboard = true;
+        UseMouse = true;
         IsFocused = true;
         UseMouse = true; 
     }
 
     public override bool ProcessKeyboard(Keyboard keyboard)
     {
-        // Prevent queuing a second card if one is already waiting to be sent
+        // Prevent selecting a new card while one is already waiting to be sent
         if (_pendingLocalAction != null && _pendingLocalAction.Action != ActionType.NoAction)
             return base.ProcessKeyboard(keyboard);
 
@@ -80,25 +87,80 @@ public class BattleRenderer : SadConsole.ScreenSurface
         {
             if (keyboard.IsKeyPressed(HandSlotKeys[i]))
             {
-                Vector2Int deployPosition = _isHost ? new Vector2Int(ArenaMap.Width / 2, ArenaMap.Height - 5) : new Vector2Int(ArenaMap.Width / 2, 5);
-                
-                // Just save the intent. The Update loop assigns the Tick and PlayerId.
-                _pendingLocalAction = new NetworkAction
-                {
-                    Action = ActionType.DeployCard,
-                    CardIdx = (byte)i,
-                    X = (byte)deployPosition.X,
-                    Y = (byte)deployPosition.Y,
-                };
+                // Arm this card for deployment; the next left click on the arena places it there.
+                _selectedHandIdx = (_selectedHandIdx == i) ? null : i;
                 return true;
             }
         }
 
         return base.ProcessKeyboard(keyboard);
     }
-    
 
+    public override bool ProcessMouse(MouseScreenObjectState state)
+    {
+        _hoverCell = state.IsOnScreenObject
+            ? new Vector2Int(state.CellPosition.X, state.CellPosition.Y)
+            : null;
+
+        if (_selectedHandIdx is int handIdx
+            && state.Mouse.LeftClicked
+            && state.IsOnScreenObject
+            && (_pendingLocalAction == null || _pendingLocalAction.Action == ActionType.NoAction))
+        {
+            Vector2Int deployPosition = new Vector2Int(state.CellPosition.X, state.CellPosition.Y);
+            PlayerState player = _isHost ? _gameState.PlayerOne : _gameState.PlayerTwo;
+            if (handIdx >= player.Hand.Count) return base.ProcessMouse(state);
+            CardInfo card = CardInfos.GetCardInfo(player.Hand[handIdx]);
+
+            if (IsValidDeploySpot(deployPosition, card.ValidLocation))
+            {
+                // Just save the intent. The Update loop assigns the Tick and PlayerId.
+                _pendingLocalAction = new NetworkAction
+                {
+                    Action = ActionType.DeployCard,
+                    CardIdx = (byte)handIdx,
+                    X = (byte)deployPosition.X,
+                    Y = (byte)deployPosition.Y,
+                };
+                _selectedHandIdx = null;
+                return true;
+            }
+        }
+
+        return base.ProcessMouse(state);
+    }
+
+    private bool IsValidDeploySpot(Vector2Int position, ValidLocation validLocation)
+    {
+        if (position.X < 0 || position.X >= ArenaMap.Width) return false;
+        if (position.Y < 0 || position.Y >= ArenaMap.Height) return false;
+        if (!ArenaMap.IsPassable(position, MovementLayer.Ground)) return false;
+
+        if (validLocation == ValidLocation.BothSides) return true;
+
+        // Units can only be deployed on your own side of the river until you've crossed it.
+        return _isHost ? position.Y > ArenaMap.RiverEndRow : position.Y < ArenaMap.RiverStartRow;
+    }
     
+    // Highlights the cell under the cursor while a card is armed: white if the spot is legal,
+    // dark red if it isn't. Draw this after DrawUnits so it sits on top.
+    private void DrawDeployCursor()
+    {
+        if (_selectedHandIdx is not int handIdx) return;
+        if (_hoverCell is not Vector2Int cell) return;
+        if (cell.X < 0 || cell.X >= _unitLayer.Surface.Width) return;
+        if (cell.Y < 0 || cell.Y >= _unitLayer.Surface.Height) return;
+
+        PlayerState player = _isHost ? _gameState.PlayerOne : _gameState.PlayerTwo;
+        if (handIdx >= player.Hand.Count) return;
+
+        CardInfo card = CardInfos.GetCardInfo(player.Hand[handIdx]);
+        bool valid = IsValidDeploySpot(cell, card.ValidLocation);
+
+        _unitLayer.Surface[cell.X, cell.Y].Background = valid ? Color.White : Color.DarkRed;
+    }
+
+
     private bool ShouldDrawSprout(int x, int y)
     {
         // Use large prime numbers to create a chaotic but repeatable hash
@@ -160,6 +222,7 @@ public override void Update(TimeSpan delta)
         _guiLayer.Surface.Clear();
         DrawUnits(_gameState.PlayerOne);
         DrawUnits(_gameState.PlayerTwo);
+        DrawDeployCursor();
         DrawGUI();
 
         if (!_networkManager.IsConnected)
@@ -232,6 +295,7 @@ public override void Update(TimeSpan delta)
     
         DrawUnits(_gameState.PlayerOne);
         DrawUnits(_gameState.PlayerTwo);
+        DrawDeployCursor();
         base.Update(delta);
     }
     private void DrawArena()
@@ -288,11 +352,12 @@ public override void Update(TimeSpan delta)
         int startX = 1;
         int startY = 4;
 
-        PlayerState player = _gameState.PlayerOne;
+        PlayerState player = _isHost ? _gameState.PlayerOne : _gameState.PlayerTwo;
         for (int i = 0; i < player.Hand.Count; i++)
         {
             CardInfo card = CardInfos.GetCardInfo(player.Hand[i]);
-            Color color = player.Elixir >= card.Cost ? Color.Cyan : Color.Gray;
+            bool isSelected = _selectedHandIdx == i;
+            Color color = isSelected ? Color.White : (player.Elixir >= card.Cost ? Color.Cyan : Color.Gray);
             int cardX = startX + (i * (cardWidth + spacing));
             int cardY = startY;
             string label = card.Id switch
@@ -355,6 +420,13 @@ public override void Update(TimeSpan delta)
                 _guiLayer.Surface.SetGlyph(1 + i, barY, 176, Color.DarkMagenta);
         }
         _guiLayer.Surface.Print(1 + barWidth, barY, barlabel, Color.Magenta);
+
+        // Row 2 is the only line left: row 1 is the elixir bar, row 3 the HAND banner
+        // and rows 4-6 the card boxes.
+        if (_selectedHandIdx is int sel && sel < player.Hand.Count)
+            _guiLayer.Surface.Print(1, 2, $"{player.Hand[sel]} -> CLICK ARENA", Color.White);
+        else
+            _guiLayer.Surface.Print(1, 2, "Press 1-4 to pick a card", Color.Gray);
     }
     private void SetupTestBattle()
     {
