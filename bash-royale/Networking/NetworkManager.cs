@@ -9,13 +9,13 @@ public class NetworkManager : INetEventListener
     private NetPeer? _serverPeer;
     private readonly NetPacketProcessor _packetProcessor;
     private readonly NetDataWriter _writer = new NetDataWriter();
-    
-    public Dictionary<int, NetworkAction> RemoteInputs { get; private set; }
+    public bool IsConnected => _serverPeer != null;
+    public Dictionary<int, NetworkAction> RemoteInputs { get; private set; } = new();
 
     public NetworkManager()
     {
         _packetProcessor = new NetPacketProcessor();
-        _packetProcessor.SubscribeReusable<NetworkAction>(OnPlayerActionReceived);
+        _packetProcessor.Subscribe<NetworkAction>(OnPlayerActionReceived, () => new NetworkAction());
     }
     public void StartClient(string ip, int port)
     {
@@ -23,7 +23,11 @@ public class NetworkManager : INetEventListener
         _client.Start();
         _client.Connect(ip, port, "BashRoyaleKey");
     }
-
+    public void StartHost(int port)
+    {
+        _client = new NetManager(this);
+        _client.Start(port); 
+    }
     public void PollEvents()
     {
         _client?.PollEvents();
@@ -54,7 +58,11 @@ public class NetworkManager : INetEventListener
         
     public void OnNetworkError(System.Net.IPEndPoint endPoint, System.Net.Sockets.SocketError socketError) { }
     public void OnNetworkReceiveUnconnected(System.Net.IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType) { }
-    public void OnConnectionRequest(ConnectionRequest request) { }
+
+    public void OnConnectionRequest(ConnectionRequest request)
+    {
+        request.AcceptIfKey("BashRoyaleKey"); 
+    }
     public void OnNetworkLatencyUpdate(NetPeer peer, int latency)
     {
         // You can leave this empty for now, or save the 'latency' 

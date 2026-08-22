@@ -1,3 +1,5 @@
+using System.Numerics;
+
 namespace bash_royale;
 
 public struct PlayerState
@@ -7,14 +9,14 @@ public struct PlayerState
     public int Elixir;
     public List<CardId> Hand;
     public List<CardId> Deck;
-    
+
 
     private const int HAND_SIZE = 4;
 
     public static PlayerState CreateNew(PlayerId id)
     {
         List<CardId> deck = Enum.GetValues<CardId>().ToList();
-        Shuffle(deck);
+        //Shuffle(deck);
 
         List<CardId> hand = deck.Take(HAND_SIZE).ToList();
         deck.RemoveRange(0, hand.Count);

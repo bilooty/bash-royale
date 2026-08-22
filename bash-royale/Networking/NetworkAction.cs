@@ -8,13 +8,13 @@ public enum ActionType : byte
 }
 public class NetworkAction : INetSerializable
 {
-    public int Tick;
-    public byte PlayerId;
-    public ActionType Action;
+    public int Tick { get; set; }
+    public byte PlayerId { get; set; }
+    public ActionType Action { get; set; }
 
-    public byte CardType;
-    public byte X;
-    public byte Y;
+    public byte CardIdx { get; set; }
+    public byte X { get; set; }
+    public byte Y { get; set; }
 
     public void Serialize(NetDataWriter writer)
     {
@@ -24,7 +24,7 @@ public class NetworkAction : INetSerializable
 
         if (Action == ActionType.DeployCard)
         {
-            writer.Put(CardType);
+            writer.Put(CardIdx);
             writer.Put(X);
             writer.Put(Y);
         }
@@ -37,7 +37,7 @@ public class NetworkAction : INetSerializable
         Action = (ActionType)reader.GetByte();
         if (Action == ActionType.DeployCard)
         {
-            CardType = reader.GetByte();
+            CardIdx = reader.GetByte();
             X = reader.GetByte();
             Y = reader.GetByte();
         }
