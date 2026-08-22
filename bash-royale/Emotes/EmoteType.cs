@@ -20,7 +20,7 @@ public static class EmoteInfo
             EmoteId.Wow => "WOW",
             EmoteId.Angry => ">:(",
             EmoteId.Cry => "T_T",
-            EmoteId.Laugh => "LOL",
+            EmoteId.Laugh => "HEHEHAHA",
             _ => "???",
         };
     
