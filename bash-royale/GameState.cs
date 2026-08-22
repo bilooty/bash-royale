@@ -11,6 +11,7 @@ public struct GameState
     public List<ProjectileState> Projectiles;
     public PlayerId? Winner;
     public int Tick;
+    public int NextID;
     public bool IsOvertime => Tick > GameSettings.REGULATION_END_TICK;
 
     public static GameState CreateNew() =>
@@ -28,6 +29,7 @@ public struct GameState
             IsGameOver = false,
             Winner = null,
             Projectiles = new List<ProjectileState>(),
+            NextID = 0,
         };
     }
 
@@ -56,7 +58,7 @@ public static class GameSim
 
         foreach (UnitState unit in units)
         {
-            if (!UnitInfos.GetUnitInfo(unit.Type).IsBuilding) continue;
+            if (unit.Type == UnitType.Tower || unit.Type == UnitType.Castle) continue;
             count++;
         }
 
@@ -101,6 +103,7 @@ public static class GameSim
         if (p1Count != p2Count)
         {
             state.IsGameOver = true;
+            
             state.Winner = p1Count > p2Count ? PlayerId.One : PlayerId.Two;
             return state;
         }

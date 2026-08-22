@@ -6,7 +6,8 @@ namespace bash_royale.Rendering;
 /// <summary>
 /// Clash Royale style deck builder: the eight cards you take into battle sit at the
 /// top, the whole collection below. Clicking a collection card adds it (or takes it
-/// back out), clicking a deck card removes it.
+/// back out), clicking a deck card removes it. The collection is paged, since it no
+/// longer fits in one grid.
 /// </summary>
 public class DeckScreen : SadConsole.ScreenSurface
 {
@@ -19,15 +20,29 @@ public class DeckScreen : SadConsole.ScreenSurface
     private const int CollectionStartX = 1;
     private const int CollectionStartY = 16;
 
+    // Rows that fit between the collection header and the message line.
+    private const int CollectionRows = 4;
+    private const int CardsPerPage = Columns * CollectionRows;
+
+    private const int HeaderRow = 15;
+
     private readonly List<CardId> _deck;
     private readonly IReadOnlyList<CardId> _collection = CardInfos.AllCards;
 
     private readonly Rectangle _saveButton = new(1, 34, 13, 3);
     private readonly Rectangle _backButton = new(14, 34, 13, 3);
 
+    // Single-glyph arrows keep the header row comfortably inside the surface.
+    private readonly Rectangle _prevPageButton = new(12, HeaderRow, 3, 1);
+    private readonly Rectangle _nextPageButton = new(20, HeaderRow, 3, 1);
+
+    private int _page;
+
     private Point? _hover;
     private string _message = "Click a card below to add it.";
     private Color _messageColor = Color.Gray;
+
+    private int PageCount => Math.Max(1, (_collection.Count + CardsPerPage - 1) / CardsPerPage);
 
     public DeckScreen() : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
     {
@@ -52,6 +67,18 @@ public class DeckScreen : SadConsole.ScreenSurface
         if (keyboard.IsKeyPressed(Keys.Enter))
         {
             SaveAndLeave();
+            return true;
+        }
+
+        if (keyboard.IsKeyPressed(Keys.Left) || keyboard.IsKeyPressed(Keys.A))
+        {
+            TurnPage(-1);
+            return true;
+        }
+
+        if (keyboard.IsKeyPressed(Keys.Right) || keyboard.IsKeyPressed(Keys.D))
+        {
+            TurnPage(1);
             return true;
         }
 
@@ -81,6 +108,18 @@ public class DeckScreen : SadConsole.ScreenSurface
             return true;
         }
 
+        if (_prevPageButton.Contains(cell))
+        {
+            TurnPage(-1);
+            return true;
+        }
+
+        if (_nextPageButton.Contains(cell))
+        {
+            TurnPage(1);
+            return true;
+        }
+
         if (HitTest(cell, DeckStartX, DeckStartY, _deck.Count) is int deckIdx)
         {
             CardId removed = _deck[deckIdx];
@@ -90,14 +129,29 @@ public class DeckScreen : SadConsole.ScreenSurface
             return true;
         }
 
-        if (HitTest(cell, CollectionStartX, CollectionStartY, _collection.Count) is int cardIdx)
+        // Slot index is relative to the visible page, so shift it back into the
+        // collection's own indexing before touching the list.
+        if (HitTest(cell, CollectionStartX, CollectionStartY, PageCardCount()) is int slotIdx)
         {
-            ToggleCard(_collection[cardIdx]);
+            ToggleCard(_collection[PageStart() + slotIdx]);
             Redraw();
             return true;
         }
 
         return base.ProcessMouse(state);
+    }
+
+    private int PageStart() => _page * CardsPerPage;
+
+    private int PageCardCount() => Math.Min(CardsPerPage, _collection.Count - PageStart());
+
+    // Wraps, so paging past either end lands somewhere sensible rather than sticking.
+    private void TurnPage(int delta)
+    {
+        if (PageCount <= 1) return;
+
+        _page = (_page + delta + PageCount) % PageCount;
+        Redraw();
     }
 
     private void ToggleCard(CardId card)
@@ -187,21 +241,47 @@ public class DeckScreen : SadConsole.ScreenSurface
                 DrawEmptySlot(bounds);
         }
 
-        Surface.Print(1, 15, "COLLECTION", Color.Yellow);
+        DrawCollectionHeader();
 
-        for (int i = 0; i < _collection.Count; i++)
+        int pageStart = PageStart();
+        int pageCount = PageCardCount();
+
+        for (int slot = 0; slot < pageCount; slot++)
         {
-            CardId card = _collection[i];
+            CardId card = _collection[pageStart + slot];
             bool inDeck = _deck.Contains(card);
-            DrawCard(SlotBounds(CollectionStartX, CollectionStartY, i), card,
+            DrawCard(SlotBounds(CollectionStartX, CollectionStartY, slot), card,
                 inDeck ? Color.DarkGreen : Color.White, inDeck);
         }
 
-        Surface.Print(1, 32, _message.PadRight(36).Substring(0, 36), _messageColor);
-        Surface.Print(1, 33, "Enter = save, Esc = back".PadRight(36), Color.Gray);
+        int messageWidth = Math.Min(36, Surface.Width - 1);
+        Surface.Print(1, 32, _message.PadRight(messageWidth)[..messageWidth], _messageColor);
+        Surface.Print(1, 33, "Enter save  Esc back  <- -> page".PadRight(messageWidth), Color.Gray);
 
         DrawButton(_saveButton, "SAVE & BACK", complete ? Color.LightGreen : Color.Gray);
         DrawButton(_backButton, "CANCEL", Color.Orange);
+    }
+
+    private void DrawCollectionHeader()
+    {
+        Surface.Print(1, HeaderRow, "COLLECTION", Color.Yellow);
+
+        if (PageCount <= 1) return;
+
+        DrawArrow(_prevPageButton, '<');
+        Surface.Print(_prevPageButton.X + _prevPageButton.Width + 1, HeaderRow,
+            (_page + 1) + "/" + PageCount, Color.Yellow);
+        DrawArrow(_nextPageButton, '>');
+    }
+
+    private void DrawArrow(Rectangle bounds, char glyph)
+    {
+        bool hovered = _hover is Point p && bounds.Contains(p);
+        Color color = hovered ? Color.White : Color.Cyan;
+
+        Surface.SetGlyph(bounds.X, HeaderRow, '[', color);
+        Surface.SetGlyph(bounds.X + 1, HeaderRow, glyph, color);
+        Surface.SetGlyph(bounds.X + 2, HeaderRow, ']', color);
     }
 
     private int Center(string text) => (Surface.Width - text.Length) / 2;
@@ -223,7 +303,7 @@ public class DeckScreen : SadConsole.ScreenSurface
 
         CardInfo info = CardInfos.GetCardInfo(card);
         string name = CardInfos.GetName(card);
-        if (name.Length > CardWidth - 2) name = name.Substring(0, CardWidth - 2);
+        if (name.Length > CardWidth - 2) name = name[..(CardWidth - 2)];
 
         Surface.Print(bounds.X + 1, bounds.Y + 1, name, border);
         Surface.SetGlyph(bounds.X + 1, bounds.Y + 2, CardInfos.GetGlyph(card),
