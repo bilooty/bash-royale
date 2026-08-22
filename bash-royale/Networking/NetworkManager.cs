@@ -12,10 +12,14 @@ public class NetworkManager : INetEventListener
     public bool IsConnected => _serverPeer != null;
     public Dictionary<int, NetworkAction> RemoteInputs { get; private set; } = new();
 
+    /// <summary>The opponent's deck, or null until their handshake packet arrives.</summary>
+    public List<CardId>? RemoteDeck { get; private set; }
+
     public NetworkManager()
     {
         _packetProcessor = new NetPacketProcessor();
         _packetProcessor.Subscribe<NetworkAction>(OnPlayerActionReceived, () => new NetworkAction());
+        _packetProcessor.SubscribeNetSerializable<DeckPacket>(OnDeckReceived, () => new DeckPacket());
     }
     public void StartClient(string ip, int port)
     {
@@ -43,12 +47,27 @@ public class NetworkManager : INetEventListener
         }
     }
 
+    public void SendDeck(List<CardId> deck)
+    {
+        if (_serverPeer == null) return;
+
+        DeckPacket packet = new() { Cards = Decks.ToBytes(deck) };
+        _writer.Reset();
+        _packetProcessor.WriteNetSerializable(_writer, ref packet);
+        _serverPeer.Send(_writer, DeliveryMethod.ReliableOrdered);
+    }
+
+    private void OnDeckReceived(DeckPacket packet)
+    {
+        RemoteDeck = Decks.FromBytes(packet.Cards);
+    }
+
     private void OnPlayerActionReceived(NetworkAction action)
     {
         RemoteInputs[action.Tick] = action;
     }
     public void OnPeerConnected(NetPeer peer) { _serverPeer = peer; }
-    public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo) { _serverPeer = null; }
+    public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo) { _serverPeer = null; RemoteDeck = null; }
         
     public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
     {

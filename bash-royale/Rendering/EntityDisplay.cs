@@ -1,4 +1,4 @@
-﻿namespace bash_royale.Scenes;
+namespace bash_royale.Scenes;
 
 public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false)
 {
@@ -47,6 +47,37 @@ public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false)
         [UnitType.HogRider] = new EntityDisplay(
             [
                 [new ColoredGlyph(Color.Orange, Color.DarkGray, 'h')]
+            ]
+        ),
+
+        [UnitType.Barbarian] = new EntityDisplay(
+            [
+                [new ColoredGlyph(Color.Brown, Color.DarkGray, 'B')]
+            ]
+        ),
+        [UnitType.Musketeer] = new EntityDisplay(
+            [
+                [new ColoredGlyph(Color.LightBlue, Color.DarkGray, 'M')]
+            ]
+        ),
+        [UnitType.MiniPekka] = new EntityDisplay(
+            [
+                [new ColoredGlyph(Color.Silver, Color.DarkGray, 'P')]
+            ]
+        ),
+        [UnitType.Valkyrie] = new EntityDisplay(
+            [
+                [new ColoredGlyph(Color.Pink, Color.DarkGray, 'V')]
+            ]
+        ),
+        [UnitType.Skeleton] = new EntityDisplay(
+            [
+                [new ColoredGlyph(Color.White, Color.DarkGray, 's')]
+            ]
+        ),
+        [UnitType.Dragon] = new EntityDisplay(
+            [
+                [new ColoredGlyph(Color.LightGreen, Color.DarkGray, 'D')]
             ]
         ),
 
