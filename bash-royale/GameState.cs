@@ -11,12 +11,18 @@ public struct GameState
     public PlayerId? Winner;
     public int Tick;
     public bool IsOvertime => Tick > GameSettings.REGULATION_END_TICK;
-    public static GameState CreateNew()
+
+    public static GameState CreateNew() =>
+        CreateNew(Decks.CreateDefault(), Decks.CreateDefault());
+
+    // Each player brings their own eight card deck; both machines build the same
+    // state from the two decks exchanged during the connection handshake.
+    public static GameState CreateNew(List<CardId> deckOne, List<CardId> deckTwo)
     {
         return new GameState
         {
-            PlayerOne = PlayerState.CreateNew(PlayerId.One),
-            PlayerTwo = PlayerState.CreateNew(PlayerId.Two),
+            PlayerOne = PlayerState.CreateNew(PlayerId.One, deckOne),
+            PlayerTwo = PlayerState.CreateNew(PlayerId.Two, deckTwo),
             IsDraw = false,
             IsGameOver = false,
             Winner = null,
