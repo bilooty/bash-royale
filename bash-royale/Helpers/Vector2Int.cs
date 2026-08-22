@@ -18,7 +18,9 @@ public record struct Vector2Int(int X, int Y)
     public static Vector2Int operator *(int scalar, Vector2Int a)   => new(a.X * scalar, a.Y * scalar);
     public static Vector2Int operator /(Vector2Int a, int scalar)   => new(a.X / scalar, a.Y / scalar);
     public static Vector2Int operator -(Vector2Int a)               => new(-a.X, -a.Y);
-
+    
+    public static readonly Vector2Int[] Cardinals = { Up, Right, Down, Left };
+    
     public int ManhattanLength => Math.Abs(X) + Math.Abs(Y);
     public long LengthSquared  => (long)X * X + (long)Y * Y;
     

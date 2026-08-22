@@ -1,20 +1,28 @@
 using System.Runtime.CompilerServices;
 using bash_royale.Networking;
 using SadConsole.Input;
-
+using System;
 namespace bash_royale.Scenes;
 
 // UI/BattleRenderer.cs
 public class BattleRenderer : SadConsole.ScreenSurface
 {
     private static readonly Keys[] HandSlotKeys = { Keys.D1, Keys.D2, Keys.D3, Keys.D4 };
-
+    private Color p1Color = Color.Blue;
+    private Color p2Color = Color.Red;
     private GameState _gameState;
     private ScreenSurface _unitLayer;
     private ScreenSurface _guiLayer;
     private double _timer = 0.05f;
     private string _ipAddress = "127.0.0.1";
     private bool _isHost;
+    
+    private int _executionTick = 0;
+    private int _inputTick = 0;
+    private const int COMMAND_DELAY = 10;
+
+    private bool _isPrimed = false;
+    private Dictionary<int, NetworkAction> _localInputs = new();
     private int tick = 0;
     private bool _hasSentAction = false;
     private NetworkManager _networkManager;
@@ -36,19 +44,21 @@ public class BattleRenderer : SadConsole.ScreenSurface
         
         // 1. Initialize your deterministic engine
         _gameState = GameState.CreateNew();
+        SetupTestBattle();
         _unitLayer = new ScreenSurface(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT);
         _unitLayer.Surface.DefaultBackground = Color.Transparent;
         _guiLayer = new ScreenSurface(28, 8);
         _guiLayer.Surface.DefaultBackground = Color.Transparent;
         _guiLayer.Position = new Point(0, ArenaMap.Height); 
         Children.Add(_guiLayer);
-        _gameState = GameState.CreateNew();
-         PlayerState p1 = _gameState.PlayerOne;
+        
+        
+        PlayerState p1 = _gameState.PlayerOne;
         // p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(10, 4)));
         // p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(5, 5)));
         PlayerState p2 = _gameState.PlayerTwo;
-        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.One, new Vector2Int(10, 30)));
-        p2.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(10, 5)));
+        
+        
          _gameState.PlayerOne = p1;
          _gameState.PlayerTwo = p2;
         Children.Add(_unitLayer);
@@ -61,28 +71,31 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
     public override bool ProcessKeyboard(Keyboard keyboard)
     {
+        // Prevent queuing a second card if one is already waiting to be sent
+        if (_pendingLocalAction != null && _pendingLocalAction.Action != ActionType.NoAction)
+            return base.ProcessKeyboard(keyboard);
+
         for (int i = 0; i < HandSlotKeys.Length; i++)
         {
             if (keyboard.IsKeyPressed(HandSlotKeys[i]))
             {
-                Vector2Int deployPosition = new Vector2Int(ArenaMap.Width / 2, ArenaMap.Height - 5);
+                Vector2Int deployPosition = _isHost ? new Vector2Int(ArenaMap.Width / 2, ArenaMap.Height - 5) : new Vector2Int(ArenaMap.Width / 2, 5);
+                
+                // Just save the intent. The Update loop assigns the Tick and PlayerId.
                 _pendingLocalAction = new NetworkAction
                 {
-                    Tick = tick,
-                    PlayerId = (_isHost) ? (byte)0 : (byte)1,
                     Action = ActionType.DeployCard,
                     CardIdx = (byte)i,
                     X = (byte)deployPosition.X,
                     Y = (byte)deployPosition.Y,
-
                 };
-                //_gameState = CardSim.PlayFromHand(_gameState, PlayerId.One, i, deployPosition);
                 return true;
             }
         }
 
         return base.ProcessKeyboard(keyboard);
     }
+    
     private bool ShouldDrawSprout(int x, int y)
     {
         // Use large prime numbers to create a chaotic but repeatable hash
@@ -110,13 +123,14 @@ public class BattleRenderer : SadConsole.ScreenSurface
                 {
                     ColoredGlyph glyph = display.Glyphs[y][x];
                     _unitLayer.Surface[pos.X, pos.Y].Background = glyph.Background;
-                    _unitLayer.Surface[pos.X, pos.Y].Foreground = glyph.Foreground;
+                    _unitLayer.Surface[pos.X, pos.Y].Foreground = player.Id == PlayerId.One ? p1Color : p2Color;
+                    //_unitLayer.Surface[pos.X, pos.Y].Foreground = glyph.Foreground;
                     _unitLayer.Surface[pos.X, pos.Y].GlyphCharacter = glyph.GlyphCharacter;
                 }
             }
         }
     }
-    public override void Update(TimeSpan delta)
+public override void Update(TimeSpan delta)
     {
         _networkManager.PollEvents();
     
@@ -126,57 +140,71 @@ public class BattleRenderer : SadConsole.ScreenSurface
         DrawUnits(_gameState.PlayerTwo);
         DrawGUI();
 
-    
         if (!_networkManager.IsConnected)
         {
             _guiLayer.Surface.Print(2, 6, "Waiting for opponent...", Color.Yellow, Color.Black);
             base.Update(delta);
             return; 
         }        
+
+        // --- PRIME THE PUMP ---
+        // The moment we connect, send 10 future ticks of NoAction so both 
+        // clients have a buffer to start playing immediately without freezing.
+        if (!_isPrimed)
+        {
+            for (int i = 0; i < COMMAND_DELAY; i++)
+            {
+                var blankAction = new NetworkAction { Tick = _inputTick, PlayerId = (_isHost) ? (byte)0 : (byte)1, Action = ActionType.NoAction };
+                _localInputs[_inputTick] = blankAction;
+                _networkManager.SendAction(blankAction);
+                _inputTick++;
+            }
+            _isPrimed = true;
+        }
+
         _timer -= delta.TotalSeconds;
     
         if (_timer <= 0f)
         {
-            // 1. Prepare local action if the player didn't press anything
-            if (_pendingLocalAction is null)
+            // === THE BUFFERED LOCKSTEP GATE ===
+            // We only look at _executionTick (Tick 0, 1, 2...). 
+            // We do NOT care if future packets haven't arrived yet!
+            if (!_networkManager.RemoteInputs.ContainsKey(_executionTick))
             {
-                _pendingLocalAction = new NetworkAction
-                {
-                    Tick = tick,
-                    PlayerId = (_isHost) ? (byte)0 : (byte)1,
-                    Action = ActionType.NoAction
-                };
-            }
-        
-            // 2. Send our action over the network exactly ONCE per tick
-            if (!_hasSentAction)
-            {
-                _networkManager.SendAction(_pendingLocalAction);
-                _hasSentAction = true; // Don't spam the network while we wait!
-            }
-
-            // 3. === THE LOCKSTEP GATE ===
-            if (!_networkManager.RemoteInputs.ContainsKey(tick))
-            {
-                // We sent ours, but they haven't sent theirs. 
-                // Hold the timer at 0 so we check again next frame.
-                _timer = 0f; 
+                _timer = 0f; // A packet took longer than 0.5 seconds! Stutter!
             }
             else
             {
-                // We have their data! Proceed with the simulation.
-                NetworkAction remoteAction = _networkManager.RemoteInputs[tick];
+                // 1. GET BOTH ACTIONS FOR CURRENT TICK
+                NetworkAction remoteAction = _networkManager.RemoteInputs[_executionTick];
+                NetworkAction localAction = _localInputs[_executionTick];
                 
-                // Advance the engine
-                _gameState = GameSim.Update(_gameState, _pendingLocalAction, remoteAction);
-            
-                // Cleanup for the NEXT tick
-                _networkManager.RemoteInputs.Remove(tick);
-                _pendingLocalAction = null; 
-                _hasSentAction = false; // Reset the flag!
+                if (remoteAction.Action != ActionType.NoAction)
+                    System.Console.WriteLine("Received: pid: " + remoteAction.PlayerId + " x" + remoteAction.X + " y" + remoteAction.Y);
+
+                // 2. ADVANCE THE ENGINE
+                if (_isHost)
+                    _gameState = GameSim.Update(_gameState, localAction, remoteAction);
+                else
+                    _gameState = GameSim.Update(_gameState, remoteAction, localAction);
+              
+                // 3. CLEAN UP EXECUTED TICK
+                _networkManager.RemoteInputs.Remove(_executionTick);
+                _localInputs.Remove(_executionTick);
+                _executionTick++;
+
+                // 4. GENERATE AND SEND THE FUTURE INPUT TICK (Tick + 10)
+                NetworkAction nextInput = _pendingLocalAction ?? new NetworkAction { Action = ActionType.NoAction };
+                nextInput.Tick = _inputTick;
+                nextInput.PlayerId = _isHost ? (byte)0 : (byte)1;
+                
+                _localInputs[_inputTick] = nextInput;
+                _networkManager.SendAction(nextInput);
+                
+                _pendingLocalAction = null; // Clear the keyboard buffer
+                _inputTick++;
             
                 _timer = 0.05;
-                tick++;
             }
         }
     
@@ -275,6 +303,32 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
         _guiLayer.Surface.Print(2, 2, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
         
+    }
+    private void SetupTestBattle()
+    {
+        PlayerState p1 = _gameState.PlayerOne;
+        PlayerState p2 = _gameState.PlayerTwo;
+
+        // Player Two defends the top, Player One the bottom.
+        p2.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(13, 2)));
+        p2.Units.Add(new UnitState(UnitType.Tower,  PlayerId.Two, new Vector2Int(4, 6)));
+        p2.Units.Add(new UnitState(UnitType.Tower,  PlayerId.Two, new Vector2Int(22, 6)));
+
+        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.One, new Vector2Int(13, 29)));
+        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(4, 25)));
+        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(22, 25)));
+
+        // Five knights a side, spread across the width so none share a spawn cell.
+        // Well back from the river so you can watch them route to the bridges.
+        for (int i = 0; i < 5; i++)
+        {
+            int x = 4 + i * 5;
+            p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(x, 21)));
+            p2.Units.Add(new UnitState(UnitType.Knight, PlayerId.Two, new Vector2Int(x, 10)));
+        }
+
+        _gameState.PlayerOne = p1;
+        _gameState.PlayerTwo = p2;
     }
     private void DrawState()
     {

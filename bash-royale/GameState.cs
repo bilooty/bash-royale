@@ -6,6 +6,7 @@ public struct GameState
 {
     public PlayerState PlayerOne;
     public PlayerState PlayerTwo;
+    public Occupancy Occupancy;
     public bool IsGameOver;
     public PlayerId? Winner;
     public int Tick;
@@ -15,7 +16,6 @@ public struct GameState
         {
             PlayerOne = PlayerState.CreateNew(PlayerId.One),
             PlayerTwo = PlayerState.CreateNew(PlayerId.Two),
-            
             
             IsGameOver = false,
             Winner = null,
@@ -33,7 +33,7 @@ public static class GameSim
         for (int i = 0; i < units.Count; i++)
         {
             ActionResult result = UnitSim.Update(units[i], gameState);
-            Console.WriteLine(result.unit.Position.X + " " + result.unit.Position.Y);
+            //Console.WriteLine(result.unit.Position.X + " " + result.unit.Position.Y);
             units[i] = result.unit;
             results.Add(result);
         }
@@ -42,6 +42,8 @@ public static class GameSim
     }
     public static GameState Update(GameState state, NetworkAction p1Action, NetworkAction p2Action)
     {
+        state.Occupancy = Occupancy.Build(state);
+        
         if (p1Action.Action == ActionType.DeployCard)
         {
             state = CardSim.PlayFromHand(state, PlayerId.One, p1Action.CardIdx, new Vector2Int(p1Action.X, p1Action.Y));
@@ -56,11 +58,10 @@ public static class GameSim
             state.PlayerTwo.Elixir += 1;
         }
         var p1Result = UpdatePlayer(state.PlayerOne, state);
-        state.PlayerOne = p1Result.playerState;
         var p2Result = UpdatePlayer(state.PlayerTwo, state);
+
+        state.PlayerOne = p1Result.playerState;
         state.PlayerTwo = p2Result.playerState;
-
-
         ApplyDamage(p1Result.results, state.PlayerTwo.Units);
         ApplyDamage(p2Result.results, state.PlayerOne.Units);
         
@@ -78,7 +79,7 @@ public static class GameSim
             if (!result.didDamage) continue;
             UnitState target = enemies[result.targetIdx];
             target.Health -= result.damage;
-            Console.WriteLine(target.Type + " " + target.Health);
+            //Console.WriteLine(target.Type + " " + target.Health);
             enemies[result.targetIdx] = target;
         }
     } 

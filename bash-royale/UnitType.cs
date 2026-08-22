@@ -24,6 +24,7 @@ public record UnitInfo(
     IUnitBehaviour ChaseBehaviour,
     IUnitBehaviour AttackBehaviour,
     Vector2Int Size,
+    MovementLayer Layer,
     bool IsBuilding = false);
     
 
@@ -43,18 +44,20 @@ public static class UnitInfos
                 new WalkForwards(5),
                 new ChaseBehaviour(5), 
                 new AttackBehaviour(75),
-                new Vector2Int(1,1)),
+                new Vector2Int(1,1),
+                MovementLayer.Ground),
             UnitType.Tower => new UnitInfo(
                 UnitType.Tower,
                 "Tower",
-                3000,
+                2000,
                 5,
                 5,
                 10,
                 new DoNothing(),
                 new DoNothing(),
                 new AttackBehaviour(5),
-                new Vector2Int(3,3),
+                new Vector2Int(1,1),
+                MovementLayer.Ground,
                 true),
             UnitType.Castle => new UnitInfo(
                 UnitType.Castle,
@@ -67,6 +70,7 @@ public static class UnitInfos
                 new DoNothing(),
                 new AttackBehaviour(5),
                 new Vector2Int(1,1),
+                MovementLayer.Ground,
                 true),
                 UnitType.Giant => new UnitInfo(
                 UnitType.Giant,
@@ -78,7 +82,8 @@ public static class UnitInfos
                 new WalkForwards(5),
                 new ChaseBehaviour(5), 
                 new AttackBehaviour(75),
-                new Vector2Int(2,2)),
+                new Vector2Int(2,2),
+                MovementLayer.Ground),
                 UnitType.Archer => new UnitInfo(
                 UnitType.Archer,
                 "Archer",
@@ -89,7 +94,8 @@ public static class UnitInfos
                 new WalkForwards(5),
                 new ChaseBehaviour(5), 
                 new AttackBehaviour(75),
-                new Vector2Int(1,1)),
+                new Vector2Int(1,1),
+                MovementLayer.Ground),
                 UnitType.Goblin => new UnitInfo(
                 UnitType.Goblin,
                 "Goblin",
@@ -100,7 +106,8 @@ public static class UnitInfos
                 new WalkForwards(8),
                 new ChaseBehaviour(5), 
                 new AttackBehaviour(75),
-                new Vector2Int(1,1)),
+                new Vector2Int(1,1),
+                MovementLayer.Ground),
                 UnitType.Wizard => new UnitInfo(
                 UnitType.Wizard,
                 "Wizard",
@@ -111,7 +118,8 @@ public static class UnitInfos
                 new WalkForwards(5),
                 new ChaseBehaviour(5), 
                 new AttackBehaviour(75),
-                new Vector2Int(1,1)),
+                new Vector2Int(1,1),
+                MovementLayer.Ground),
                 UnitType.Horde => new UnitInfo(
                 UnitType.Horde,
                 "Horde",
@@ -122,7 +130,8 @@ public static class UnitInfos
                 new WalkForwards(5),
                 new ChaseBehaviour(5), 
                 new AttackBehaviour(75),
-                new Vector2Int(1,1)),
+                new Vector2Int(1,1),
+                MovementLayer.Ground),
                 
             _ => throw new ArgumentOutOfRangeException(nameof(unitType), unitType, null)
         };
