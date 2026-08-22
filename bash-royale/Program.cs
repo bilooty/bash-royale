@@ -1,10 +1,10 @@
-﻿using SadConsole.Configuration;
+using SadConsole.Configuration;
 
 Settings.WindowTitle = "My SadConsole Game";
 
 Builder
     .GetBuilder()
-    .SetWindowSizeInCells(40, 40)
+    .SetWindowSizeInCells(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
     .SetStartingScreen<bash_royale.Scenes.StartScreen>()
     .IsStartingScreenFocused(true)
     .ConfigureFonts(true)

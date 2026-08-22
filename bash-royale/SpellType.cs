@@ -1,4 +1,6 @@
-﻿namespace bash_royale;
+﻿using System.Drawing;
+
+namespace bash_royale;
 
 public enum SpellType
 {

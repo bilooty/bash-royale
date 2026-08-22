@@ -96,6 +96,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
                 return true;
             }
         }
+        
 
         return base.ProcessKeyboard(keyboard);
     }
@@ -501,7 +502,7 @@ public override void Update(TimeSpan delta)
         if (_selectedHandIdx is int sel && sel < player.Hand.Count)
             _guiLayer.Surface.Print(1, 2, $"{player.Hand[sel]} -> CLICK ARENA", Color.White);
         else
-            _guiLayer.Surface.Print(1, 2, "Press 1-4 to pick a card", Color.Gray);
+            _guiLayer.Surface.Print(0, 2, "==Press 1-4 to pick a card==", Color.Yellow);
     }
     private void SetupTestBattle()
     {
