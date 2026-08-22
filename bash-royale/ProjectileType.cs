@@ -10,7 +10,9 @@ public enum ProjectileType
     Arrow,
     CannonBall,
     WizardBall,
-    WizardBoom
+    WizardBoom,
+    DragonBall,
+    DragonBoom,
     
 }
 
@@ -43,6 +45,9 @@ public struct ProjectileState
     public static Dictionary<ProjectileType, ProjectileInfo> Infos = new Dictionary<ProjectileType, ProjectileInfo>
     {
         [ProjectileType.WizardBoom] = new ProjectileInfo([ new Linger(4), new InstantDamage(new Vector2Int(3,3), 450, die:false)], size:new Vector2Int(3,3), targetType:TargetType.Location),
+        [ProjectileType.DragonBoom] = new ProjectileInfo([ new Linger(4), new InstantDamage(new Vector2Int(3,3), 150, die:false)], size:new Vector2Int(3,3), targetType:TargetType.Location),
+        [ProjectileType.DragonBall] = new ProjectileInfo([new Splash(1000, ProjectileType.DragonBoom)]),
+        
         [ProjectileType.ZapEffect] = new ProjectileInfo(
             [
             new Linger(4)], size:new Vector2Int(3, 3), targetType:TargetType.Location),
@@ -130,20 +135,19 @@ public class MoveTowards(int speed) : IProjectileBehaviour
         {
             // Close enough to arrive this tick - snap exactly onto the target
             // rather than overshooting past it.
-            System.Console.WriteLine("ARRIVED!");
             state.SubPosition = new Vector2Int(target.X * SCALE, target.Y * SCALE);
             state.Position = target;
             return OnArrive(state, gameState); 
         }
 
         int dist = IntSqrt(distSq);
-        System.Console.WriteLine("dist " +  dist + "speed " + _speed);
+        //System.Console.WriteLine("dist " +  dist + "speed " + _speed);
         int stepX = (int)((long)dx * _speed / dist);
         int stepY = (int)((long)dy * _speed / dist);
-        System.Console.WriteLine("Moved from:  " + state.Position + " " + state.SubPosition);
+        //System.Console.WriteLine("Moved from:  " + state.Position + " " + state.SubPosition);
         state.SubPosition = new Vector2Int(state.SubPosition.X + stepX, state.SubPosition.Y + stepY);
         state.Position = new Vector2Int(state.SubPosition.X / SCALE, state.SubPosition.Y / SCALE);
-        System.Console.WriteLine("Moved to:  " + state.Position + " " + state.SubPosition);
+        //System.Console.WriteLine("Moved to:  " + state.Position + " " + state.SubPosition);
         return new ProjectileResult(state, new List<DamageInstance>(), new List<ProjectileState>());
     }
 
@@ -161,7 +165,7 @@ public class Linger(int duration) : IProjectileBehaviour
 {
     public ProjectileResult Update(ProjectileState state, GameState gameState)
     {
-        System.Console.WriteLine("Linger at tick: " + state.Ticks + "/" + duration);
+        //System.Console.WriteLine("Linger at tick: " + state.Ticks + "/" + duration);
         if (state.Ticks > duration)
         {
             state.ShouldDie = true;
@@ -175,7 +179,7 @@ public class SummonProj(ProjectileType type) : IProjectileBehaviour
 {
     public ProjectileResult Update(ProjectileState state, GameState gameState)
     {
-        System.Console.WriteLine("Summon projectile");
+        //System.Console.WriteLine("Summon projectile");
         return new ProjectileResult(state, [], [new ProjectileState(type, state.Owner, state.Position)]);
     }
 }

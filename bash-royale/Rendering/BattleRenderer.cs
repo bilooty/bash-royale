@@ -350,7 +350,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
                     //     Behaviour.Attack => 'A',
                     //     Behaviour.Chase => 'C',
                     // };
-                    System.Console.WriteLine(player.NextUnitId);
+                    //System.Console.WriteLine(player.NextUnitId);
                     //_unitLayer.Surface[renderX, renderY - 1].GlyphCharacter = unit.Id.ToString()[0];
                     
                     if ((unit.Ticks - unit.LastAttackTick) < 1)
@@ -628,9 +628,9 @@ public override void Update(TimeSpan delta)
         p2.Units.Add(new UnitState(UnitType.Tower,  PlayerId.Two, new Vector2Int(4, 3), 1));
         p2.Units.Add(new UnitState(UnitType.Tower,  PlayerId.Two, new Vector2Int(22, 3), 2));
 
-        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.One, new Vector2Int(13, 26), 0));
-        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(4, 24),1) );
-        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(22, 24),2 ));
+        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.One, new Vector2Int(13, 27), 0));
+        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(4, 25),1) );
+        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(22, 25),2 ));
         p1.NextUnitId = 3;
         p2.NextUnitId = 3;
         _gameState.PlayerOne = p1;

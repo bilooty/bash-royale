@@ -95,7 +95,7 @@ public static class CardSim
             return gameState;
         }
         player.Elixir -= card.Cost;
-        System.Console.WriteLine("Card cost was +" + card.Cost);
+        //System.Console.WriteLine("Card cost was +" + card.Cost);
         
         
        

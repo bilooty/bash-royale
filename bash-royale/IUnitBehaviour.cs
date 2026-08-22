@@ -74,7 +74,7 @@ public class WalkForwards(int speed) : IUnitBehaviour
         foreach (UnitState enemy in enemies)
         {
             if (enemy.Health <= 0) continue;
-            if (!UnitInfos.GetUnitInfo(enemy.Type).IsBuilding) continue;
+            if (!(enemy.Type == UnitType.Tower || enemy.Type == UnitType.Castle)) continue;
             if (enemy.Type == UnitType.Castle && castleLocked) continue;
 
             int d = UnitSim.FootprintDistance(unit, enemy);
