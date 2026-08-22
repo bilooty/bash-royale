@@ -1,10 +1,9 @@
 ﻿namespace bash_royale;
 
-
 public static class Pathfinder
-{   
-    // A* 
-    public static Vector2Int? NextStep(Vector2Int from, Vector2Int to, Vector2Int size, MovementLayer layer, GameState state)
+{
+    // A*
+    public static Vector2Int? NextStep(Vector2Int from, Vector2Int to, Vector2Int size, Vector2Int goalSize, MovementLayer layer, GameState state)
     {
         if (from == to) return null;
 
@@ -29,9 +28,9 @@ public static class Pathfinder
             {
                 Vector2Int neighbour = current + direction;
 
-                // The goal is exempt will always be occupied
-                
-                if (neighbour != to && UnitSim.FootprintBlocked(state, neighbour, size, layer, from)) continue;
+                // The goal is exempt, it will always be occupied. Exempt its whole
+                // footprint, or a big unit can never reach a big target.
+                if (!InGoal(neighbour, to, goalSize) && UnitSim.FootprintBlocked(state, neighbour, size, layer, from)) continue;
 
                 if (costSoFar.TryGetValue(neighbour, out int known) && known <= nextCost) continue;
 
@@ -44,7 +43,14 @@ public static class Pathfinder
         return null;
     }
 
-    // Manhattan distance 
+    private static bool InGoal(Vector2Int cell, Vector2Int goal, Vector2Int goalSize)
+    {
+        if (cell.X < goal.X || cell.X >= goal.X + goalSize.X) return false;
+        if (cell.Y < goal.Y || cell.Y >= goal.Y + goalSize.Y) return false;
+        return true;
+    }
+
+    // Manhattan distance
     private static int Heuristic(Vector2Int a, Vector2Int b)
     {
         return Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);

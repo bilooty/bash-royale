@@ -70,6 +70,8 @@ public static class UnitSim
     }
     private static int? FindNearestEnemy(UnitState curUnit, GameState gameState, int aggroRange)
     {
+        bool targetsBuildingOnly = UnitInfos.GetUnitInfo(curUnit.Type).targetsBuildingsOnly;
+        bool ranged = UnitInfos.GetUnitInfo(curUnit.Type).ranged;
         Vector2Int curPosition = curUnit.Position;
         long rangeSquared = (long)aggroRange * aggroRange;
         List<UnitState> enemies = GetEnemyUnits(curUnit, gameState);
@@ -83,7 +85,10 @@ public static class UnitSim
 
             if (distanceSquared > rangeSquared) continue;
             if (distanceSquared >= closestDistanceSquared) continue;
-
+            // if targets layer is air and unit is not ranged, continue
+            if (UnitInfos.GetUnitInfo(enemies[i].Type).Layer == MovementLayer.Air && ranged == false) continue;
+            // if unit is buildings only and target is not a building
+            if (UnitInfos.GetUnitInfo(enemies[i].Type).targetsBuildingsOnly == true && targetsBuildingOnly) continue;
             closestDistanceSquared = distanceSquared;
             closestIndex = i;
         }

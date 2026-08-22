@@ -3,17 +3,17 @@ using System;
 
 public static class Movement
 {
-    public const int MOVE_THRESHOLD = 100;   // 100 progress = one cell
+    public const int MOVE_THRESHOLD = 100; // 100 progress = one cell
 
-    public static UnitState StepTo(UnitState unit, Vector2Int destination, int speed, GameState state, MovementLayer layer)
+    public static UnitState StepTo(UnitState unit, Vector2Int destination, Vector2Int destinationSize, int speed,
+        GameState state, MovementLayer layer)
     {
-        
         unit.MoveProgress = Math.Min(unit.MoveProgress + speed, MOVE_THRESHOLD);
         if (unit.MoveProgress < MOVE_THRESHOLD) return unit;
 
         Vector2Int size = UnitInfos.GetUnitInfo(unit.Type).Size;
 
-        Vector2Int? next = Pathfinder.NextStep(unit.Position, destination, size, layer, state);
+        Vector2Int? next = Pathfinder.NextStep(unit.Position, destination, size, destinationSize, layer, state);
         if (next is null) return unit;
         if (UnitSim.FootprintBlocked(state, next.Value, size, layer, unit.Position)) return unit;
 
@@ -22,6 +22,7 @@ public static class Movement
         return unit;
     }
 }
+
 public interface IUnitBehaviour
 {
     public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx);
@@ -31,16 +32,18 @@ public class WalkForwards(int speed) : IUnitBehaviour
 {
     public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
     {
-        Vector2Int? destination = NearestBuilding(unit, state);
+        UnitState? destination = NearestBuilding(unit, state);
         if (destination is null) return ActionResult.NoAttack(unit);
 
         MovementLayer layer = UnitInfos.GetUnitInfo(unit.Type).Layer;
-        return ActionResult.NoAttack(Movement.StepTo(unit, destination.Value, speed, state, layer));
+        Vector2Int destinationSize = UnitInfos.GetUnitInfo(destination.Value.Type).Size;
+
+        return ActionResult.NoAttack(Movement.StepTo(unit, destination.Value.Position, destinationSize, speed, state, layer));
     }
 
-    private static Vector2Int? NearestBuilding(UnitState unit, GameState state)
+    private static UnitState? NearestBuilding(UnitState unit, GameState state)
     {
-        Vector2Int? destination = null;
+        UnitState? destination = null;
         long best = long.MaxValue;
 
         foreach (UnitState enemy in UnitSim.GetEnemyUnits(unit, state))
@@ -51,7 +54,7 @@ public class WalkForwards(int speed) : IUnitBehaviour
             if (d >= best) continue;
 
             best = d;
-            destination = enemy.Position;
+            destination = enemy;
         }
 
         return destination;
@@ -65,7 +68,9 @@ public class ChaseBehaviour(int speed) : IUnitBehaviour
         if (target is null) return ActionResult.NoAttack(unit);
 
         MovementLayer layer = UnitInfos.GetUnitInfo(unit.Type).Layer;
-        return ActionResult.NoAttack(Movement.StepTo(unit, target.Value.Position, speed, state, layer));
+        Vector2Int targetSize = UnitInfos.GetUnitInfo(target.Value.Type).Size;
+
+        return ActionResult.NoAttack(Movement.StepTo(unit, target.Value.Position, targetSize, speed, state, layer));
     }
 }
 
