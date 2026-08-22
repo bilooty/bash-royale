@@ -180,11 +180,11 @@ public class BattleRenderer : SadConsole.ScreenSurface
             int cardY = startY;
             _guiLayer.Surface.DrawBox(
                 new Rectangle(cardX, cardY, cardWidth, cardHeight),
-                ShapeParameters.CreateBorder(new ColoredGlyph(card.Color, Color.Black, 0))
+                ShapeParameters.CreateBorder(new ColoredGlyph(Color.White, Color.Black, 0))
             );  
         }
 
-        _guiLayer.Surface.Print(25, 2, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
+        _guiLayer.Surface.Print(2, 2, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
     }
     private void DrawState()
     {
