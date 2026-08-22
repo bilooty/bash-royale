@@ -126,6 +126,16 @@ public class BattleRenderer : SadConsole.ScreenSurface
                     _unitLayer.Surface[pos.X, pos.Y].Foreground = player.Id == PlayerId.One ? p1Color : p2Color;
                     //_unitLayer.Surface[pos.X, pos.Y].Foreground = glyph.Foreground;
                     _unitLayer.Surface[pos.X, pos.Y].GlyphCharacter = glyph.GlyphCharacter;
+                    //System.Console.WriteLine("[" + glyph.GlyphCharacter + "] ticks: " + unit.Ticks + " last tick:" + unit.LastAttackTick);
+                    if ((unit.Ticks - unit.LastAttackTick) < 5)
+                    {
+                        _unitLayer.Surface[pos.X, pos.Y].GlyphCharacter = ' ';
+                    }
+                    if ((unit.Ticks - unit.LastDamageTick) < 5)
+                    {
+
+                        _unitLayer.Surface[pos.X, pos.Y].Background = Color.Red;
+                    }
                 }
             }
         }
@@ -203,7 +213,7 @@ public override void Update(TimeSpan delta)
                 
                 _pendingLocalAction = null; // Clear the keyboard buffer
                 _inputTick++;
-            
+                tick++;
                 _timer = 0.05;
             }
         }
@@ -267,7 +277,7 @@ public override void Update(TimeSpan delta)
         int cardWidth = 5;
         int cardHeight = 3;
         int spacing = 2;
-        int startX = 2;
+        int startX = 1;
         int startY = 4;
 
         PlayerState player = _gameState.PlayerOne;
@@ -277,14 +287,32 @@ public override void Update(TimeSpan delta)
             Color color = player.Elixir >= card.Cost ? Color.Cyan : Color.Gray;
             int cardX = startX + (i * (cardWidth + spacing));
             int cardY = startY;
-            _guiLayer.Surface.DrawBox(
-                new Rectangle(cardX, cardY, cardWidth, cardHeight),
-                ShapeParameters.CreateBorder(new ColoredGlyph(Color.Red, Color.Blue, 0))
-            );  
-            _guiLayer.Surface.Print(cardX, cardY, card.Id.ToString(), Color.Green);
+            _guiLayer.Surface.Print(cardX, cardY, "+" + new string('-', cardWidth - 2) + "+", color);
+            _guiLayer.Surface.Print(cardX, cardY + cardHeight - 1, "+" + new string('-', cardWidth - 2) + "+", color);
+            for (int row = 1; row < cardHeight - 1; row++)
+            {
+                _guiLayer.Surface.SetGlyph(cardX, cardY + row, '|', color);
+                _guiLayer.Surface.SetGlyph(cardX + cardWidth - 1, cardY + row, '|', color);
+            }
+
+            _guiLayer.Surface.Print(cardX, cardY, card.Cost.ToString(), Color.Magenta);
+            int centerX = cardX + (cardWidth / 2);
+            int centerY = cardY + (cardHeight / 2);
+            if (card is UnitCard unitCard && UnitDisplay.Displays.TryGetValue(unitCard.UnitType, out var display))
+            {
+                ColoredGlyph g = display.Glyphs[0][0];
+                _guiLayer.Surface[centerX, centerY].GlyphCharacter = g.GlyphCharacter;
+                _guiLayer.Surface[centerX, centerY].Foreground = g.Foreground;
+            }
+            else
+            {
+                _guiLayer.Surface.Print(centerX, centerY, card.Cost.ToString(), Color.Red);
+            }
         }
+        
 
         _guiLayer.Surface.Print(2, 2, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
+        
     }
     private void SetupTestBattle()
     {
@@ -302,12 +330,12 @@ public override void Update(TimeSpan delta)
 
         // Five knights a side, spread across the width so none share a spawn cell.
         // Well back from the river so you can watch them route to the bridges.
-        for (int i = 0; i < 5; i++)
-        {
-            int x = 4 + i * 5;
-            p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(x, 21)));
-            p2.Units.Add(new UnitState(UnitType.Knight, PlayerId.Two, new Vector2Int(x, 10)));
-        }
+        // for (int i = 0; i < 5; i++)
+        // {
+        //     int x = 4 + i * 5;
+        //     p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(x, 21)));
+        //     p2.Units.Add(new UnitState(UnitType.Knight, PlayerId.Two, new Vector2Int(x, 10)));
+        // }
 
         _gameState.PlayerOne = p1;
         _gameState.PlayerTwo = p2;

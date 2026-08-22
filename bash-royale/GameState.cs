@@ -77,6 +77,7 @@ public static class GameSim
             if (!result.didDamage) continue;
             UnitState target = enemies[result.targetIdx];
             target.Health -= result.damage;
+            target.LastDamageTick = target.Ticks;
             //Console.WriteLine(target.Type + " " + target.Health);
             enemies[result.targetIdx] = target;
         }
