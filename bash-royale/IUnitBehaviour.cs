@@ -1,40 +1,25 @@
 ﻿namespace bash_royale;
 using System;
+
 public static class Movement
 {
     public const int MOVE_THRESHOLD = 100;   // 100 progress = one cell
+
     public static UnitState StepTo(UnitState unit, Vector2Int destination, int speed, GameState state, MovementLayer layer)
     {
+        // Clamp so a blocked unit doesn't bank progress and teleport when freed.
         unit.MoveProgress = Math.Min(unit.MoveProgress + speed, MOVE_THRESHOLD);
         if (unit.MoveProgress < MOVE_THRESHOLD) return unit;
-    
+
         Vector2Int? next = Pathfinder.NextStep(unit.Position, destination, layer);
         if (next is null) return unit;
-        if (!state.Occupancy.IsFree(next.Value, layer)) return unit;
-    
-        state.Occupancy.Vacate(unit.Position, layer);
-        state.Occupancy.Occupy(next.Value, layer);
-    
+        if (UnitSim.IsOccupied(state, next.Value, layer)) return unit;
+
         unit.MoveProgress -= MOVE_THRESHOLD;
         unit.Position = next.Value;
         return unit;
     }
-    public static UnitState StepToward(UnitState unit, Vector2Int destination, int speed)
-    {
-        //Console.WriteLine("OldPos: " + unit.Position + " " + unit.MoveProgress);
-
-        unit.MoveProgress += speed;
-        if (unit.MoveProgress < MOVE_THRESHOLD) return unit;
-
-        unit.MoveProgress -= MOVE_THRESHOLD;
-
-        int dx = Math.Sign(destination.X - unit.Position.X);
-        int dy = Math.Sign(destination.Y - unit.Position.Y);
-
-        unit.Position = new Vector2Int(unit.Position.X + dx, unit.Position.Y + dy);
-        //Console.WriteLine("NewPos: " + unit.Position);
-        return unit;
-    }
+    
 }
 public interface IUnitBehaviour
 {
@@ -79,7 +64,9 @@ public class ChaseBehaviour(int speed) : IUnitBehaviour
         if (target is null) return ActionResult.NoAttack(unit);
 
         MovementLayer layer = UnitInfos.GetUnitInfo(unit.Type).Layer;
-        return ActionResult.NoAttack(Movement.StepTo(unit, target.Value.Position, speed, state, layer));
+        Vector2Int approach = Pathfinder.NearestFreeApproach(unit.Position, target.Value.Position, layer, state);
+
+        return ActionResult.NoAttack(Movement.StepTo(unit, approach, speed, state, layer));
     }
 }
 
