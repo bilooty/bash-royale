@@ -16,6 +16,7 @@ public enum CardId
     Valkyrie,
     Skeleton,
     Dragon,
+    Cannon,
 }
 
 public enum ValidLocation
@@ -136,6 +137,7 @@ public static class CardInfos
         CardId.Valkyrie => new UnitCard(id, 4, UnitType.Valkyrie),
         CardId.Skeleton => new UnitCard(id, 1, UnitType.Skeleton),
         CardId.Dragon => new UnitCard(id, 5, UnitType.Dragon),
+        CardId.Cannon => new UnitCard(id, 4, UnitType.Cannon),
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
     };
 
@@ -159,7 +161,9 @@ public static class CardInfos
         CardId.Valkyrie  => "VALKR",
         CardId.Skeleton  => "SKELE",
         CardId.Dragon    => "DRAGN",
-        _ => id.ToString().PadRight(5)[..5],
+        CardId.Cannon    => "CNNON",
+        CardId.Zap => "ZAP",
+        _ => id.ToString().PadRight(5)[..5].ToUpper(),
     };
 
     // Full name for the roomier deck builder boxes.

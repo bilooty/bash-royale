@@ -5,7 +5,8 @@ public enum ProjectileType
     Zap,
     FireBall,
     ZapEffect,
-    CannonBall
+    Arrow,
+    CannonBall,
 }
 
 public enum TargetType
@@ -46,7 +47,9 @@ public struct ProjectileState
             
         ]),
         [ProjectileType.FireBall] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 450)]),
-        [ProjectileType.CannonBall] = new ProjectileInfo([new Missile(1000, 20)], null, TargetType.Unit)
+        [ProjectileType.Arrow] = new ProjectileInfo([new Missile(1000, 20)], null, TargetType.Unit),
+        [ProjectileType.CannonBall] = new ProjectileInfo([new Missile(1000, 40)], null, TargetType.Unit),
+
     };
 }
 

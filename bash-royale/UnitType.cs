@@ -16,7 +16,8 @@ public enum UnitType
     MiniPekka,
     Valkyrie,
     Dragon,
-    Skeleton
+    Skeleton,
+    Cannon,
     
 
 }
@@ -80,7 +81,7 @@ public static class UnitInfos
                 true,
                 new DoNothing(),
                 new DoNothing(),
-                new AttackBehaviour(75),
+                new RangedAttack(75, ProjectileType.Arrow),
                 new Vector2Int(3,2),
                 MovementLayer.Ground,
                 true),
@@ -92,7 +93,7 @@ public static class UnitInfos
                 5,
                 34,
                 false,
-                new WalkForwards(4),
+                new WalkForwards(6),
                 new ChaseBehaviour(4), 
                 new AttackBehaviour(175),
                 new Vector2Int(2,2),
@@ -109,7 +110,7 @@ public static class UnitInfos
                 true,
                 new WalkForwards(6),
                 new ChaseBehaviour(6), 
-                new RangedAttack(75, ProjectileType.CannonBall),
+                new RangedAttack(80, ProjectileType.Arrow),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
                 UnitType.Goblin => new UnitInfo(
@@ -179,6 +180,19 @@ public static class UnitInfos
                 new AttackBehaviour(165),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
+            UnitType.Cannon => new UnitInfo(
+                UnitType.Cannon,
+                "Cannon",
+                600,
+                6,
+                8,
+                28,
+                true,
+                new DoNothing(),
+                new DoNothing(),
+                new RangedAttack(180, ProjectileType.CannonBall),
+                new Vector2Int(1,1),
+                MovementLayer.Ground, true),
                 UnitType.MiniPekka => new UnitInfo(
                 UnitType.MiniPekka,
                 "Mini Pekka",
