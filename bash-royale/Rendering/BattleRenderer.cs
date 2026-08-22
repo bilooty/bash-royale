@@ -48,6 +48,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
         if (isHost)
         {
             _networkManager.StartHost(9050);
+            
         }
         else
         {
@@ -81,18 +82,35 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
         _endScreenLayer = new SadConsole.UI.ControlsConsole(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT);
         _endScreenLayer.Surface.DefaultBackground = Color.Transparent;
+        _endScreenLayer.Surface.Clear(); 
         _endScreenLayer.IsVisible = false;
 
-        var playAgainBtn = new Button(14)
+        var mainMenubtn = new Button(14)
+        {
+            Text = "Main Menu",
+            Position = new Point(ArenaMap.Width / 2 - 7, ArenaMap.Height / 2 + 6)
+        };
+        var playAgainbtn = new Button(14)
         {
             Text = "Play Again",
             Position = new Point(ArenaMap.Width / 2 - 7, ArenaMap.Height / 2 + 2)
         };
-        playAgainBtn.Click += (s, e) => 
+        
+        mainMenubtn.Click += (s, e) => 
         {
-            SadConsole.Game.Instance.Screen = new StartScreen();
+            Game.Instance.Screen = new StartScreen();
         };
-        _endScreenLayer.Controls.Add(playAgainBtn);
+        playAgainbtn.Click += (s, e) => 
+        {
+            _networkManager.Stop();
+            var battleScreen = new BattleRenderer(_ipAddress, _isHost);
+            Game.Instance.Screen = battleScreen;
+            battleScreen.IsFocused = true;
+        };
+        
+        _endScreenLayer.Controls.Add(mainMenubtn);
+        _endScreenLayer.Controls.Add(playAgainbtn);
+        
         Children.Add(_endScreenLayer);
 
         // 3. Draw the static map onto the base surface once
@@ -356,21 +374,20 @@ public override void Update(TimeSpan delta)
             _emoteManager.Show((EmoteId)emoteAction.EmoteId,
             _isHost ? PlayerId.Two : PlayerId.One);
         }
-
-        if (!_networkManager.IsConnected)
-        {
-            Redraw();
-            _guiLayer.Surface.Print(2, 6, "Waiting for opponent...", Color.Yellow, Color.Black);
-            base.Update(delta);
-            return;
-        }
-
         if (_gameState.IsGameOver)
         {
             Redraw();
             base.Update(delta);
             return;
         }   
+        if (!_networkManager.IsConnected)
+        {
+            _deckSent = false;
+            Redraw();
+            _guiLayer.Surface.Print(2, 6, "Waiting for opponent...", Color.Yellow, Color.Black);
+            base.Update(delta);
+            return;
+        }
 
         // --- DECK HANDSHAKE ---
         if (!_deckSent)
