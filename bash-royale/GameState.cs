@@ -227,7 +227,7 @@ public static class GameSim
         {
             if (result.didDamage)
             {
-                damageInstances.Add(new DamageInstance(state.PlayerTwo.Units[result.targetIdx].Id, result.damage, PlayerId.Two));
+                damageInstances.Add(new DamageInstance(result.targetId, result.damage, PlayerId.Two));
             }
         }
 
@@ -240,7 +240,7 @@ public static class GameSim
         {
             if (result.didDamage)
             {
-                damageInstances.Add(new DamageInstance(state.PlayerOne.Units[result.targetIdx].Id, result.damage, PlayerId.One));
+                damageInstances.Add(new DamageInstance(result.targetId, result.damage, PlayerId.One));
             }
         }
         foreach (ProjectileState proj in p2Result.Projectiles)

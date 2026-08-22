@@ -3,7 +3,7 @@
 // Handles targeting, movement and attacking across both armies. This lives apart from
 // UnitSim/PlayerSim because resolving an attack needs to mutate the *enemy's* state.
 
-public record ActionResult(UnitState unit, int targetIdx, int damage, bool didDamage, ProjectileState? newProjectile = null)
+public record ActionResult(UnitState unit, int targetId, int damage, bool didDamage, ProjectileState? newProjectile = null)
 {
     public static ActionResult NoAttack(UnitState unit) => new(unit, -1, 0, false);
 }
@@ -13,36 +13,37 @@ public static class UnitSim
     public static ActionResult Update(UnitState curUnit, GameState gameState)
     {
         UnitInfo info = UnitInfos.GetUnitInfo(curUnit.Type);
-        int? targetIdx = FindNearestEnemy(curUnit, gameState, info.AggroRange);
+        int? targetId = FindNearestEnemy(curUnit, gameState, info.AggroRange);
 
         IUnitBehaviour behaviour;
         UnitState? target = null;
 
-        if (targetIdx is null)
+        if (targetId is null)
         {
             behaviour = info.NeutralBehaviour;
         }
         else
         {
-            target = GetEnemyUnits(curUnit, gameState)[targetIdx.Value];
-            bool inAttackRange = InRange(curUnit, target.Value, info.AttackRange);
-            if (inAttackRange)
-            {
-                behaviour = info.AttackBehaviour;
+            List<UnitState> enemies = GetEnemyUnits(curUnit, gameState);
+            int idx = enemies.FindIndex(u => u.Id == targetId.Value);
+            target = idx >= 0 ? enemies[idx] : null;
 
+            if (target is null)
+            {
+                // Target vanished between search and lookup (shouldn't happen within one
+                // call, but this keeps it a graceful no-op instead of a crash if that ever changes).
+                behaviour = info.NeutralBehaviour;
             }
             else
             {
-                behaviour = info.ChaseBehaviour;
+                bool inAttackRange = InRange(curUnit, target.Value, info.AttackRange);
+                behaviour = inAttackRange ? info.AttackBehaviour : info.ChaseBehaviour;
             }
-
-
         }
 
         curUnit.Ticks++;
-        return behaviour.Update(curUnit, gameState, target, targetIdx ?? -1);
+        return behaviour.Update(curUnit, gameState, target, target?.Id ?? -1);
     }
-
     internal static bool IsOccupied(GameState state, Vector2Int position, MovementLayer layer, Vector2Int ignore)
     {
         return HasUnitAt(state.PlayerOne.Units, position, layer, ignore)
@@ -78,24 +79,24 @@ public static class UnitSim
         long rangeSquared = (long)aggroRange * aggroRange;
         List<UnitState> enemies = GetEnemyUnits(curUnit, gameState);
 
-        int? closestIndex = null;
+        int? closestId = null;
         long closestDistanceSquared = long.MaxValue;
 
-        for (int i = 0; i < enemies.Count; i++)
+        foreach (UnitState enemy in enemies)
         {
-            long distanceSquared = DistanceSquared(curPosition, enemies[i].Position);
+            long distanceSquared = DistanceSquared(curPosition, enemy.Position);
 
             if (distanceSquared > rangeSquared) continue;
             if (distanceSquared >= closestDistanceSquared) continue;
             // if targets layer is air and unit is not ranged, continue
-            if (UnitInfos.GetUnitInfo(enemies[i].Type).Layer == MovementLayer.Air && ranged == false) continue;
+            if (UnitInfos.GetUnitInfo(enemy.Type).Layer == MovementLayer.Air && ranged == false) continue;
             // Buildings-only units ignore troops and only target towers/castles.
-            if (targetsBuildingOnly && !UnitInfos.GetUnitInfo(enemies[i].Type).IsBuilding) continue;
+            if (targetsBuildingOnly && !UnitInfos.GetUnitInfo(enemy.Type).IsBuilding) continue;
             closestDistanceSquared = distanceSquared;
-            closestIndex = i;
+            closestId = enemy.Id;
         }
 
-        return closestIndex;
+        return closestId;
     }
 
     internal static long DistanceSquared(Vector2Int a, Vector2Int b)
@@ -107,7 +108,7 @@ public static class UnitSim
 
     // Chebyshev gap between two footprints. 0 means touching or overlapping, so a
     // range-1 melee unit connects from any edge or corner regardless of unit size.
-    private static int FootprintDistance(UnitState a, UnitState b)
+    internal static int FootprintDistance(UnitState a, UnitState b)
     {
         Vector2Int sizeA = UnitInfos.GetUnitInfo(a.Type).Size;
         Vector2Int sizeB = UnitInfos.GetUnitInfo(b.Type).Size;

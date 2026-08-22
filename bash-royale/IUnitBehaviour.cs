@@ -25,12 +25,12 @@ public static class Movement
 
 public interface IUnitBehaviour
 {
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx);
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId);
 }
 // FOR ALL NON ATTACKS ENSURE ACTIONRESULT.ISATTACK IS FALSE
 public class WalkForwards(int speed) : IUnitBehaviour
 {
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId)
     {
         UnitState? destination = NearestBuilding(unit, state);
         if (destination is null) return ActionResult.NoAttack(unit);
@@ -46,11 +46,16 @@ public class WalkForwards(int speed) : IUnitBehaviour
         UnitState? destination = null;
         long best = long.MaxValue;
 
+        bool castleUnlocked = CountTowers(unit, state) < 2;
+
         foreach (UnitState enemy in UnitSim.GetEnemyUnits(unit, state))
         {
             if (!UnitInfos.GetUnitInfo(enemy.Type).IsBuilding) continue;
 
-            long d = UnitSim.DistanceSquared(unit.Position, enemy.Position);
+            // The castle only becomes a target once a tower has fallen.
+            if (enemy.Type == UnitType.Castle && !castleUnlocked) continue;
+
+            long d = UnitSim.FootprintDistance(unit, enemy);
             if (d >= best) continue;
 
             best = d;
@@ -59,11 +64,23 @@ public class WalkForwards(int speed) : IUnitBehaviour
 
         return destination;
     }
+
+    private static int CountTowers(UnitState unit, GameState state)
+    {
+        int count = 0;
+
+        foreach (UnitState enemy in UnitSim.GetEnemyUnits(unit, state))
+        {
+            if (enemy.Type == UnitType.Tower) count++;
+        }
+
+        return count;
+    }
 }
 
 public class ChaseBehaviour(int speed) : IUnitBehaviour
 {
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId)
     {
         if (target is null) return ActionResult.NoAttack(unit);
 
@@ -77,20 +94,20 @@ public class ChaseBehaviour(int speed) : IUnitBehaviour
 public class AttackBehaviour(int damage) : IUnitBehaviour
 {
      
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId)
     { 
         if (target is null) return ActionResult.NoAttack(unit);
         
         UnitInfo info = UnitInfos.GetUnitInfo(unit.Type); 
         if (unit.Ticks % info.TicksPerAttack != 0) return ActionResult.NoAttack(unit);
         unit.LastAttackTick = unit.Ticks;
-        return new ActionResult(unit, targetIdx, damage, true);
+        return new ActionResult(unit, targetId, damage, true);
     }
 }
 public class RangedAttack(int damage, ProjectileType projectileType) : IUnitBehaviour
 {
      
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId)
     { 
         if (target is null) return ActionResult.NoAttack(unit);
         
@@ -99,14 +116,14 @@ public class RangedAttack(int damage, ProjectileType projectileType) : IUnitBeha
         unit.LastAttackTick = unit.Ticks;
         PlayerState enemy = unit.Owner == PlayerId.One ? state.PlayerTwo : state.PlayerOne;
         ProjectileState newProj = new ProjectileState(projectileType, unit.Owner, unit.Position);
-        newProj.TargetId = enemy.Units[targetIdx].Id;
-        return new ActionResult(unit, targetIdx, 0, false, newProj);
+        newProj.TargetId = targetId;
+        return new ActionResult(unit, targetId, 0, false, newProj);
     }
 }
 
 public class DoNothing : IUnitBehaviour
 {
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId)
     {
         return ActionResult.NoAttack(unit);
     }
