@@ -26,7 +26,17 @@ public static class UnitSim
         {
             target = GetEnemyUnits(curUnit, gameState)[targetIdx.Value];
             bool inAttackRange = InRange(curUnit.Position, target.Value.Position, info.AttackRange);
-            behaviour = inAttackRange ? info.AttackBehaviour : info.ChaseBehaviour;
+            if (inAttackRange)
+            {
+                behaviour = info.AttackBehaviour;
+            
+            }
+            else
+            {
+               behaviour =  info.ChaseBehaviour;
+            }
+         
+            
         }
 
         curUnit.Ticks++;

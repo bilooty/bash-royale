@@ -75,12 +75,15 @@ public class AttackBehaviour(int damage) : IUnitBehaviour
      
     public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
     {
-        
+        System.Console.WriteLine("bleehhh");
         if (target is null) return ActionResult.NoAttack(unit);
         
         UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
+        System.Console.WriteLine("bleehhh");
         if (unit.Ticks % info.TicksPerAttack != 0) return ActionResult.NoAttack(unit);
-        System.Console.WriteLine("ATTACKED");
+        System.Console.Write("Last attack tick was: " + unit.LastAttackTick + "is now");
+        unit.LastAttackTick = unit.Ticks;
+        System.Console.WriteLine(unit.LastAttackTick);
         return new ActionResult(unit, targetIdx, damage, true);
     }
 }
