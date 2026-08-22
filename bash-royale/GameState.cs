@@ -162,6 +162,8 @@ public static class GameSim
                     damageInstances.Add(instance);
                 }
             }
+
+            proj.Ticks++;
             state.Projectiles[i] = proj;
             if (!proj.ShouldDie)
             {
