@@ -117,19 +117,19 @@ public static class GameSim
         state.Winner = state.IsDraw ? null : (p1Lowest > p2Lowest ? PlayerId.One : PlayerId.Two);
         return state;
     }
-    private static HashSet<int> DeadIndices(List<UnitState> units)
+    private static HashSet<int> DeadIds(List<UnitState> units)
     {
         HashSet<int> dead = new();
         for (int i = 0; i < units.Count; i++)
-            if (units[i].Health <= 0) dead.Add(i);
+            if (units[i].Health <= 0) dead.Add(units[i].Id);
         return dead;
     }
 
 // Must run BEFORE RemoveAll — indices only line up with the pre-removal lists.
     private static List<ProjectileState> HandleUnitDeaths(GameState state, List<ProjectileState> projectiles)
     {
-        HashSet<int> p1Dead = DeadIndices(state.PlayerOne.Units);
-        HashSet<int> p2Dead = DeadIndices(state.PlayerTwo.Units);
+        HashSet<int> p1Dead = DeadIds(state.PlayerOne.Units);
+        HashSet<int> p2Dead = DeadIds(state.PlayerTwo.Units);
 
         List<ProjectileState> result = new(projectiles.Count);
         for (var i = 0; i < projectiles.Count; i++)
@@ -140,8 +140,8 @@ public static class GameSim
             {
                 // The projectile's target lives on whichever player it does NOT belong to.
                 bool targetDied = proj.Owner == PlayerId.One
-                    ? p2Dead.Contains(proj.TargetIndex)
-                    : p1Dead.Contains(proj.TargetIndex);
+                    ? p2Dead.Contains(proj.TargetId)
+                    : p1Dead.Contains(proj.TargetId);
 
                 if (targetDied)
                 {
@@ -227,7 +227,7 @@ public static class GameSim
         {
             if (result.didDamage)
             {
-                damageInstances.Add(new DamageInstance(result.targetIdx, result.damage, PlayerId.Two));
+                damageInstances.Add(new DamageInstance(state.PlayerTwo.Units[result.targetIdx].Id, result.damage, PlayerId.Two));
             }
         }
 
@@ -240,7 +240,7 @@ public static class GameSim
         {
             if (result.didDamage)
             {
-                damageInstances.Add(new DamageInstance(result.targetIdx, result.damage, PlayerId.One));
+                damageInstances.Add(new DamageInstance(state.PlayerOne.Units[result.targetIdx].Id, result.damage, PlayerId.One));
             }
         }
         foreach (ProjectileState proj in p2Result.Projectiles)
@@ -254,8 +254,7 @@ public static class GameSim
         ApplyDamage(PlayerId.Two, damageInstances, state.PlayerTwo.Units);
         ApplyDamage(PlayerId.One, damageInstances, state.PlayerOne.Units);
         
-        ApplyDamage(PlayerId.Two, damageInstances, state.PlayerTwo.Units);
-        ApplyDamage(PlayerId.One, damageInstances, state.PlayerOne.Units);
+     
         
         aliveProjectiles = HandleUnitDeaths(state, aliveProjectiles);
         aliveProjectiles.RemoveAll(p => p.ShouldDie); // flush anything that just lost its target
@@ -274,11 +273,12 @@ public static class GameSim
         foreach (DamageInstance instance in instances)
         {
             if (instance.targetPlayer != player) continue;
-            UnitState target = enemies[instance.Index];
+            UnitState target = enemies.First(s => s.Id == instance.Id);
+            int targetIndex = enemies.IndexOf(target);
             target.Health -= instance.Damage;
             target.LastDamageTick = target.Ticks;
             
-            enemies[instance.Index] = target;
+            enemies[targetIndex] = target;
         }
     } 
 }

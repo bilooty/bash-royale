@@ -1,10 +1,11 @@
 namespace bash_royale;
 
-public struct UnitState
+public record struct UnitState
 {
     public UnitType Type;
     public PlayerId Owner;
     public Vector2Int Position;
+    public int Id;
     public int LastAttackTick = -10;
     public int LastDamageTick = -10;
     public IEnumerable<Vector2Int> Positions(){
@@ -22,8 +23,9 @@ public struct UnitState
     // increase by 1 each frame / iteration of unit sim
     // if we have attack 1 per second then we want to do 
     public int Ticks;
-    public UnitState(UnitType type, PlayerId owner, Vector2Int position)
+    public UnitState(UnitType type, PlayerId owner, Vector2Int position, int id)
     {
+        Id = id;
         Type = type;
         Owner = owner;
         Position = position;

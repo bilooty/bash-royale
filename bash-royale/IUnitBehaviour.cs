@@ -97,8 +97,9 @@ public class RangedAttack(int damage, ProjectileType projectileType) : IUnitBeha
         UnitInfo info = UnitInfos.GetUnitInfo(unit.Type); 
         if (unit.Ticks % info.TicksPerAttack != 0) return ActionResult.NoAttack(unit);
         unit.LastAttackTick = unit.Ticks;
+        PlayerState enemy = unit.Owner == PlayerId.One ? state.PlayerTwo : state.PlayerOne;
         ProjectileState newProj = new ProjectileState(projectileType, unit.Owner, unit.Position);
-        newProj.TargetIndex = targetIdx;
+        newProj.TargetId = enemy.Units[targetIdx].Id;
         return new ActionResult(unit, targetIdx, 0, false, newProj);
     }
 }
