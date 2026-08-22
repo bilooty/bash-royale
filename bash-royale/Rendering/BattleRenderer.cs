@@ -661,13 +661,11 @@ public override void Update(TimeSpan delta)
 
             foreach (UnitState unit in player.Units)
             {
-                UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
-                if (!info.IsBuilding) continue;
+                if (unit.Type != UnitType.Tower && unit.Type != UnitType.Castle) continue;
 
+                UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
                 string text = unit.Health.ToString().PadLeft(5);
 
-                // Work out the label's anchor in world space, then flip once. Position is
-                // the top-left corner, so centre on the footprint's middle column.
                 int worldCenterX = unit.Position.X + info.Size.X / 2;
                 int worldY = unit.Position.Y > ArenaMap.Height / 2
                     ? unit.Position.Y + info.Size.Y
@@ -678,7 +676,8 @@ public override void Update(TimeSpan delta)
                 int labelX = Math.Clamp(anchor.X - text.Length / 2, 0, ArenaMap.Width - text.Length);
                 if (anchor.Y < 0 || anchor.Y >= ArenaMap.Height) continue;
 
-                _unitLayer.Surface.Print(labelX, anchor.Y, text, Color.White, Color.Black);
+                Color textColor = unit.Type == UnitType.Castle ? Color.Gold : Color.White;
+                _guiLayer.Surface.Print(labelX, anchor.Y, text, textColor, teamColor);
             }
         }
 }
