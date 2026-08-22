@@ -244,7 +244,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
             {
                 for (int y = 0; y < size.Y; y++)
                 {
-                    ColoredGlyph glyph = display.Glyphs[y][x];
+                    ColoredGlyph glyph = display.Glyphs[0][0];
                     Vector2Int render = Flip(new Vector2Int(pos.X + x, pos.Y + y));
                     int renderX = render.X;
                     int renderY = render.Y;
@@ -253,12 +253,12 @@ public class BattleRenderer : SadConsole.ScreenSurface
                     _unitLayer.Surface[renderX, renderY].Background = teamColor;
                     _unitLayer.Surface[renderX, renderY].GlyphCharacter = glyph.GlyphCharacter;
 
-                    if ((unit.Ticks - unit.LastAttackTick) < 2)
+                    if ((unit.Ticks - unit.LastAttackTick) < 1)
                     {
                         _unitLayer.Surface[renderX, renderY].GlyphCharacter = ' ';
                     }
 
-                    if ((unit.Ticks - unit.LastDamageTick) < 2)
+                    if ((unit.Ticks - unit.LastDamageTick) < 1)
                     {
                         _unitLayer.Surface[renderX, renderY].Background = Color.Red;
                     }
@@ -510,13 +510,13 @@ public override void Update(TimeSpan delta)
         PlayerState p2 = _gameState.PlayerTwo;
 
         // Player Two defends the top, Player One the bottom.
-        p2.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(13, 3)));
-        p2.Units.Add(new UnitState(UnitType.Tower,  PlayerId.Two, new Vector2Int(4, 6)));
-        p2.Units.Add(new UnitState(UnitType.Tower,  PlayerId.Two, new Vector2Int(22, 6)));
+        p2.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(13, 1)));
+        p2.Units.Add(new UnitState(UnitType.Tower,  PlayerId.Two, new Vector2Int(4, 3)));
+        p2.Units.Add(new UnitState(UnitType.Tower,  PlayerId.Two, new Vector2Int(22, 3)));
 
-        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.One, new Vector2Int(13, 27)));
-        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(4, 25)));
-        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(22, 25)));
+        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.One, new Vector2Int(13, 26)));
+        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(4, 24)));
+        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(22, 24)));
 
         // Five knights a side, spread across the width so none share a spawn cell.
         // Well back from the river so you can watch them route to the bridges.
@@ -585,8 +585,32 @@ public override void Update(TimeSpan delta)
             _guiLayer.Surface.Clear();
             DrawUnits(_gameState.PlayerOne);
             DrawUnits(_gameState.PlayerTwo);
+            DrawBuildingHealth(_gameState.PlayerOne);
+            DrawBuildingHealth(_gameState.PlayerTwo);
             DrawDeployCursor();
             DrawGUI();
             DrawEndScreen();
+        }
+
+
+        private void DrawBuildingHealth(PlayerState player)
+        {
+            Color teamColor = (player.Id == PlayerId.One) == _isHost ? p1Color : p2Color;
+
+            foreach (UnitState unit in player.Units)
+            {
+                UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
+                if (!info.IsBuilding) continue;
+
+                Vector2Int render = Flip(unit.Position);
+                string text = unit.Health.ToString().PadLeft(5);
+
+                int labelX = Math.Clamp(render.X - text.Length / 2, 0, ArenaMap.Width - text.Length);
+                int labelY = render.Y > ArenaMap.Height / 2 ? render.Y + info.Size.Y : render.Y - 1;
+
+                if (labelY < 0 || labelY >= ArenaMap.Height) continue;
+
+                _unitLayer.Surface.Print(labelX, labelY, text, Color.White, teamColor);
+            }
         }
 }

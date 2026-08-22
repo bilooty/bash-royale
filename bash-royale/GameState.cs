@@ -144,6 +144,30 @@ public static class GameSim
         }
              
         List<DamageInstance> damageInstances = new();
+        List<ProjectileState> aliveProjectiles = new();
+        for (int i = 0; i < state.Projectiles.Count; i++)
+        { 
+            ProjectileState proj = state.Projectiles[i];
+            ProjectileInfo info = ProjectileState.Infos[proj.Type];
+            foreach (IProjectileBehaviour behaviour in info.Behaviours)
+            {
+                ProjectileResult result = behaviour.Update(proj, state);
+                proj = result.State;
+                foreach (ProjectileState newProjectile in result.NewProjectiles)
+                {
+                    aliveProjectiles.Add(newProjectile);
+                }
+                foreach (DamageInstance instance in result.DamageInstances)
+                {
+                    damageInstances.Add(instance);
+                }
+            }
+            state.Projectiles[i] = proj;
+            if (!proj.ShouldDie)
+            {
+                aliveProjectiles.Add(proj);
+            }
+        }
         var p1Result = UpdatePlayer(state.PlayerOne, state);
         foreach (ActionResult result in p1Result.results)
         {
@@ -162,24 +186,7 @@ public static class GameSim
         }
         state.PlayerOne = p1Result.playerState;
         state.PlayerTwo = p2Result.playerState;
-        List<ProjectileState> aliveProjectiles = new();
-        for (int i = 0; i < state.Projectiles.Count; i++)
-        {
-            System.Console.WriteLine("Projectiling!");
-            ProjectileState proj = state.Projectiles[i];
-            ProjectileInfo info = ProjectileState.Infos[proj.Type];
-            ProjectileResult result = info.Behaviour.Update(proj, state);
-            proj = result.State;
-            foreach (DamageInstance instance in result.DamageInstances)
-            {
-                damageInstances.Add(instance);
-            }
-            state.Projectiles[i] = proj;
-            if (!proj.ShouldDie)
-            {
-                aliveProjectiles.Add(proj);
-            }
-        }
+        
         
         
         ApplyDamage(PlayerId.Two, damageInstances, state.PlayerTwo.Units);
