@@ -1,4 +1,4 @@
-namespace bash_royale.Scenes;
+namespace bash_royale.Rendering;
 
 public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false)
 {

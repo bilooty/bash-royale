@@ -5,11 +5,13 @@ public enum ActionType : byte
 {
     NoAction = 0,
     DeployCard = 1,
+    Emote = 2,
 }
 public class NetworkAction : INetSerializable
 {
     public int Tick { get; set; }
     public byte PlayerId { get; set; }
+    public byte EmoteId { get; set; }
     public ActionType Action { get; set; }
 
     public byte CardIdx { get; set; }
@@ -28,6 +30,10 @@ public class NetworkAction : INetSerializable
             writer.Put(X);
             writer.Put(Y);
         }
+        else if (Action == ActionType.Emote)
+        {
+            writer.Put(EmoteId);
+        }
     }
 
     public void Deserialize(NetDataReader reader)
@@ -40,6 +46,10 @@ public class NetworkAction : INetSerializable
             CardIdx = reader.GetByte();
             X = reader.GetByte();
             Y = reader.GetByte();
+        }
+        else if (Action == ActionType.Emote)
+        {
+            EmoteId = reader.GetByte();
         }
     }
 }

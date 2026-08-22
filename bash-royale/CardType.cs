@@ -174,7 +174,7 @@ public static class CardInfos
 
     // The glyph the card is drawn with, so the deck builder looks like the arena.
     public static char GetGlyph(CardId id) =>
-        GetCardInfo(id) is UnitCard unitCard && Scenes.EntityDisplay.Displays.TryGetValue(unitCard.UnitType, out var display)
+        GetCardInfo(id) is UnitCard unitCard && Rendering.EntityDisplay.Displays.TryGetValue(unitCard.UnitType, out var display)
             ? display.Glyphs[0][0].GlyphCharacter
             : '*';
 }
