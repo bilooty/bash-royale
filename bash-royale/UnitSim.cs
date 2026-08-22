@@ -87,8 +87,8 @@ public static class UnitSim
             if (distanceSquared >= closestDistanceSquared) continue;
             // if targets layer is air and unit is not ranged, continue
             if (UnitInfos.GetUnitInfo(enemies[i].Type).Layer == MovementLayer.Air && ranged == false) continue;
-            // if unit is buildings only and target is not a building
-            if (UnitInfos.GetUnitInfo(enemies[i].Type).targetsBuildingsOnly == true && targetsBuildingOnly) continue;
+            // Buildings-only units ignore troops and only target towers/castles.
+            if (targetsBuildingOnly && !UnitInfos.GetUnitInfo(enemies[i].Type).IsBuilding) continue;
             closestDistanceSquared = distanceSquared;
             closestIndex = i;
         }
