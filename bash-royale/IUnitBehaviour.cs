@@ -2,8 +2,23 @@
 using System;
 public static class Movement
 {
-    public const int MOVE_THRESHOLD = 50;   // 100 progress = one cell
-
+    public const int MOVE_THRESHOLD = 100;   // 100 progress = one cell
+    public static UnitState StepTo(UnitState unit, Vector2Int destination, int speed, GameState state, MovementLayer layer)
+    {
+        unit.MoveProgress = Math.Min(unit.MoveProgress + speed, MOVE_THRESHOLD);
+        if (unit.MoveProgress < MOVE_THRESHOLD) return unit;
+    
+        Vector2Int? next = Pathfinder.NextStep(unit.Position, destination, layer);
+        if (next is null) return unit;
+        if (!state.Occupancy.IsFree(next.Value, layer)) return unit;
+    
+        state.Occupancy.Vacate(unit.Position, layer);
+        state.Occupancy.Occupy(next.Value, layer);
+    
+        unit.MoveProgress -= MOVE_THRESHOLD;
+        unit.Position = next.Value;
+        return unit;
+    }
     public static UnitState StepToward(UnitState unit, Vector2Int destination, int speed)
     {
         //Console.WriteLine("OldPos: " + unit.Position + " " + unit.MoveProgress);
@@ -30,13 +45,19 @@ public class WalkForwards(int speed) : IUnitBehaviour
 {
     public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
     {
-        //Console.WriteLine("We are moving forward!");
-        List<UnitState> enemies = UnitSim.GetEnemyUnits(unit, state);
+        Vector2Int? destination = NearestBuilding(unit, state);
+        if (destination is null) return ActionResult.NoAttack(unit);
 
+        MovementLayer layer = UnitInfos.GetUnitInfo(unit.Type).Layer;
+        return ActionResult.NoAttack(Movement.StepTo(unit, destination.Value, speed, state, layer));
+    }
+
+    private static Vector2Int? NearestBuilding(UnitState unit, GameState state)
+    {
         Vector2Int? destination = null;
         long best = long.MaxValue;
 
-        foreach (UnitState enemy in enemies)
+        foreach (UnitState enemy in UnitSim.GetEnemyUnits(unit, state))
         {
             if (!UnitInfos.GetUnitInfo(enemy.Type).IsBuilding) continue;
 
@@ -47,16 +68,18 @@ public class WalkForwards(int speed) : IUnitBehaviour
             destination = enemy.Position;
         }
 
-        if (destination is null) return ActionResult.NoAttack(unit);
-        return ActionResult.NoAttack(Movement.StepToward(unit, destination.Value, speed));
+        return destination;
     }
 }
+
 public class ChaseBehaviour(int speed) : IUnitBehaviour
 {
     public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
     {
         if (target is null) return ActionResult.NoAttack(unit);
-        return ActionResult.NoAttack(Movement.StepToward(unit, target.Value.Position, speed));
+
+        MovementLayer layer = UnitInfos.GetUnitInfo(unit.Type).Layer;
+        return ActionResult.NoAttack(Movement.StepTo(unit, target.Value.Position, speed, state, layer));
     }
 }
 
