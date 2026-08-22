@@ -1,7 +1,6 @@
 ﻿namespace bash_royale;
 
-// Handles targeting, movement and attacking across both armies. This lives apart from
-// UnitSim/PlayerSim because resolving an attack needs to mutate the *enemy's* state.
+
 
 public record ActionResult(UnitState unit, int targetId, int damage, bool didDamage, ProjectileState? newProjectile = null)
 {
@@ -10,49 +9,105 @@ public record ActionResult(UnitState unit, int targetId, int damage, bool didDam
 
 public static class UnitSim
 {
+    private const int RetargetMargin = 1;
+
     public static ActionResult Update(UnitState curUnit, GameState gameState)
     {
         UnitInfo info = UnitInfos.GetUnitInfo(curUnit.Type);
-        int? targetId = FindNearestEnemy(curUnit, gameState, info.AggroRange);
+        List<UnitState> enemies = GetEnemyUnits(curUnit, gameState);
+
+        bool castleLocked = CountTowers(enemies) >= 2;
+
+        UnitState? target = ResolveTarget(curUnit, info, enemies, castleLocked);
 
         IUnitBehaviour behaviour;
-        UnitState? target = null;
-
-        if (targetId is not null)
-        {
-            List<UnitState> enemies = GetEnemyUnits(curUnit, gameState);
-            int idx = enemies.FindIndex(u => u.Id == targetId.Value);
-            if (idx >= 0) target = enemies[idx];
-        }
 
         if (target is null)
         {
-            behaviour = info.NeutralBehaviour;
+            curUnit.TargetId = UnitState.NoTarget;
             curUnit.CurrentBehaviour = Behaviour.Neutral;
+            behaviour = info.NeutralBehaviour;
         }
         else
         {
+            curUnit.TargetId = target.Value.Id;
+
             bool inAttackRange = InRange(curUnit, target.Value, info.AttackRange);
-            behaviour = inAttackRange ? info.AttackBehaviour : info.ChaseBehaviour;
             curUnit.CurrentBehaviour = inAttackRange ? Behaviour.Attack : Behaviour.Chase;
+            behaviour = inAttackRange ? info.AttackBehaviour : info.ChaseBehaviour;
         }
 
         curUnit.Ticks++;
         return behaviour.Update(curUnit, gameState, target, target?.Id ?? -1);
     }
-
-    internal static bool IsOccupied(GameState state, Vector2Int position, MovementLayer layer, Vector2Int ignore)
+    
+    private static UnitState? ResolveTarget(UnitState curUnit, UnitInfo curInfo,
+        List<UnitState> enemies, bool castleLocked)
     {
-        return HasUnitAt(state.PlayerOne.Units, position, layer, ignore)
-               || HasUnitAt(state.PlayerTwo.Units, position, layer, ignore);
+        if (curUnit.TargetId != UnitState.NoTarget)
+        {
+            foreach (UnitState enemy in enemies)
+            {
+                if (enemy.Id != curUnit.TargetId) continue;
+                
+                if (!IsTargetable(curInfo, enemy, castleLocked)) break;
+                if (FootprintDistance(curUnit, enemy) > curInfo.AggroRange + RetargetMargin) break;
+
+                return enemy;
+            }
+        }
+
+        return FindNearestEnemy(curUnit, curInfo, enemies, castleLocked);
+    }
+    
+    private static UnitState? FindNearestEnemy(UnitState curUnit, UnitInfo curInfo,
+        List<UnitState> enemies, bool castleLocked)
+    {
+        UnitState? closest = null;
+        int closestDistance = int.MaxValue;
+
+        foreach (UnitState enemy in enemies)
+        {
+            if (!IsTargetable(curInfo, enemy, castleLocked)) continue;
+
+            int distance = FootprintDistance(curUnit, enemy);
+            if (distance > curInfo.AggroRange) continue;
+            if (distance > closestDistance) continue;
+            
+            if (distance == closestDistance && closest is not null
+                                            && enemy.Id >= closest.Value.Id) continue;
+
+            closestDistance = distance;
+            closest = enemy;
+        }
+
+        return closest;
     }
 
-    private static bool HasUnitAt(List<UnitState> units, Vector2Int position, MovementLayer layer, Vector2Int ignore)
+    private static bool IsTargetable(UnitInfo curInfo, UnitState enemy, bool castleLocked)
+    {
+        if (enemy.Health <= 0) return false;
+
+        UnitInfo enemyInfo = UnitInfos.GetUnitInfo(enemy.Type);
+
+        if (enemy.Type == UnitType.Castle && castleLocked) return false;
+        if (enemyInfo.Layer == MovementLayer.Air && !curInfo.ranged) return false;
+        if (curInfo.targetsBuildingsOnly && !enemyInfo.IsBuilding) return false;
+
+        return true;
+    }
+
+    internal static bool IsOccupied(GameState state, Vector2Int position, MovementLayer layer, int ignoreUnitId)
+    {
+        return HasUnitAt(state.PlayerOne.Units, position, layer, ignoreUnitId)
+               || HasUnitAt(state.PlayerTwo.Units, position, layer, ignoreUnitId);
+    }
+
+    private static bool HasUnitAt(List<UnitState> units, Vector2Int position, MovementLayer layer, int ignoreUnitId)
     {
         foreach (UnitState unit in units)
         {
-            // Skip the unit doing the moving; its own body isn't an obstacle.
-            if (unit.Position == ignore) continue;
+            if (unit.Id == ignoreUnitId) continue;
 
             UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
             if (info.Layer != layer) continue;
@@ -66,38 +121,6 @@ public static class UnitSim
         }
 
         return false;
-    }
-
-    // Single pass over enemies, tracking the closest UnitState directly rather than an
-    // index or a second lookup — avoids scanning twice for the same answer.
-    private static int? FindNearestEnemy(UnitState curUnit, GameState gameState, int aggroRange)
-    {
-        UnitInfo curInfo = UnitInfos.GetUnitInfo(curUnit.Type);
-        List<UnitState> enemies = GetEnemyUnits(curUnit, gameState);
-
-        // The castle is untargetable while both towers still stand.
-        bool castleLocked = CountTowers(enemies) >= 2;
-
-        int? closestId = null;
-        long closestDistanceSquared = long.MaxValue;
-
-        foreach (UnitState enemy in enemies)
-        {
-            UnitInfo enemyInfo = UnitInfos.GetUnitInfo(enemy.Type);
-
-            if (enemy.Type == UnitType.Castle && castleLocked) continue;
-            if (enemyInfo.Layer == MovementLayer.Air && !curInfo.ranged) continue;
-            if (curInfo.targetsBuildingsOnly && !enemyInfo.IsBuilding) continue;
-
-            long distanceSquared = DistanceSquared(curUnit.Position, enemy.Position);
-            if (distanceSquared > (long)aggroRange * aggroRange) continue;
-            if (distanceSquared >= closestDistanceSquared) continue;
-
-            closestDistanceSquared = distanceSquared;
-            closestId = enemy.Id;
-        }
-
-        return closestId;
     }
 
     internal static int CountTowers(List<UnitState> units)
@@ -121,16 +144,23 @@ public static class UnitSim
     // range-1 melee unit connects from any edge or corner regardless of unit size.
     internal static int FootprintDistance(UnitState a, UnitState b)
     {
-        Vector2Int sizeA = UnitInfos.GetUnitInfo(a.Type).Size;
-        Vector2Int sizeB = UnitInfos.GetUnitInfo(b.Type).Size;
+        return FootprintDistance(
+            a.Position, UnitInfos.GetUnitInfo(a.Type).Size,
+            b.Position, UnitInfos.GetUnitInfo(b.Type).Size);
+    }
 
-        int aMaxX = a.Position.X + sizeA.X - 1;
-        int aMaxY = a.Position.Y + sizeA.Y - 1;
-        int bMaxX = b.Position.X + sizeB.X - 1;
-        int bMaxY = b.Position.Y + sizeB.Y - 1;
+    // Same metric against raw rectangles, for callers reasoning about hypothetical
+    // positions (the pathfinder asking "would I be in range if I stood here?").
+    // Targeting, attack range and pathfinding all agree because they all end up here.
+    internal static int FootprintDistance(Vector2Int aPos, Vector2Int aSize, Vector2Int bPos, Vector2Int bSize)
+    {
+        int aMaxX = aPos.X + aSize.X - 1;
+        int aMaxY = aPos.Y + aSize.Y - 1;
+        int bMaxX = bPos.X + bSize.X - 1;
+        int bMaxY = bPos.Y + bSize.Y - 1;
 
-        int dx = Math.Max(0, Math.Max(b.Position.X - aMaxX, a.Position.X - bMaxX));
-        int dy = Math.Max(0, Math.Max(b.Position.Y - aMaxY, a.Position.Y - bMaxY));
+        int dx = Math.Max(0, Math.Max(bPos.X - aMaxX, aPos.X - bMaxX));
+        int dy = Math.Max(0, Math.Max(bPos.Y - aMaxY, aPos.Y - bMaxY));
 
         return Math.Max(dx, dy);
     }
@@ -150,10 +180,8 @@ public static class UnitSim
         };
     }
 
-
-
     internal static bool FootprintBlocked(GameState state, Vector2Int topLeft,
-        Vector2Int size, UnitType unitType, Vector2Int ignore)
+        Vector2Int size, UnitType unitType, int ignoreUnitId)
     {
         MovementLayer layer = UnitInfos.GetUnitInfo(unitType).Layer;
 
@@ -164,17 +192,15 @@ public static class UnitSim
                 Vector2Int cell = new(topLeft.X + x, topLeft.Y + y);
 
                 if (!ArenaMap.IsPassable(cell, unitType)) return true;
-                if (IsOccupied(state, cell, layer, ignore)) return true;
+                if (IsOccupied(state, cell, layer, ignoreUnitId)) return true;
             }
         }
 
         return false;
     }
 
-  
-
     internal static bool FootprintBlocked(GameState state, Vector2Int topLeft, Vector2Int size,
-        UnitType unitType, Vector2Int ignore, Vector2Int goal, Vector2Int goalSize)
+        UnitType unitType, int ignoreUnitId, Vector2Int goal, Vector2Int goalSize)
     {
         MovementLayer layer = UnitInfos.GetUnitInfo(unitType).Layer;
 
@@ -190,7 +216,7 @@ public static class UnitSim
                 if (cell.X >= goal.X && cell.X < goal.X + goalSize.X
                                      && cell.Y >= goal.Y && cell.Y < goal.Y + goalSize.Y) continue;
 
-                if (IsOccupied(state, cell, layer, ignore)) return true;
+                if (IsOccupied(state, cell, layer, ignoreUnitId)) return true;
             }
         }
 
