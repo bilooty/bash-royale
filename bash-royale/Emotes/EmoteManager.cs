@@ -49,7 +49,6 @@ public class EmoteManager
                 return true;
             }
 
-            // Menu is open, swallow all input so cards don't get selected
             return true;
         }
 
@@ -58,7 +57,6 @@ public class EmoteManager
 
     public void Show(EmoteId emote, PlayerId owner)
     {
-        _activeEmotes.RemoveAll(e => e.Owner == owner);
         _activeEmotes.Add(new EmoteDisplay(emote, owner));
     }
 

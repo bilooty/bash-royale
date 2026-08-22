@@ -5,6 +5,7 @@ using SadConsole.UI.Controls;
 using SadRogue.Primitives;
 using System.Linq;
 using bash_royale.Music;
+using Microsoft.Xna.Framework.Media;
 
 namespace bash_royale.Rendering
 {
@@ -76,6 +77,26 @@ namespace bash_royale.Rendering
                     Position = new Point((Width - line.Length) / 2, 24 + row),
                     TextColor = Color.Cyan
                 });
+            }
+
+            var mute = new Button(10)
+            {
+                Text = "Mute",
+                Position = new Point((Width - 10) / 2, 35),
+            };
+            mute.Click += OnMuteClicked;
+            Controls.Add(mute);
+        }
+
+        private void OnMuteClicked(object? sender, EventArgs e)
+        {
+            if (MediaPlayer.State == MediaState.Playing)
+            {
+                AudioManager.StopMusic();
+            }
+            else
+            {
+                AudioManager.PlayMenuMusic();
             }
         }
 
