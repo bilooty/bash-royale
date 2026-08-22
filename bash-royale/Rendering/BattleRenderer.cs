@@ -478,7 +478,7 @@ public override void Update(TimeSpan delta)
             }
             else
             {
-                _guiLayer.Surface.Print(centerX, centerY, card.Cost.ToString(), Color.Red);
+                _guiLayer.Surface.Print(centerX, centerY, "*", Color.Red);
             }
         }
         
@@ -591,8 +591,8 @@ public override void Update(TimeSpan delta)
             DrawGUI();
             DrawEndScreen();
         }
-        
-        
+
+
         private void DrawBuildingHealth(PlayerState player)
         {
             Color teamColor = (player.Id == PlayerId.One) == _isHost ? p1Color : p2Color;

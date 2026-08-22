@@ -1,10 +1,9 @@
-using Microsoft.VisualBasic;
-
 namespace bash_royale;
 
 public enum ProjectileType
 {
     Zap,
+    FireBall,
     ZapEffect
 }
 
@@ -32,7 +31,9 @@ public struct ProjectileState
 
     public static Dictionary<ProjectileType, ProjectileInfo> Infos = new Dictionary<ProjectileType, ProjectileInfo>
     {
-        [ProjectileType.Zap] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 10)])
+        [ProjectileType.Zap] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 120)]),
+        [ProjectileType.FireBall] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 450)]),
+        [ProjectileType.ZapEffect] = new ProjectileInfo([])
     };
 }
 
@@ -51,7 +52,7 @@ public record DamageInstance(int Index, int Damage, PlayerId targetPlayer);
 
 public class Linger(int duration)
 {
-    
+
 }
 public class InstantDamage(Vector2Int size, int damage) : IProjectileBehaviour
 {
@@ -82,4 +83,4 @@ public record ProjectileResult(
     ProjectileState State,
     List<DamageInstance> DamageInstances,
     List<ProjectileState> NewProjectiles
-    ); 
+    );
