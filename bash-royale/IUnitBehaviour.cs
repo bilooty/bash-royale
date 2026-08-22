@@ -46,11 +46,16 @@ public class WalkForwards(int speed) : IUnitBehaviour
         UnitState? destination = null;
         long best = long.MaxValue;
 
+        bool castleUnlocked = CountTowers(unit, state) < 2;
+
         foreach (UnitState enemy in UnitSim.GetEnemyUnits(unit, state))
         {
             if (!UnitInfos.GetUnitInfo(enemy.Type).IsBuilding) continue;
 
-            long d = UnitSim.DistanceSquared(unit.Position, enemy.Position);
+            // The castle only becomes a target once a tower has fallen.
+            if (enemy.Type == UnitType.Castle && !castleUnlocked) continue;
+
+            long d = UnitSim.FootprintDistance(unit, enemy);
             if (d >= best) continue;
 
             best = d;
@@ -58,6 +63,18 @@ public class WalkForwards(int speed) : IUnitBehaviour
         }
 
         return destination;
+    }
+
+    private static int CountTowers(UnitState unit, GameState state)
+    {
+        int count = 0;
+
+        foreach (UnitState enemy in UnitSim.GetEnemyUnits(unit, state))
+        {
+            if (enemy.Type == UnitType.Tower) count++;
+        }
+
+        return count;
     }
 }
 

@@ -107,7 +107,7 @@ public static class UnitSim
 
     // Chebyshev gap between two footprints. 0 means touching or overlapping, so a
     // range-1 melee unit connects from any edge or corner regardless of unit size.
-    private static int FootprintDistance(UnitState a, UnitState b)
+    internal static int FootprintDistance(UnitState a, UnitState b)
     {
         Vector2Int sizeA = UnitInfos.GetUnitInfo(a.Type).Size;
         Vector2Int sizeB = UnitInfos.GetUnitInfo(b.Type).Size;
