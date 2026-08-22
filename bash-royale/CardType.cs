@@ -40,12 +40,9 @@ public static class CardSim
     {
         var card = CardInfos.GetCardInfo(cardId);
         PlayerState player = playerId == PlayerId.One ? gameState.PlayerOne : gameState.PlayerTwo;
-        if (player.Elixir - card.Cost < 0)
-        {
-            return gameState;
-        }
+  
 
-        player.Elixir -= card.Cost;
+       
         if (card is UnitCard unitCard)
         {
             player.Units.Add(new UnitState(
@@ -81,11 +78,6 @@ public static class CardSim
 
         CardId cardId = player.Hand[handIndex];
         CardInfo card = CardInfos.GetCardInfo(cardId);
-
-        if (player.Elixir - card.Cost < 0)
-        {
-            return gameState;
-        }
 
         gameState = PlayCard(cardId, gameState, playerId, position);
 
