@@ -57,7 +57,7 @@ namespace bash_royale.Scenes
 
         private void LaunchGame(bool isHost, string ipAddress)
         {
-            var battleScreen = new BattleRenderer();
+            var battleScreen = new BattleRenderer(ipAddress, isHost);
             Game.Instance.Screen = battleScreen;
             battleScreen.IsFocused = true;
         }

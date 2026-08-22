@@ -36,8 +36,9 @@ public record CardInfo(
 
 public static class CardSim
 {
-    public static GameState PlayCard(CardInfo card, GameState gameState, PlayerId playerId, Vector2Int position)
+    public static GameState PlayCard(CardId cardId, GameState gameState, PlayerId playerId, Vector2Int position)
     {
+        var card = CardInfos.GetCardInfo(cardId);
         PlayerState player = playerId == PlayerId.One ? gameState.PlayerOne : gameState.PlayerTwo;
         if (player.Elixir - card.Cost < 0)
         {
@@ -86,7 +87,7 @@ public static class CardSim
             return gameState;
         }
 
-        gameState = PlayCard(card, gameState, playerId, position);
+        gameState = PlayCard(cardId, gameState, playerId, position);
 
         player = playerId == PlayerId.One ? gameState.PlayerOne : gameState.PlayerTwo;
         player.Hand.RemoveAt(handIndex);

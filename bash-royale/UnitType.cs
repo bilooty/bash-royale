@@ -47,7 +47,7 @@ public static class UnitInfos
             UnitType.Tower => new UnitInfo(
                 UnitType.Tower,
                 "Tower",
-                30,
+                3000,
                 5,
                 5,
                 10,
@@ -59,7 +59,7 @@ public static class UnitInfos
             UnitType.Castle => new UnitInfo(
                 UnitType.Castle,
                 "Castle",
-                30,
+                3000,
                 5,
                 5,
                 10,

@@ -4,9 +4,10 @@ public struct PlayerState
 {
     public PlayerId Id;
     public List<UnitState> Units;
-    public float Elixir;
+    public int Elixir;
     public List<CardId> Hand;
     public List<CardId> Deck;
+    
 
     private const int HAND_SIZE = 4;
 
@@ -36,14 +37,5 @@ public struct PlayerState
             int j = random.Next(i + 1);
             (cards[i], cards[j]) = (cards[j], cards[i]);
         }
-    }
-}
-
-public static class PlayerSim
-{
-    public static float RegenerateElixir(float elixir, float deltaSeconds)
-    {
-        float regenerated = elixir + GameSettings.ELIXIR_REGEN_PER_SECOND * deltaSeconds;
-        return Math.Min(regenerated, GameSettings.MAX_ELIXIR);
     }
 }
