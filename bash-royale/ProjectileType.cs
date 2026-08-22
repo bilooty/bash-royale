@@ -42,7 +42,7 @@ public struct ProjectileState
 
     public static Dictionary<ProjectileType, ProjectileInfo> Infos = new Dictionary<ProjectileType, ProjectileInfo>
     {
-        [ProjectileType.WizardBoom] = new ProjectileInfo([ new Linger(4), new InstantDamage(new Vector2Int(3,3), 450)], size:new Vector2Int(3,3), targetType:TargetType.Location),
+        [ProjectileType.WizardBoom] = new ProjectileInfo([ new Linger(4), new InstantDamage(new Vector2Int(3,3), 450, die:false)], size:new Vector2Int(3,3), targetType:TargetType.Location),
         [ProjectileType.ZapEffect] = new ProjectileInfo(
             [
             new Linger(4)], size:new Vector2Int(3, 3), targetType:TargetType.Location),
@@ -182,7 +182,7 @@ public class SummonProj(ProjectileType type) : IProjectileBehaviour
 
 
 
-public class InstantDamage(Vector2Int size, int damage) : IProjectileBehaviour
+public class InstantDamage(Vector2Int size, int damage, bool die =true) : IProjectileBehaviour
 {
     public ProjectileResult Update(ProjectileState state, GameState gameState)
     {
@@ -205,7 +205,7 @@ public class InstantDamage(Vector2Int size, int damage) : IProjectileBehaviour
             }
         }
 
-        state.ShouldDie = true;
+        state.ShouldDie = die;
         return new ProjectileResult(state, damageInstances, []);
     }
 }
