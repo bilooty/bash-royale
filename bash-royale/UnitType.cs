@@ -66,7 +66,7 @@ public static class UnitInfos
                 true,
                 new DoNothing(),
                 new DoNothing(),
-                new AttackBehaviour(90),
+                new RangedAttack(80, ProjectileType.CannonBall),
                 new Vector2Int(3,2),
                 MovementLayer.Ground,
                 true),
@@ -109,7 +109,7 @@ public static class UnitInfos
                 true,
                 new WalkForwards(6),
                 new ChaseBehaviour(6), 
-                new AttackBehaviour(80),
+                new RangedAttack(80, ProjectileType.CannonBall),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
                 UnitType.Goblin => new UnitInfo(
