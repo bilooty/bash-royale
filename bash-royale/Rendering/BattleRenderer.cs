@@ -117,7 +117,36 @@ public class BattleRenderer : SadConsole.ScreenSurface
         }
         return base.ProcessKeyboard(keyboard);
     }
+    private void DrawProjectiles()
+    {
+        foreach (ProjectileState proj in _gameState.Projectiles)
+        {
+            if (!EntityDisplay.Projectiles.TryGetValue(proj.Type, out EntityDisplay display))
+                continue; // no visual for this projectile type, skip it
 
+            ColoredGlyph glyph = display.Glyphs[0][0];
+
+            Vector2Int? sizeHuh = ProjectileState.Infos[proj.Type].Size;
+
+            Vector2Int size = sizeHuh ?? new Vector2Int(1, 1);
+            System.Console.WriteLine("Size: " + size.X + ", " + size.Y + proj.Type);
+            for (int x = 0; x < size.X; x++)
+            {
+                for (int y = 0; y < size.Y; y++)
+                {
+                    Vector2Int render = Flip(new Vector2Int(proj.Position.X + x, proj.Position.Y + y));
+
+                    if (render.X < 0 || render.X >= _unitLayer.Surface.Width) continue;
+                    if (render.Y < 0 || render.Y >= _unitLayer.Surface.Height) continue;
+
+                    _unitLayer.Surface[render.X, render.Y].Foreground = glyph.Foreground;
+                    if (!display.IsTransparent)
+                        _unitLayer.Surface[render.X, render.Y].Background = glyph.Background;
+                    _unitLayer.Surface[render.X, render.Y].GlyphCharacter = glyph.GlyphCharacter;
+                }
+            }
+        }
+    }
     public override bool ProcessMouse(MouseScreenObjectState state)
     {
         _hoverCell = state.IsOnScreenObject
@@ -613,6 +642,7 @@ public override void Update(TimeSpan delta)
             _guiLayer.Surface.Clear();
             DrawUnits(_gameState.PlayerOne);
             DrawUnits(_gameState.PlayerTwo);
+            DrawProjectiles();
             DrawBuildingHealth(_gameState.PlayerOne);
             DrawBuildingHealth(_gameState.PlayerTwo);
             DrawDeployCursor();

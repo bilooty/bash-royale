@@ -148,6 +148,7 @@ public static class GameSim
         for (int i = 0; i < state.Projectiles.Count; i++)
         { 
             ProjectileState proj = state.Projectiles[i];
+            System.Console.WriteLine(proj.Type);
             ProjectileInfo info = ProjectileState.Infos[proj.Type];
             foreach (IProjectileBehaviour behaviour in info.Behaviours)
             {
