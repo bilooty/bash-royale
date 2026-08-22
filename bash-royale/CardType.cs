@@ -9,7 +9,6 @@ public enum CardId
     Goblin,
     Wizard,
     Hog,
-
     FireBall,
     Barbarian,
     Musketeer,
@@ -124,6 +123,8 @@ public static class CardInfos
     {
         CardId.Knight => new UnitCard(id, 3, UnitType.Knight),
         CardId.Zap => new SpellCard(id, 4, ProjectileType.Zap, new Vector2Int(-1, -1), new Vector2Int(3, 3)),
+        CardId.FireBall => new SpellCard(id, 4, ProjectileType.Zap, new Vector2Int(-1, -1), new Vector2Int(3, 3)),
+
         CardId.Giant => new UnitCard(id, 5, UnitType.Giant),
         CardId.Archer => new UnitCard(id, 3, UnitType.Archer),
         CardId.Goblin => new UnitCard(id, 2, UnitType.Goblin),
