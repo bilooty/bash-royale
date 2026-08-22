@@ -10,7 +10,14 @@ public enum UnitType
     Goblin,
     Wizard,
     HogRider,
-    BabyDragon
+    BabyDragon,
+    Barbarian,
+    Musketeer,
+    MiniPekka,
+    Valkyrie,
+    Dragon,
+    Skeleton
+    
 
 }
 public record UnitInfo(
