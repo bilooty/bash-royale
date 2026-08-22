@@ -1,5 +1,11 @@
 namespace bash_royale;
 
+public enum Behaviour
+{
+    Neutral,
+    Chase,
+    Attack
+}
 public record struct UnitState
 {
     public UnitType Type;
@@ -8,6 +14,7 @@ public record struct UnitState
     public int Id;
     public int LastAttackTick = -10;
     public int LastDamageTick = -10;
+    public Behaviour CurrentBehaviour = Behaviour.Neutral;
     public IEnumerable<Vector2Int> Positions(){
         UnitInfo info = UnitInfos.GetUnitInfo(Type);
         for (int x = 0; x < info.Size.X; x++)

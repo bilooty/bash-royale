@@ -28,11 +28,13 @@ public static class UnitSim
         if (target is null)
         {
             behaviour = info.NeutralBehaviour;
+            curUnit.CurrentBehaviour = Behaviour.Neutral;
         }
         else
         {
             bool inAttackRange = InRange(curUnit, target.Value, info.AttackRange);
             behaviour = inAttackRange ? info.AttackBehaviour : info.ChaseBehaviour;
+            curUnit.CurrentBehaviour = inAttackRange ? Behaviour.Attack : Behaviour.Chase;
         }
 
         curUnit.Ticks++;
