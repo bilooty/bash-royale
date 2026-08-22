@@ -32,7 +32,29 @@ public static class UnitSim
         curUnit.Ticks++;
         return behaviour.Update(curUnit, gameState, target, targetIdx ?? -1);
     }
-    
+    internal static bool IsOccupied(GameState state, Vector2Int position, MovementLayer layer)
+    {
+        return HasUnitAt(state.PlayerOne.Units, position, layer)
+               || HasUnitAt(state.PlayerTwo.Units, position, layer);
+    }
+
+    private static bool HasUnitAt(List<UnitState> units, Vector2Int position, MovementLayer layer)
+    {
+        foreach (UnitState unit in units)
+        {
+            UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
+            if (info.Layer != layer) continue;
+
+            if (position.X < unit.Position.X) continue;
+            if (position.X >= unit.Position.X + info.Size.X) continue;
+            if (position.Y < unit.Position.Y) continue;
+            if (position.Y >= unit.Position.Y + info.Size.Y) continue;
+
+            return true;
+        }
+
+        return false;
+    }
     private static int? FindNearestEnemy(UnitState curUnit, GameState gameState, int aggroRange)
     {
         Vector2Int curPosition = curUnit.Position;
