@@ -35,116 +35,114 @@ public static class UnitInfos
     {
         return unitType switch
         {
-                        UnitType.Knight => new UnitInfo(
+            UnitType.Knight => new UnitInfo(
                 UnitType.Knight,
                 "Knight",
-                1400,
+                700,
                 1,
                 6,
-                24,                        // 1.2s hit speed
+                20,
                 false,
                 new WalkForwards(5),
-                new ChaseBehaviour(5),
-                new AttackBehaviour(160),
+                new ChaseBehaviour(5), 
+                new AttackBehaviour(75),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
             UnitType.Tower => new UnitInfo(
                 UnitType.Tower,
                 "Tower",
-                1400,
-                7,
-                7,
-                16,                        // 0.8s
+                2000,
+                5,
+                5,
+                10,
                 true,
                 new DoNothing(),
                 new DoNothing(),
-                new AttackBehaviour(90),
+                new AttackBehaviour(5),
                 new Vector2Int(1,1),
                 MovementLayer.Ground,
                 true),
             UnitType.Castle => new UnitInfo(
                 UnitType.Castle,
                 "Castle",
-                2400,
-                7,
-                7,
-                20,                        // 1.0s
+                3000,
+                5,
+                5,
+                10,
                 true,
                 new DoNothing(),
                 new DoNothing(),
-                new AttackBehaviour(110),
+                new AttackBehaviour(5),
                 new Vector2Int(1,1),
                 MovementLayer.Ground,
                 true),
-            UnitType.Giant => new UnitInfo(
+                UnitType.Giant => new UnitInfo(
                 UnitType.Giant,
                 "Giant",
-                2500,
+                1500,
                 1,
                 5,
-                30,                        // 1.5s
+                20,
                 false,
-                new WalkForwards(3),       // slow
-                new ChaseBehaviour(3),
-                new AttackBehaviour(210),
+                new WalkForwards(5),
+                new ChaseBehaviour(5), 
+                new AttackBehaviour(75),
                 new Vector2Int(2,2),
                 MovementLayer.Ground,
                 false,
                 true),
-            UnitType.Archer => new UnitInfo(
+                UnitType.Archer => new UnitInfo(
                 UnitType.Archer,
                 "Archer",
-                250,
-                7,
-                9,
-                24,                        // 1.2s
+                500,
+                5,
+                10,
+                10,
                 true,
-                new WalkForwards(5),
-                new ChaseBehaviour(5),
-                new AttackBehaviour(85),
+                new WalkForwards(10),
+                new ChaseBehaviour(5), 
+                new AttackBehaviour(75),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
-            UnitType.Goblin => new UnitInfo(
+                UnitType.Goblin => new UnitInfo(
                 UnitType.Goblin,
                 "Goblin",
-                170,
+                200,
                 1,
                 8,
-                22,                        // 1.1s
+                5,
                 false,
-                new WalkForwards(8),       // very fast
-                new ChaseBehaviour(8),
-                new AttackBehaviour(110),
+                new WalkForwards(12),
+                new ChaseBehaviour(5), 
+                new AttackBehaviour(75),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
-            UnitType.Wizard => new UnitInfo(
+                UnitType.Wizard => new UnitInfo(
                 UnitType.Wizard,
                 "Wizard",
-                450,
-                8,
+                600,
+                5,
+                5,
                 10,
-                28,                        // 1.4s
                 true,
                 new WalkForwards(5),
-                new ChaseBehaviour(5),
-                new AttackBehaviour(220),
+                new ChaseBehaviour(5), 
+                new AttackBehaviour(75),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
-            UnitType.HogRider => new UnitInfo(
+                UnitType.HogRider => new UnitInfo(
                 UnitType.HogRider,
-                "Hog Rider",
-                1200,
+                "Horde",
+                800,
                 1,
-                5,
-                32,                        // 1.6s
+                3,
+                10,
                 false,
-                new WalkForwards(9),       // very fast
-                new ChaseBehaviour(9),
-                new AttackBehaviour(240),
+                new WalkForwards(15),
+                new ChaseBehaviour(15), 
+                new AttackBehaviour(75),
                 new Vector2Int(1,1),
-                MovementLayer.Ground,
-                false,
-                true),                     // buildings only
+                MovementLayer.Ground),
                 
             _ => throw new ArgumentOutOfRangeException(nameof(unitType), unitType, null)
         };
