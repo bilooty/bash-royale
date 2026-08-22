@@ -25,12 +25,12 @@ public static class Movement
 
 public interface IUnitBehaviour
 {
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx);
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId);
 }
 // FOR ALL NON ATTACKS ENSURE ACTIONRESULT.ISATTACK IS FALSE
 public class WalkForwards(int speed) : IUnitBehaviour
 {
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId)
     {
         UnitState? destination = NearestBuilding(unit, state);
         if (destination is null) return ActionResult.NoAttack(unit);
@@ -63,7 +63,7 @@ public class WalkForwards(int speed) : IUnitBehaviour
 
 public class ChaseBehaviour(int speed) : IUnitBehaviour
 {
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId)
     {
         if (target is null) return ActionResult.NoAttack(unit);
 
@@ -77,20 +77,20 @@ public class ChaseBehaviour(int speed) : IUnitBehaviour
 public class AttackBehaviour(int damage) : IUnitBehaviour
 {
      
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId)
     { 
         if (target is null) return ActionResult.NoAttack(unit);
         
         UnitInfo info = UnitInfos.GetUnitInfo(unit.Type); 
         if (unit.Ticks % info.TicksPerAttack != 0) return ActionResult.NoAttack(unit);
         unit.LastAttackTick = unit.Ticks;
-        return new ActionResult(unit, targetIdx, damage, true);
+        return new ActionResult(unit, targetId, damage, true);
     }
 }
 public class RangedAttack(int damage, ProjectileType projectileType) : IUnitBehaviour
 {
      
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId)
     { 
         if (target is null) return ActionResult.NoAttack(unit);
         
@@ -99,14 +99,14 @@ public class RangedAttack(int damage, ProjectileType projectileType) : IUnitBeha
         unit.LastAttackTick = unit.Ticks;
         PlayerState enemy = unit.Owner == PlayerId.One ? state.PlayerTwo : state.PlayerOne;
         ProjectileState newProj = new ProjectileState(projectileType, unit.Owner, unit.Position);
-        newProj.TargetId = enemy.Units[targetIdx].Id;
-        return new ActionResult(unit, targetIdx, 0, false, newProj);
+        newProj.TargetId = targetId;
+        return new ActionResult(unit, targetId, 0, false, newProj);
     }
 }
 
 public class DoNothing : IUnitBehaviour
 {
-    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetId)
     {
         return ActionResult.NoAttack(unit);
     }
