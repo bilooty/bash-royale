@@ -14,10 +14,12 @@ public struct PlayerState
 
     private const int HAND_SIZE = 4;
 
-    public static PlayerState CreateNew(PlayerId id)
+    public static PlayerState CreateNew(PlayerId id) => CreateNew(id, Decks.CreateDefault());
+
+    public static PlayerState CreateNew(PlayerId id, List<CardId> chosenDeck)
     {
-        List<CardId> deck = Enum.GetValues<CardId>().ToList();
-        //Shuffle(deck);
+        // Same seed on both machines, so the lockstep sim stays in sync.
+        List<CardId> deck = Decks.Shuffled(chosenDeck, id);
 
         List<CardId> hand = deck.Take(HAND_SIZE).ToList();
         deck.RemoveRange(0, hand.Count);
@@ -32,13 +34,4 @@ public struct PlayerState
         };
     }
 
-    private static void Shuffle(List<CardId> cards)
-    {
-        Random random = new Random();
-        for (int i = cards.Count - 1; i > 0; i--)
-        {
-            int j = random.Next(i + 1);
-            (cards[i], cards[j]) = (cards[j], cards[i]);
-        }
-    }
 }

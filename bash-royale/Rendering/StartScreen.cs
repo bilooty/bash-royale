@@ -3,6 +3,7 @@ using SadConsole;
 using SadConsole.UI;
 using SadConsole.UI.Controls;
 using SadRogue.Primitives;
+using System.Linq;
 
 namespace bash_royale.Scenes
 {
@@ -43,6 +44,42 @@ namespace bash_royale.Scenes
             };
             joinBtn.Click += (s, e) => OnJoinClicked(ipInput.Text);
             Controls.Add(joinBtn); // <-- Changed here
+
+            // 5. Deck Button - opens the deck builder
+            var deckBtn = new Button(10)
+            {
+                Text = "Deck",
+                Position = new Point((Width - 10) / 2, 19)
+            };
+            deckBtn.Click += OnDeckClicked;
+            Controls.Add(deckBtn);
+
+            // 6. A peek at the deck you will take into the next battle
+            var deckLabel = new Label("YOUR DECK")
+            {
+                Position = new Point((Width - 9) / 2, 22),
+                TextColor = Color.Yellow
+            };
+            Controls.Add(deckLabel);
+
+            // Two rows of four so the labels fit the 40 cell wide screen.
+            string[] labels = Decks.Current.Select(CardInfos.GetShortLabel).ToArray();
+            for (int row = 0; row * 4 < labels.Length; row++)
+            {
+                string line = string.Join(" ", labels.Skip(row * 4).Take(4));
+                Controls.Add(new Label(line)
+                {
+                    Position = new Point((Width - line.Length) / 2, 24 + row),
+                    TextColor = Color.Cyan
+                });
+            }
+        }
+
+        private void OnDeckClicked(object? sender, EventArgs e)
+        {
+            var deckScreen = new DeckScreen();
+            Game.Instance.Screen = deckScreen;
+            deckScreen.IsFocused = true;
         }
 
         private void OnHostClicked(object? sender, EventArgs e)
