@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using bash_royale.Networking;
 using SadConsole.Input;
 
 namespace bash_royale.Scenes;
@@ -12,9 +13,15 @@ public class BattleRenderer : SadConsole.ScreenSurface
     private ScreenSurface _unitLayer;
     private ScreenSurface _guiLayer;
     private double _timer = 0.05f;
+    private string _ipAddress = "127.0.0.1";
+    private bool _isHost;
     private int tick = 0;
-    public BattleRenderer() : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
+    private NetworkManager _networkManager;
+    public BattleRenderer(string ipAddress, bool isHost) : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
     {
+        _isHost = isHost;
+        _ipAddress = ipAddress;
+        
         // 1. Initialize your deterministic engine
         _gameState = GameState.CreateNew();
         _unitLayer = new ScreenSurface(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT);
@@ -23,13 +30,14 @@ public class BattleRenderer : SadConsole.ScreenSurface
         _guiLayer.Surface.DefaultBackground = Color.Transparent;
         Children.Add(_guiLayer);
         _gameState = GameState.CreateNew();
-        PlayerState p1 = _gameState.PlayerOne;
-        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(10, 4)));
-        p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(5, 5)));
+         PlayerState p1 = _gameState.PlayerOne;
+        // p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(10, 4)));
+        // p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(5, 5)));
         PlayerState p2 = _gameState.PlayerTwo;
-        p2.Units.Add(new UnitState(UnitType.Knight, PlayerId.Two, new Vector2Int(10, 29)));
-        p2.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(10, 30)));
-        _gameState.PlayerOne = p1;
+        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.One, new Vector2Int(10, 30)));
+        p2.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(10, 5)));
+         _gameState.PlayerOne = p1;
+         _gameState.PlayerTwo = p2;
         Children.Add(_unitLayer);
         // 3. Draw the static map onto the base surface once
         DrawArena();
@@ -87,8 +95,6 @@ public class BattleRenderer : SadConsole.ScreenSurface
     }
     public override void Update(TimeSpan delta)
     {
-        _gameState.PlayerOne.Elixir = PlayerSim.RegenerateElixir(_gameState.PlayerOne.Elixir, (float)delta.TotalSeconds);
-        _gameState.PlayerTwo.Elixir = PlayerSim.RegenerateElixir(_gameState.PlayerTwo.Elixir, (float)delta.TotalSeconds);
 
         _unitLayer.Surface.Clear();
         _guiLayer.Surface.Clear();
@@ -162,7 +168,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
             _guiLayer.Surface.Print(2, 1, "=== HAND ===", Color.Yellow);
         _guiLayer.Surface.Print(2, 3, "[1] Knight (3)", Color.Cyan);
         _guiLayer.Surface.Print(2, 4, $"[2] Fireball ({tick})", Color.Orange);
-        _guiLayer.Surface.Print(25, 2, "Elixir: 5 / 10", Color.Magenta);
+        _guiLayer.Surface.Print(25, 2, $"Elixir: {(int)_gameState.PlayerOne.Elixir} / 10", Color.Magenta);
     }
     private void DrawState()
     {

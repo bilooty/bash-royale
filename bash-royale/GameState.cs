@@ -40,6 +40,11 @@ public static class GameSim
     }
     public static GameState Update(GameState state)
     {
+        if (state.Tick % 100 == 0)
+        {
+            state.PlayerOne.Elixir += 1;
+            state.PlayerTwo.Elixir += 1;
+        }
         var p1Result = UpdatePlayer(state.PlayerOne, state);
         state.PlayerOne = p1Result.playerState;
         var p2Result = UpdatePlayer(state.PlayerTwo, state);
