@@ -677,8 +677,7 @@ public override void Update(TimeSpan delta)
                 int labelX = Math.Clamp(anchor.X - text.Length / 2, 0, ArenaMap.Width - text.Length);
                 if (anchor.Y < 0 || anchor.Y >= ArenaMap.Height) continue;
 
-                Color textColor = unit.Type == UnitType.Castle ? Color.Gold : Color.White;
-                _guiLayer.Surface.Print(labelX, anchor.Y, text, textColor, teamColor);
+                _unitLayer.Surface.Print(labelX, anchor.Y, text, Color.White, Color.Black);
             }
         }
 }
