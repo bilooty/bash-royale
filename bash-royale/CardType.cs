@@ -69,6 +69,7 @@ public static class CardSim
 
     public static GameState PlayFromHand(GameState gameState, PlayerId playerId, int handIndex, Vector2Int position)
     {
+        
         PlayerState player = playerId == PlayerId.One ? gameState.PlayerOne : gameState.PlayerTwo;
 
         if (handIndex < 0 || handIndex >= player.Hand.Count)
@@ -78,10 +79,16 @@ public static class CardSim
 
         CardId cardId = player.Hand[handIndex];
         CardInfo card = CardInfos.GetCardInfo(cardId);
-
+        if (player.Elixir - card.Cost < 0)
+        {
+            return gameState;
+        }
+        player.Elixir -= card.Cost;
+        System.Console.WriteLine("Card cost was +" + card.Cost);
+      
         gameState = PlayCard(cardId, gameState, playerId, position);
 
-        player = playerId == PlayerId.One ? gameState.PlayerOne : gameState.PlayerTwo;
+       
         player.Hand.RemoveAt(handIndex);
         player.Deck.Add(cardId);
         if (player.Deck.Count > 0)
