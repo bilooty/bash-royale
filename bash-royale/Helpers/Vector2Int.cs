@@ -24,7 +24,13 @@ public record struct Vector2Int(int X, int Y)
     public int ManhattanLength => Math.Abs(X) + Math.Abs(Y);
     public long LengthSquared  => (long)X * X + (long)Y * Y;
     
-
+    public static bool Intersects(Vector2Int posA, Vector2Int sizeA, Vector2Int posB, Vector2Int sizeB)
+    {
+        return posA.X < posB.X + sizeB.X &&
+               posA.X + sizeA.X > posB.X &&
+               posA.Y < posB.Y + sizeB.Y &&
+               posA.Y + sizeA.Y > posB.Y;
+    }
     public override string ToString() => $"({X}, {Y})";
 
     public double DistanceTo(Vector2Int other)

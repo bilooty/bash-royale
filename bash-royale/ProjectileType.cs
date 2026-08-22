@@ -24,13 +24,16 @@ public struct ProjectileState
     public ProjectileType Type;
     public bool ShouldDie;
     public Vector2Int Position;
-    public int Ticks;
+    public int Ticks = 0;
     public PlayerId Owner;
     public Vector2Int TargetLoc;
     public int TargetIndex;
 
     public static Dictionary<ProjectileType, ProjectileInfo> Infos = new Dictionary<ProjectileType, ProjectileInfo>
     {
+        [ProjectileType.ZapEffect] = new ProjectileInfo(
+            [
+            new Linger(10)]),
         [ProjectileType.Zap] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 120)]),
         [ProjectileType.FireBall] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 450)]),
         [ProjectileType.ZapEffect] = new ProjectileInfo([])
@@ -50,10 +53,29 @@ public interface IProjectileBehaviour
 
 public record DamageInstance(int Index, int Damage, PlayerId targetPlayer);
 
-public class Linger(int duration)
+public class Linger(int duration) : IProjectileBehaviour
 {
+    public ProjectileResult Update(ProjectileState state, GameState gameState)
+    {
+        if (state.Ticks > duration)
+        {
+            state.ShouldDie = true;
+        }
 
+        return new ProjectileResult(state, [], []);
+    }
 }
+
+public class SummonProj(ProjectileType type) : IProjectileBehaviour
+{
+    public ProjectileResult Update(ProjectileState state, GameState gameState)
+    {
+        return new ProjectileResult(state, [], [new ProjectileState(type, state.Owner, state.Position)]);
+    }
+}
+
+
+
 public class InstantDamage(Vector2Int size, int damage) : IProjectileBehaviour
 {
     public ProjectileResult Update(ProjectileState state, GameState gameState)
@@ -65,10 +87,8 @@ public class InstantDamage(Vector2Int size, int damage) : IProjectileBehaviour
         for (int i = 0; i < units.Count; i++)
         {   
             UnitState unit = units[i];
-            if (unit.Position.X >= state.Position.X
-                && unit.Position.Y >= state.Position.Y
-                && unit.Position.X < state.Position.X + size.X
-                && unit.Position.Y < state.Position.Y + size.Y)
+            if (Vector2Int.Intersects(unit.Position, UnitInfos.GetUnitInfo(unit.Type).Size, 
+                    state.Position, size))
             {
                 System.Console.WriteLine("Hit!!!");
                 damageInstances.Add(new DamageInstance(i, damage, enemy.Id));
