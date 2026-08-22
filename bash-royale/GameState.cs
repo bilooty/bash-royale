@@ -21,6 +21,11 @@ public struct GameState
             Winner = null,
         };
     }
+
+    public static PlayerState GetPlayerState(GameState state, PlayerId playerId)
+    {
+        return playerId == PlayerId.One ?  state.PlayerOne : state.PlayerTwo;
+    }
 }
 
 public record PlayerResult(PlayerState playerState, List<ActionResult> results);
