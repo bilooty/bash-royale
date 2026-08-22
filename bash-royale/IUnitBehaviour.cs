@@ -11,7 +11,7 @@ public static class Movement
         unit.MoveProgress = Math.Min(unit.MoveProgress + speed, MOVE_THRESHOLD);
         if (unit.MoveProgress < MOVE_THRESHOLD) return unit;
 
-        Vector2Int? next = Pathfinder.NextStep(unit.Position, destination, layer);
+        Vector2Int? next = Pathfinder.NextStep(unit.Position, destination, layer, state);
         if (next is null) return unit;
         if (UnitSim.IsOccupied(state, next.Value, layer)) return unit;
 
@@ -64,9 +64,7 @@ public class ChaseBehaviour(int speed) : IUnitBehaviour
         if (target is null) return ActionResult.NoAttack(unit);
 
         MovementLayer layer = UnitInfos.GetUnitInfo(unit.Type).Layer;
-        Vector2Int approach = Pathfinder.NearestFreeApproach(unit.Position, target.Value.Position, layer, state);
-
-        return ActionResult.NoAttack(Movement.StepTo(unit, approach, speed, state, layer));
+        return ActionResult.NoAttack(Movement.StepTo(unit, target.Value.Position, speed, state, layer));
     }
 }
 
@@ -80,7 +78,6 @@ public class AttackBehaviour(int damage) : IUnitBehaviour
         
         UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
         if (unit.Ticks % info.TicksPerAttack != 0) return ActionResult.NoAttack(unit);
-        System.Console.WriteLine("ATTACKED");
         return new ActionResult(unit, targetIdx, damage, true);
     }
 }

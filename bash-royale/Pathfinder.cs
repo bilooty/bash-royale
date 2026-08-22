@@ -29,14 +29,14 @@ public static class Pathfinder
     // Returns the next cell to step to, or null if no route exists.
     // Terrain only — occupancy is checked by the caller when it steps, so a unit
     // blocked by a body waits a tick instead of re-routing around it.
-    public static Vector2Int? NextStep(Vector2Int from, Vector2Int to, MovementLayer layer)
+    public static Vector2Int? NextStep(Vector2Int from, Vector2Int to, MovementLayer layer, GameState state)
     {
         if (from == to) return null;
         if (!ArenaMap.IsPassable(to, layer)) return null;
 
         Dictionary<Vector2Int, Vector2Int> cameFrom = new();
         Dictionary<Vector2Int, int> costSoFar = new();
-        
+
         PriorityQueue<Vector2Int, (int, int, int)> frontier = new();
 
         cameFrom[from] = from;
@@ -55,6 +55,11 @@ public static class Pathfinder
             {
                 Vector2Int neighbour = current + direction;
                 if (!ArenaMap.IsPassable(neighbour, layer)) continue;
+
+                // Route around other units. The goal is exempt — it's usually the
+                // thing we're attacking, so it will always be occupied.
+                if (neighbour != to && UnitSim.IsOccupied(state, neighbour, layer)) continue;
+
                 if (costSoFar.TryGetValue(neighbour, out int known) && known <= nextCost) continue;
 
                 costSoFar[neighbour] = nextCost;
