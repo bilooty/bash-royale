@@ -1,7 +1,5 @@
 ﻿namespace bash_royale;
 
-
-
 public record ActionResult(UnitState unit, int targetId, int damage, bool didDamage, ProjectileState? newProjectile = null)
 {
     public static ActionResult NoAttack(UnitState unit) => new(unit, -1, 0, false);
@@ -40,7 +38,7 @@ public static class UnitSim
         curUnit.Ticks++;
         return behaviour.Update(curUnit, gameState, target, target?.Id ?? -1);
     }
-    
+
     private static UnitState? ResolveTarget(UnitState curUnit, UnitInfo curInfo,
         List<UnitState> enemies, bool castleLocked)
     {
@@ -49,9 +47,9 @@ public static class UnitSim
             foreach (UnitState enemy in enemies)
             {
                 if (enemy.Id != curUnit.TargetId) continue;
-                
+
                 if (!IsTargetable(curInfo, enemy, castleLocked)) break;
-                if (FootprintDistance(curUnit, enemy) > curInfo.AggroRange + RetargetMargin) break;
+                if (!WithinRange(FootprintDistanceSquared(curUnit, enemy), curInfo.AggroRange + RetargetMargin)) break;
 
                 return enemy;
             }
@@ -59,25 +57,28 @@ public static class UnitSim
 
         return FindNearestEnemy(curUnit, curInfo, enemies, castleLocked);
     }
-    
+
     private static UnitState? FindNearestEnemy(UnitState curUnit, UnitInfo curInfo,
         List<UnitState> enemies, bool castleLocked)
     {
         UnitState? closest = null;
-        int closestDistance = int.MaxValue;
+        long closestDistanceSquared = long.MaxValue;
 
         foreach (UnitState enemy in enemies)
         {
             if (!IsTargetable(curInfo, enemy, castleLocked)) continue;
 
-            int distance = FootprintDistance(curUnit, enemy);
-            if (distance > curInfo.AggroRange) continue;
-            if (distance > closestDistance) continue;
-            
-            if (distance == closestDistance && closest is not null
-                                            && enemy.Id >= closest.Value.Id) continue;
+            // Comparing squares orders identically to comparing the distances themselves,
+            // and stays exact — no sqrt means no rounding and nothing platform-dependent.
+            long distanceSquared = FootprintDistanceSquared(curUnit, enemy);
+            if (!WithinRange(distanceSquared, curInfo.AggroRange)) continue;
+            if (distanceSquared > closestDistanceSquared) continue;
 
-            closestDistance = distance;
+            // Deterministic tie-break: lowest Id, never list order.
+            if (distanceSquared == closestDistanceSquared && closest is not null
+                                                          && enemy.Id >= closest.Value.Id) continue;
+
+            closestDistanceSquared = distanceSquared;
             closest = enemy;
         }
 
@@ -91,6 +92,8 @@ public static class UnitSim
         UnitInfo enemyInfo = UnitInfos.GetUnitInfo(enemy.Type);
 
         if (enemy.Type == UnitType.Castle && castleLocked) return false;
+        // Still conflating "shoots at range" with "can hit flyers" — a melee flyer can't
+        // fight another flyer under this rule. Worth a separate CanTargetAir eventually.
         if (enemyInfo.Layer == MovementLayer.Air && !curInfo.ranged) return false;
         if (curInfo.targetsBuildingsOnly && !enemyInfo.IsBuilding) return false;
 
@@ -107,7 +110,6 @@ public static class UnitSim
     {
         foreach (UnitState unit in units)
         {
-  
             if (unit.Id == ignoreUnitId) continue;
 
             UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
@@ -140,19 +142,9 @@ public static class UnitSim
         return dx * dx + dy * dy;
     }
 
-    // Chebyshev gap between two footprints. 0 means touching or overlapping, so a
-    // range-1 melee unit connects from any edge or corner regardless of unit size.
-    internal static int FootprintDistance(UnitState a, UnitState b)
-    {
-        return FootprintDistance(
-            a.Position, UnitInfos.GetUnitInfo(a.Type).Size,
-            b.Position, UnitInfos.GetUnitInfo(b.Type).Size);
-    }
-
-    // Same metric against raw rectangles, for callers reasoning about hypothetical
-    // positions (the pathfinder asking "would I be in range if I stood here?").
-    // Targeting, attack range and pathfinding all agree because they all end up here.
-    internal static int FootprintDistance(Vector2Int aPos, Vector2Int aSize, Vector2Int bPos, Vector2Int bSize)
+    // Per-axis gaps between two footprints. 0 on an axis means the rectangles overlap
+    // along it. Every distance below is built from these two numbers.
+    internal static (int dx, int dy) FootprintAxisGaps(Vector2Int aPos, Vector2Int aSize, Vector2Int bPos, Vector2Int bSize)
     {
         int aMaxX = aPos.X + aSize.X - 1;
         int aMaxY = aPos.Y + aSize.Y - 1;
@@ -162,12 +154,62 @@ public static class UnitSim
         int dx = Math.Max(0, Math.Max(bPos.X - aMaxX, aPos.X - bMaxX));
         int dy = Math.Max(0, Math.Max(bPos.Y - aMaxY, aPos.Y - bMaxY));
 
-        return Math.Max(dx, dy);
+        return (dx, dy);
+    }
+
+    // Squared straight-line gap between two footprints. This is the sim's distance
+    // metric now: aggro and attack ranges are circles rather than squares, so an enemy
+    // two cells away diagonally sits 2.83 cells off, not 2.
+    //
+    // Use this anywhere the result is only compared — which is everywhere in the sim.
+    // Squaring is exact; the square root isn't.
+    internal static long FootprintDistanceSquared(Vector2Int aPos, Vector2Int aSize, Vector2Int bPos, Vector2Int bSize)
+    {
+        (int dx, int dy) = FootprintAxisGaps(aPos, aSize, bPos, bSize);
+        return (long)dx * dx + (long)dy * dy;
+    }
+
+    internal static long FootprintDistanceSquared(UnitState a, UnitState b)
+    {
+        return FootprintDistanceSquared(
+            a.Position, UnitInfos.GetUnitInfo(a.Type).Size,
+            b.Position, UnitInfos.GetUnitInfo(b.Type).Size);
+    }
+
+    // Single place where a range is turned into a comparison, so the metric can be
+    // changed again (or moved to tenths of a cell) by editing one line.
+    internal static bool WithinRange(long distanceSquared, int range)
+    {
+        return distanceSquared <= (long)range * range;
+    }
+
+    // Actual straight-line gap, floored to a whole cell. For display, debug overlays and
+    // the pathfinder heuristic only — sim logic compares squares so it never sees the
+    // rounding this introduces.
+    internal static int FootprintDistance(UnitState a, UnitState b)
+    {
+        return IntSqrt(FootprintDistanceSquared(a, b));
+    }
+
+    // Integer Newton's method. Exact floor(sqrt(n)) for n >= 0, no floating point.
+    internal static int IntSqrt(long n)
+    {
+        if (n <= 0) return 0;
+
+        long x = n;
+        long y = (x + 1) / 2;
+        while (y < x)
+        {
+            x = y;
+            y = (x + n / x) / 2;
+        }
+
+        return (int)x;
     }
 
     private static bool InRange(UnitState attacker, UnitState target, int range)
     {
-        return FootprintDistance(attacker, target) <= range;
+        return WithinRange(FootprintDistanceSquared(attacker, target), range);
     }
 
     internal static List<UnitState> GetEnemyUnits(UnitState curUnit, GameState gameState)

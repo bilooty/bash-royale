@@ -8,7 +8,6 @@ public static class Movement
     public static UnitState StepTo(UnitState unit, Vector2Int destination, Vector2Int destinationSize,
         int speed, int stopDistance, GameState state)
     {
-       
         unit.MoveProgress += speed;
         if (unit.MoveProgress < MOVE_THRESHOLD) return unit;
 
@@ -25,7 +24,6 @@ public static class Movement
             state: state);
 
         if (next is null) return Stall(unit);
-
         if (UnitSim.FootprintBlocked(state, next.Value, size, unit.Type, unit.Id)) return Stall(unit);
 
         unit.MoveProgress -= MOVE_THRESHOLD;
@@ -34,7 +32,7 @@ public static class Movement
     }
 
     // Blocked or no route: hold progress at a full cell so the unit steps the instant the
-    // way clears, but don't let it bank several cells' worth while it waits.
+    // way clears, without banking several cells' worth while it waits.
     private static UnitState Stall(UnitState unit)
     {
         unit.MoveProgress = MOVE_THRESHOLD;
@@ -69,15 +67,15 @@ public class WalkForwards(int speed) : IUnitBehaviour
         bool castleLocked = UnitSim.CountTowers(enemies) >= 2;
 
         UnitState? destination = null;
-        int best = int.MaxValue;
+        long best = long.MaxValue;
 
         foreach (UnitState enemy in enemies)
         {
             if (enemy.Health <= 0) continue;
-            if (!(enemy.Type == UnitType.Tower || enemy.Type == UnitType.Castle)) continue;
+            if (!UnitInfos.GetUnitInfo(enemy.Type).IsBuilding) continue;
             if (enemy.Type == UnitType.Castle && castleLocked) continue;
 
-            int d = UnitSim.FootprintDistance(unit, enemy);
+            long d = UnitSim.FootprintDistanceSquared(unit, enemy);
             if (d > best) continue;
 
             // Same deterministic tie-break as targeting: lowest Id, never list order.
@@ -105,6 +103,8 @@ public class ChaseBehaviour(int speed) : IUnitBehaviour
     }
 }
 
+// Cooldown measured from the last swing rather than from a global tick phase, so each
+// unit has its own cadence and can't re-attack early by leaving and re-entering range.
 internal static class AttackTiming
 {
     public static bool Ready(UnitState unit, UnitInfo info)
