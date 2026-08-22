@@ -15,8 +15,8 @@ public class BattleRenderer : SadConsole.ScreenSurface
         _gameState = new GameState();
         _unitLayer = new ScreenSurface(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT);
         _unitLayer.Surface.DefaultBackground = Color.Transparent;
-        _guiLayer = new ScreenSurface(GameSettings.GAME_WIDTH, 8);
-        _guiLayer.Surface.DefaultBackground = Color.Transparent;
+        _guiLayer = new ScreenSurface(GameSettings.GAME_WIDTH, 5);
+        _guiLayer.Surface.DefaultBackground = Color.Red;
         Children.Add(_guiLayer);
 
         Children.Add(_unitLayer);
@@ -113,14 +113,15 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
     private void DrawGUI()
     {
-        new ColoredGlyph(Color.White, Color.Black, 0);
 
         _guiLayer.Surface.Clear();
         _guiLayer.Surface.DrawBox(
-            new Rectangle(0, 0, _guiLayer.Surface.Width, _guiLayer.Surface.Height),
-            ShapeParameters.CreateBorder(new ColoredGlyph(Color.Black)));
+            new Rectangle(0, 20, 28, 5),
+            ShapeParameters.CreateStyledBox(
+                ICellSurface.ConnectedLineThin,
+                new ColoredGlyph(Color.Red, Color.Red)));
         
-            _guiLayer.Surface.Print(2, 1, "=== HAND ===", Color.Yellow);
+            _guiLayer.Surface.Print(2, 20, "=== HAND ===", Color.Yellow);
         _guiLayer.Surface.Print(2, 3, "[1] Knight (3)", Color.Cyan);
         _guiLayer.Surface.Print(2, 4, "[2] Fireball (4)", Color.Orange);
         _guiLayer.Surface.Print(25, 2, "Elixir: 5 / 10", Color.Magenta);
