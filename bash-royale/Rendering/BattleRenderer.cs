@@ -3,6 +3,7 @@ using bash_royale.Networking;
 using SadConsole.Input;
 using System;
 using bash_royale.Emotes;
+using SadConsole.UI.Controls;
 
 namespace bash_royale.Rendering;
 
@@ -16,6 +17,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
     private GameState _gameState;
     private ScreenSurface _unitLayer;
     private ScreenSurface _guiLayer;
+    private SadConsole.UI.ControlsConsole _endScreenLayer;
     private double _timer = 0.05f;
     private string _ipAddress = "127.0.0.1";
     private bool _isHost;
@@ -76,6 +78,23 @@ public class BattleRenderer : SadConsole.ScreenSurface
          _gameState.PlayerOne = p1;
          _gameState.PlayerTwo = p2;
         Children.Add(_unitLayer);
+
+        _endScreenLayer = new SadConsole.UI.ControlsConsole(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT);
+        _endScreenLayer.Surface.DefaultBackground = Color.Transparent;
+        _endScreenLayer.IsVisible = false;
+
+        var playAgainBtn = new Button(14)
+        {
+            Text = "Play Again",
+            Position = new Point(ArenaMap.Width / 2 - 7, ArenaMap.Height / 2 + 2)
+        };
+        playAgainBtn.Click += (s, e) => 
+        {
+            SadConsole.Game.Instance.Screen = new StartScreen();
+        };
+        _endScreenLayer.Controls.Add(playAgainBtn);
+        Children.Add(_endScreenLayer);
+
         // 3. Draw the static map onto the base surface once
         DrawArena();
 
@@ -639,6 +658,7 @@ public override void Update(TimeSpan delta)
         }
 
         _unitLayer.Surface.Print(bannerX, bannerY, message, color);
+        _endScreenLayer.IsVisible = true;
     }
     
         private void Redraw()
