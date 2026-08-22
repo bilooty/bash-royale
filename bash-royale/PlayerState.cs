@@ -9,7 +9,6 @@ public struct PlayerState
     public List<UnitState> Units;
     public int Elixir;
     public List<CardId> Hand;
-    public int NextUnitId; 
     public List<CardId> Deck;
     
     
@@ -34,7 +33,6 @@ public struct PlayerState
             Elixir = GameSettings.STARTING_ELIXIR,
             Hand = hand,
             Deck = deck,
-            NextUnitId = 0,
         };
     }
 

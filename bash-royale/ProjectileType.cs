@@ -44,7 +44,7 @@ public struct ProjectileState
 
     public static Dictionary<ProjectileType, ProjectileInfo> Infos = new Dictionary<ProjectileType, ProjectileInfo>
     {
-        [ProjectileType.WizardBoom] = new ProjectileInfo([ new Linger(4), new InstantDamage(new Vector2Int(3,3), 450, die:false)], size:new Vector2Int(3,3), targetType:TargetType.Location),
+        [ProjectileType.WizardBoom] = new ProjectileInfo([ new Linger(4), new InstantDamage(new Vector2Int(3,3), 200, die:false)], size:new Vector2Int(3,3), targetType:TargetType.Location),
         [ProjectileType.DragonBoom] = new ProjectileInfo([ new Linger(4), new InstantDamage(new Vector2Int(3,3), 150, die:false)], size:new Vector2Int(3,3), targetType:TargetType.Location),
         [ProjectileType.DragonBall] = new ProjectileInfo([new Splash(1000, ProjectileType.DragonBoom)]),
         
@@ -58,7 +58,7 @@ public struct ProjectileState
             
         ], targetType: TargetType.Location, size:new Vector2Int(3,3)),
         [ProjectileType.FireBall] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 450)], targetType: TargetType.Location),
-        [ProjectileType.Arrow] = new ProjectileInfo([new Missile(1000, 100)], null, TargetType.Unit),
+        [ProjectileType.Arrow] = new ProjectileInfo([new Missile(1000, 110)], null, TargetType.Unit),
         [ProjectileType.CannonBall] = new ProjectileInfo([new Missile(1000, 200)], null, TargetType.Unit),
         [ProjectileType.WizardBall] = new ProjectileInfo([new Splash(1000, ProjectileType.WizardBoom)])
 

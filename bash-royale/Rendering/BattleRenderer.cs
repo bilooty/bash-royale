@@ -246,10 +246,6 @@ public class BattleRenderer : SadConsole.ScreenSurface
         return _isHost ? position.Y > ArenaMap.RiverEndRow : position.Y < ArenaMap.RiverStartRow;
     }
     
-    // Highlights the cell under the cursor while a card is armed: white if the spot is legal,
-    // dark red if it isn't. Draw this after DrawUnits so it sits on top.
-// Highlights the cell(s) under the cursor while a card is armed: white if the spot is legal,
-    // dark red if it isn't. Draw this after DrawUnits so it sits on top.
     private void DrawDeployCursor()
     {
         if (_selectedHandIdx is not int handIdx) return;
@@ -351,7 +347,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
                     //     Behaviour.Chase => 'C',
                     // };
                     //System.Console.WriteLine(player.NextUnitId);
-                    //_unitLayer.Surface[renderX, renderY - 1].GlyphCharacter = unit.Id.ToString()[0];
+                    _unitLayer.Surface[renderX, renderY - 1].GlyphCharacter = unit.Id.ToString()[0];
                     
                     if ((unit.Ticks - unit.LastAttackTick) < 1)
                     {
@@ -413,10 +409,6 @@ public override void Update(TimeSpan delta)
             SetupTestBattle();
             _matchStarted = true;
         }
-
-        // --- PRIME THE PUMP ---
-        // The moment we connect, send 10 future ticks of NoAction so both 
-        // clients have a buffer to start playing immediately without freezing.
         if (!_isPrimed)
         {
             for (int i = 0; i < COMMAND_DELAY; i++)
@@ -433,16 +425,14 @@ public override void Update(TimeSpan delta)
     
         if (_timer <= 0f)
         {
-            // === THE BUFFERED LOCKSTEP GATE ===
-            // We only look at _executionTick (Tick 0, 1, 2...). 
-            // We do NOT care if future packets haven't arrived yet!
+          
             if (!_networkManager.RemoteInputs.ContainsKey(_executionTick))
             {
-                _timer = 0f; // A packet took longer than 0.5 seconds! Stutter!
+                _timer = 0f; 
             }
             else
             {
-                // 1. GET BOTH ACTIONS FOR CURRENT TICK
+    
                 NetworkAction remoteAction = _networkManager.RemoteInputs[_executionTick];
                 NetworkAction localAction = _localInputs[_executionTick];
                 if (remoteAction.Action == ActionType.Emote)
@@ -452,18 +442,16 @@ public override void Update(TimeSpan delta)
                 if (remoteAction.Action != ActionType.NoAction)
                     System.Console.WriteLine("Received: pid: " + remoteAction.PlayerId + " x" + remoteAction.X + " y" + remoteAction.Y);
 
-                // 2. ADVANCE THE ENGINE
+               
                 if (_isHost)
                     _gameState = GameSim.Update(_gameState, localAction, remoteAction);
                 else
                     _gameState = GameSim.Update(_gameState, remoteAction, localAction);
-              
-                // 3. CLEAN UP EXECUTED TICK
+                
                 _networkManager.RemoteInputs.Remove(_executionTick);
                 _localInputs.Remove(_executionTick);
                 _executionTick++;
-
-                // 4. GENERATE AND SEND THE FUTURE INPUT TICK (Tick + 10)
+                
                 NetworkAction nextInput = _pendingLocalAction ?? new NetworkAction { Action = ActionType.NoAction };
                 nextInput.Tick = _inputTick;
                 nextInput.PlayerId = _isHost ? (byte)0 : (byte)1;
@@ -622,26 +610,21 @@ public override void Update(TimeSpan delta)
     {
         PlayerState p1 = _gameState.PlayerOne;
         PlayerState p2 = _gameState.PlayerTwo;
-
-        // Player Two defends the top, Player One the bottom.
+        
         p2.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(13, 1), 0));
         p2.Units.Add(new UnitState(UnitType.Tower,  PlayerId.Two, new Vector2Int(4, 3), 1));
         p2.Units.Add(new UnitState(UnitType.Tower,  PlayerId.Two, new Vector2Int(22, 3), 2));
 
-        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.One, new Vector2Int(13, 27), 0));
-        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(4, 25),1) );
-        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(22, 25),2 ));
-        p1.NextUnitId = 3;
-        p2.NextUnitId = 3;
+        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.One, new Vector2Int(13, 27), 3));
+        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(4, 25),4) );
+        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(22, 25),5 ));
+        _gameState.NextID = 6;
         _gameState.PlayerOne = p1;
         _gameState.PlayerTwo = p2;
     }
     private void DrawState()
     {
         Surface.Clear();
-
-        // Draw Arena (River, Bridges, Towers)
-        
         
     }
     

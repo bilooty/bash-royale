@@ -71,7 +71,7 @@ public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false, 
         ),
         [UnitType.Cannon] = new EntityDisplay(
             [
-                [new ColoredGlyph(Color.Beige, Color.DarkGray, 'C')]
+                [new ColoredGlyph(Color.Silver, Color.DarkGray, 'C')]
             ]
         ),
         [UnitType.HogRider] = new EntityDisplay(
@@ -83,6 +83,11 @@ public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false, 
         [UnitType.Barbarian] = new EntityDisplay(
             [
                 [new ColoredGlyph(Color.Brown, Color.DarkGray, 'B')]
+            ]
+        ),
+        [UnitType.GoblinCage] = new EntityDisplay(
+            [
+                [new ColoredGlyph(Color.LightYellow, Color.DarkGray, 'G')]
             ]
         ),
         [UnitType.Musketeer] = new EntityDisplay(
