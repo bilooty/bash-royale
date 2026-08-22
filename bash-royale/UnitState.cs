@@ -5,6 +5,16 @@ public struct UnitState
     public UnitType Type;
     public PlayerId Owner;
     public Vector2Int Position;
+    public IEnumerable<Vector2Int> Positions(){
+        UnitInfo info = UnitInfos.GetUnitInfo(Type);
+        for (int x = 0; x < info.Size.X; x++)
+        {
+            for (int y = 0; y < info.Size.Y; y++)
+            {
+                yield return new Vector2Int(Position.X + x , Position.Y + y);
+            }
+        }
+    }
     public int Health;
     public int MoveProgress;
     public IUnitBehaviour UnitBehaviour;
