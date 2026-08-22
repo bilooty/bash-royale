@@ -31,15 +31,9 @@ public struct ProjectileState
 
     public static Dictionary<ProjectileType, ProjectileInfo> Infos = new Dictionary<ProjectileType, ProjectileInfo>
     {
-        [ProjectileType.Zap] = new ProjectileInfo(
-        [
-            new InstantDamage(new Vector2Int(3, 3), 10),
-            new SummonProj(ProjectileType.ZapEffect)
-            ]
-            ),
         [ProjectileType.ZapEffect] = new ProjectileInfo(
             [
-            new Linger(10)])
+            new Linger(10)]),
         [ProjectileType.Zap] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 120)]),
         [ProjectileType.FireBall] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 450)]),
         [ProjectileType.ZapEffect] = new ProjectileInfo([])
