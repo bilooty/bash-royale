@@ -107,7 +107,8 @@ public class BattleRenderer : SadConsole.ScreenSurface
             && state.IsOnScreenObject
             && (_pendingLocalAction == null || _pendingLocalAction.Action == ActionType.NoAction))
         {
-            Vector2Int deployPosition = new Vector2Int(state.CellPosition.X, state.CellPosition.Y);
+            // CellPosition is where the click landed on screen; the sim works in world space.
+            Vector2Int deployPosition = Flip(new Vector2Int(state.CellPosition.X, state.CellPosition.Y));
             PlayerState player = _isHost ? _gameState.PlayerOne : _gameState.PlayerTwo;
             if (handIdx >= player.Hand.Count) return base.ProcessMouse(state);
             CardInfo card = CardInfos.GetCardInfo(player.Hand[handIdx]);
@@ -129,6 +130,12 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
         return base.ProcessMouse(state);
     }
+
+    // The client views the arena rotated 180 degrees so its own side sits at the bottom.
+    // A point reflection is its own inverse, so this one helper converts both ways:
+    // screen -> world for input, world -> screen for rendering.
+    private Vector2Int Flip(Vector2Int p) =>
+        _isHost ? p : new Vector2Int(ArenaMap.Width - 1 - p.X, ArenaMap.Height - 1 - p.Y);
 
     private bool IsValidDeploySpot(Vector2Int position, ValidLocation validLocation)
     {
@@ -155,7 +162,8 @@ public class BattleRenderer : SadConsole.ScreenSurface
         if (handIdx >= player.Hand.Count) return;
 
         CardInfo card = CardInfos.GetCardInfo(player.Hand[handIdx]);
-        bool valid = IsValidDeploySpot(cell, card.ValidLocation);
+        // cell is a screen coordinate: validate in world space, but draw where the cursor is.
+        bool valid = IsValidDeploySpot(Flip(cell), card.ValidLocation);
 
         _unitLayer.Surface[cell.X, cell.Y].Background = valid ? Color.White : Color.DarkRed;
     }
@@ -188,14 +196,9 @@ public class BattleRenderer : SadConsole.ScreenSurface
                 for (int y = 0; y < size.Y; y++)
                 {
                     ColoredGlyph glyph = display.Glyphs[y][x];
-                    int renderX = pos.X + x;
-                    int renderY = pos.Y + y;
-
-                    if (!_isHost)
-                    {
-                        renderX = ArenaMap.Width - 1 - renderX;
-                        renderY = ArenaMap.Height - 1 - renderY;
-                    }
+                    Vector2Int render = Flip(new Vector2Int(pos.X + x, pos.Y + y));
+                    int renderX = render.X;
+                    int renderY = render.Y;
 
                     _unitLayer.Surface[renderX, renderY].Foreground = glyph.Foreground;
                     _unitLayer.Surface[renderX, renderY].Background = teamColor;
@@ -336,7 +339,8 @@ public override void Update(TimeSpan delta)
                         break;
                 }
 
-                // Apply the visual state to the specific grid coordinate on the screen
+                // No flip needed here: the map is vertically symmetric (30 rows, water on
+                // 14-15, which maps onto itself), so the terrain looks the same either way.
                 Surface.SetCellAppearance(x, y, cellAppearance);
             }
         }
