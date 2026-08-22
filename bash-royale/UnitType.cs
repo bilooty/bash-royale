@@ -10,12 +10,7 @@ public enum UnitType
     Goblin,
     Wizard,
     HogRider,
-    Barbarian,
-    Musketeer,
-    MiniPekka,
-    Valkyrie,
-    Skeleton,
-    Dragon,
+    BabyDragon
 
 }
 public record UnitInfo(
@@ -203,30 +198,17 @@ public static class UnitInfos
                 new AttackBehaviour(180),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
-                UnitType.Skeleton => new UnitInfo(
-                UnitType.Skeleton,
-                "Skeleton",
-                90,
+            UnitType.BabyDragon => new UnitInfo(
+                UnitType.BabyDragon,
+                "Baby_Dragon",
+                700,
                 1,
-                5,
-                16,
-                false,
-                new WalkForwards(10),
-                new ChaseBehaviour(10),
-                new AttackBehaviour(45),
-                new Vector2Int(1,1),
-                MovementLayer.Ground),
-                UnitType.Dragon => new UnitInfo(
-                UnitType.Dragon,
-                "Baby Dragon",
-                1000,
-                4,
-                7,
-                32,
+                6,
+                20,
                 true,
-                new WalkForwards(6),
-                new ChaseBehaviour(6),
-                new AttackBehaviour(160),
+                new WalkForwards(5),
+                new ChaseBehaviour(5), 
+                new AttackBehaviour(75),
                 new Vector2Int(1,1),
                 MovementLayer.Air),
                 
