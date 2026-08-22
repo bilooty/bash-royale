@@ -366,6 +366,59 @@ public class BattleRenderer : SadConsole.ScreenSurface
             }
         }
     }
+    public void DrawUnitHP(PlayerState player)
+    {
+        foreach (UnitState unit in player.Units)
+        {
+            if (unit.Type ==  UnitType.Tower || unit.Type == UnitType.Castle) continue;
+            UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
+            if (unit.Health >= info.MaxHealth) continue;
+            float healthPct = (float)unit.Health / info.MaxHealth;
+            
+            Color barColor;
+            if (healthPct > 0.6f)
+                barColor = Color.LimeGreen;
+            else if (healthPct > 0.3f)
+                barColor = Color.Yellow;
+            else
+                barColor = Color.Red;
+            
+            int barWidth = info.Size.X;
+            int barWorldY = unit.Position.Y + info.Size.Y;
+            int filled = Math.Max(1, (int)Math.Ceiling(barWidth * healthPct));
+
+            for (int x = 0; x < barWidth; x++)
+            {
+                int pos;
+                PlayerId myId = _isHost ? PlayerId.One : PlayerId.Two;
+                if (unit.Owner == myId)
+                {
+                    pos = unit.Position.X -1;
+                    System.Console.WriteLine($"{pos }p1");
+                }
+                else
+                {
+                    pos = unit.Position.X + 1;
+                    System.Console.WriteLine($"{pos }p2");
+
+                }
+                Vector2Int render = Flip(new Vector2Int(pos, barWorldY ));
+                if (render.X < 0 || render.X >= _unitLayer.Surface.Width) continue;
+                if (render.Y < 0 || render.Y >= _unitLayer.Surface.Height) continue;
+                if (x < filled)
+                {
+                    _unitLayer.Surface[render.X, render.Y].GlyphCharacter = (char)220;
+                    _unitLayer.Surface[render.X, render.Y].Foreground = barColor;
+                }
+                else
+                {
+                    _unitLayer.Surface[render.X, render.Y].GlyphCharacter = (char)220;
+                    _unitLayer.Surface[render.X, render.Y].Foreground = Color.DarkGray;
+                }
+            }
+
+        }
+    }
 public override void Update(TimeSpan delta)
     {
         _networkManager.PollEvents();
@@ -695,6 +748,8 @@ public override void Update(TimeSpan delta)
             DrawProjectiles();
             DrawBuildingHealth(_gameState.PlayerOne);
             DrawBuildingHealth(_gameState.PlayerTwo);
+            DrawUnitHP(_gameState.PlayerOne);
+            DrawUnitHP(_gameState.PlayerTwo);
             DrawDeployCursor();
             DrawGUI();
             DrawEndScreen();
