@@ -268,21 +268,21 @@ public class BattleRenderer : SadConsole.ScreenSurface
 public override void Update(TimeSpan delta)
     {
         _networkManager.PollEvents();
-    
-        _unitLayer.Surface.Clear();
-        _guiLayer.Surface.Clear();
-        DrawUnits(_gameState.PlayerOne);
-        DrawUnits(_gameState.PlayerTwo);
-        DrawDeployCursor();
-        DrawGUI();
-        // roughly we need a timer also timer need sto swap to overtime after 2 mins
-        
+
         if (!_networkManager.IsConnected)
         {
+            Redraw();
             _guiLayer.Surface.Print(2, 6, "Waiting for opponent...", Color.Yellow, Color.Black);
             base.Update(delta);
-            return; 
-        }        
+            return;
+        }
+
+        if (_gameState.IsGameOver)
+        {
+            Redraw();
+            base.Update(delta);
+            return;
+        }   
 
         // --- DECK HANDSHAKE ---
         if (!_deckSent)
@@ -369,10 +369,9 @@ public override void Update(TimeSpan delta)
             }
         }
     
-        DrawUnits(_gameState.PlayerOne);
-        DrawUnits(_gameState.PlayerTwo);
-        DrawDeployCursor();
+        Redraw();
         base.Update(delta);
+        
     }
     private void DrawArena()
     {
@@ -421,12 +420,6 @@ public override void Update(TimeSpan delta)
 
     private void DrawGUI()
     {
-        // we want a timer, that swaps to overtime after isOvertime
-        // we want a victory screen for active player if winner
-        // we want a defeat screen for opposite player
-        // if ishost and win = player 1 then victory else lose
-        // if isclient and win = player 2 then victory else lose
-        
         int cardWidth = 5;
         int cardHeight = 3;
         int spacing = 2;
@@ -434,6 +427,17 @@ public override void Update(TimeSpan delta)
         int startY = 4;
 
         PlayerState player = _isHost ? _gameState.PlayerOne : _gameState.PlayerTwo;
+        int secondsElapsed = _gameState.Tick / GameSettings.TICKS_PER_SECOND;
+        int totalSeconds = GameSettings.OVERTIME_END_TICK / GameSettings.TICKS_PER_SECOND;
+        int remaining = Math.Max(0, totalSeconds - secondsElapsed);
+        bool isOvertime = _gameState.Tick >= GameSettings.REGULATION_END_TICK;
+
+        string clock = $"{remaining / 60}:{remaining % 60:00}";
+        string phase = isOvertime ? "OVERTIME " : "";
+        Color clockColor = isOvertime ? Color.Orange : Color.White;
+
+        _guiLayer.Surface.Print(ArenaMap.Width - phase.Length - clock.Length - 1, 0, phase + clock, clockColor);
+
         for (int i = 0; i < player.Hand.Count; i++)
         {
             CardInfo card = CardInfos.GetCardInfo(player.Hand[i]);
@@ -533,4 +537,55 @@ public override void Update(TimeSpan delta)
         
         
     }
+    
+    private void DrawEndScreen()
+    {
+        if (!_gameState.IsGameOver) return;
+
+        PlayerId localPlayer = _isHost ? PlayerId.One : PlayerId.Two;
+
+        string message;
+        Color color;
+
+        if (_gameState.IsDraw)
+        {
+            message = "DRAW";
+            color = Color.Yellow;
+        }
+        else if (_gameState.Winner == localPlayer)
+        {
+            message = "VICTORY";
+            color = Color.Gold;
+        }
+        else
+        {
+            message = "DEFEAT";
+            color = Color.Red;
+        }
+
+        int bannerY = ArenaMap.Height / 2 - 1;
+        int bannerX = (ArenaMap.Width - message.Length) / 2;
+
+        for (int x = 0; x < ArenaMap.Width; x++)
+        {
+            for (int y = bannerY - 1; y <= bannerY + 1; y++)
+            {
+                _unitLayer.Surface[x, y].Background = Color.Black;
+                _unitLayer.Surface[x, y].GlyphCharacter = ' ';
+            }
+        }
+
+        _unitLayer.Surface.Print(bannerX, bannerY, message, color);
+    }
+    
+        private void Redraw()
+        {
+            _unitLayer.Surface.Clear();
+            _guiLayer.Surface.Clear();
+            DrawUnits(_gameState.PlayerOne);
+            DrawUnits(_gameState.PlayerTwo);
+            DrawDeployCursor();
+            DrawGUI();
+            DrawEndScreen();
+        }
 }
