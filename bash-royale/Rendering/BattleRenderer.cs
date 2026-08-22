@@ -111,8 +111,19 @@ public class BattleRenderer : SadConsole.ScreenSurface
         {
             if (keyboard.IsKeyPressed(HandSlotKeys[i]))
             {
-                _selectedHandIdx = (_selectedHandIdx == i) ? null : i;
-                return true;
+                PlayerId id = _isHost ? PlayerId.One : PlayerId.Two;
+                PlayerState state = GameState.GetPlayerState(_gameState, id);
+                CardInfo card = CardInfos.GetCardInfo(state.Hand[i]);
+                if (state.Elixir >= card.Cost)
+                {
+                    _selectedHandIdx = (_selectedHandIdx == i) ? null : i;
+                    return true;
+                }
+                else
+                {
+                    
+                }
+               
             }
         }
         return base.ProcessKeyboard(keyboard);
