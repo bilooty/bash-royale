@@ -54,7 +54,7 @@ public static class CardSim
         if (card is UnitCard unitCard)
         {
             player.Units.Add(new UnitState(
-                unitCard.UnitType, playerId, position, player.NextUnitId));
+                unitCard.UnitType, playerId, position, player.NextUnitId+1));
             player.NextUnitId++;
         }
         
