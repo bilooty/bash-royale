@@ -32,21 +32,21 @@ public struct ProjectileState
     public PlayerId Owner;
     public Vector2Int SubPosition;
     public Vector2Int TargetLoc;
-    public int TargetIndex;
+    public int TargetId;
 
 
     public static Dictionary<ProjectileType, ProjectileInfo> Infos = new Dictionary<ProjectileType, ProjectileInfo>
     {
         [ProjectileType.ZapEffect] = new ProjectileInfo(
             [
-            new Linger(4)], size:new Vector2Int(3, 3)),
+            new Linger(4)], size:new Vector2Int(3, 3), targetType:TargetType.Location),
         
         [ProjectileType.Zap] = new ProjectileInfo([
             new InstantDamage(new Vector2Int(3, 3), 120),
             new SummonProj(ProjectileType.ZapEffect),
             
-        ]),
-        [ProjectileType.FireBall] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 450)]),
+        ], targetType: TargetType.Location),
+        [ProjectileType.FireBall] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 450)], targetType: TargetType.Location),
         [ProjectileType.Arrow] = new ProjectileInfo([new Missile(1000, 20)], null, TargetType.Unit),
         [ProjectileType.CannonBall] = new ProjectileInfo([new Missile(1000, 40)], null, TargetType.Unit),
 
@@ -77,7 +77,7 @@ public class Missile(int speed, int damage) : MoveTowards(speed)
     {
         state.ShouldDie = true;
         PlayerId targetPlayer = state.Owner == PlayerId.Two ? PlayerId.One :  PlayerId.Two;
-        return new ProjectileResult(state, [new DamageInstance(state.TargetIndex, damage, targetPlayer)], []);
+        return new ProjectileResult(state, [new DamageInstance(state.TargetId, damage, targetPlayer)], []);
     }
 }
 public class MoveTowards(int speed) : IProjectileBehaviour
@@ -98,7 +98,9 @@ public class MoveTowards(int speed) : IProjectileBehaviour
         ProjectileInfo info = ProjectileState.Infos[state.Type];
         PlayerState enemy = 
             GameState.GetPlayerState(gameState, state.Owner == PlayerId.One ? PlayerId.Two : PlayerId.One);
-        Vector2Int target = info.TargetType == TargetType.Location ? state.TargetLoc : enemy.Units[state.TargetIndex].Position;
+        Vector2Int target = info.TargetType == TargetType.Location
+            ? state.TargetLoc
+            : enemy.Units.First(s => s.Id == state.TargetId).Position;
 
         int dx = target.X * SCALE - state.SubPosition.X;
         int dy = target.Y * SCALE - state.SubPosition.Y;
@@ -135,7 +137,7 @@ public class MoveTowards(int speed) : IProjectileBehaviour
         return (int)x;
     }
 }
-public record DamageInstance(int Index, int Damage, PlayerId targetPlayer);
+public record DamageInstance(int Id, int Damage, PlayerId targetPlayer);
 
 public class Linger(int duration) : IProjectileBehaviour
 {
@@ -177,7 +179,7 @@ public class InstantDamage(Vector2Int size, int damage) : IProjectileBehaviour
                     state.Position, size))
             {
                 System.Console.WriteLine("Hit!!!");
-                damageInstances.Add(new DamageInstance(i, damage, enemy.Id));
+                damageInstances.Add(new DamageInstance(unit.Id, damage, enemy.Id));
             }
         }
 
