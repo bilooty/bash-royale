@@ -14,16 +14,16 @@ public class DeckScreen : SadConsole.ScreenSurface
     private const int CardHeight = 3;
     private const int Columns = 4;
 
-    private const int DeckStartX = 2;
+    private const int DeckStartX = 1;
     private const int DeckStartY = 4;
-    private const int CollectionStartX = 2;
+    private const int CollectionStartX = 1;
     private const int CollectionStartY = 16;
 
     private readonly List<CardId> _deck;
     private readonly IReadOnlyList<CardId> _collection = CardInfos.AllCards;
 
-    private readonly Rectangle _saveButton = new(2, 34, 16, 3);
-    private readonly Rectangle _backButton = new(22, 34, 16, 3);
+    private readonly Rectangle _saveButton = new(1, 34, 13, 3);
+    private readonly Rectangle _backButton = new(14, 34, 13, 3);
 
     private Point? _hover;
     private string _message = "Click a card below to add it.";
@@ -174,8 +174,8 @@ public class DeckScreen : SadConsole.ScreenSurface
 
         bool complete = _deck.Count == Decks.DECK_SIZE;
         string deckHeader = "YOUR DECK  " + _deck.Count + "/" + Decks.DECK_SIZE;
-        Surface.Print(2, 3, deckHeader, complete ? Color.LightGreen : Color.Yellow);
-        Surface.Print(2 + deckHeader.Length + 1, 3, complete ? "READY" : "INCOMPLETE",
+        Surface.Print(1, 3, deckHeader, complete ? Color.LightGreen : Color.Yellow);
+        Surface.Print(1 + deckHeader.Length + 1, 3, complete ? "READY" : "INCOMPLETE",
             complete ? Color.LightGreen : Color.Red);
 
         for (int i = 0; i < Decks.DECK_SIZE; i++)
@@ -187,7 +187,7 @@ public class DeckScreen : SadConsole.ScreenSurface
                 DrawEmptySlot(bounds);
         }
 
-        Surface.Print(2, 15, "COLLECTION", Color.Yellow);
+        Surface.Print(1, 15, "COLLECTION", Color.Yellow);
 
         for (int i = 0; i < _collection.Count; i++)
         {
@@ -197,8 +197,8 @@ public class DeckScreen : SadConsole.ScreenSurface
                 inDeck ? Color.DarkGreen : Color.White, inDeck);
         }
 
-        Surface.Print(2, 32, _message.PadRight(36).Substring(0, 36), _messageColor);
-        Surface.Print(2, 33, "Enter = save, Esc = back".PadRight(36), Color.Gray);
+        Surface.Print(1, 32, _message.PadRight(36).Substring(0, 36), _messageColor);
+        Surface.Print(1, 33, "Enter = save, Esc = back".PadRight(36), Color.Gray);
 
         DrawButton(_saveButton, "SAVE & BACK", complete ? Color.LightGreen : Color.Gray);
         DrawButton(_backButton, "CANCEL", Color.Orange);
