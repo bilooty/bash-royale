@@ -12,6 +12,9 @@ public class NetworkManager : INetEventListener
     public bool IsConnected => _serverPeer != null;
     public Dictionary<int, NetworkAction> RemoteInputs { get; private set; } = new();
     public Queue<NetworkAction> RemoteEmotes { get; private set; } = new();
+    private string? _clientIp;
+    private int _clientPort;
+    private DateTime _lastConnectTime = DateTime.MinValue;
 
     /// <summary>The opponent's deck, or null until their handshake packet arrives.</summary>
     public List<CardId>? RemoteDeck { get; private set; }
@@ -22,20 +25,40 @@ public class NetworkManager : INetEventListener
         _packetProcessor.Subscribe<NetworkAction>(OnPlayerActionReceived, () => new NetworkAction());
         _packetProcessor.SubscribeNetSerializable<DeckPacket>(OnDeckReceived, () => new DeckPacket());
     }
+    public void Stop()
+    {
+        if (_client != null)
+        {
+            _client.Stop();
+            _client = null;
+        }
+        _serverPeer = null;
+    }
     public void StartClient(string ip, int port)
     {
         _client = new NetManager(this);
         _client.Start();
         _client.Connect(ip, port, "BashRoyaleKey");
+        _clientIp = ip;
+        _clientPort = port;
     }
     public void StartHost(int port)
     {
         _client = new NetManager(this);
         _client.Start(port); 
     }
+
     public void PollEvents()
     {
         _client?.PollEvents();
+        if (_client != null && _clientIp != null && _serverPeer == null)
+        {
+            if ((DateTime.Now - _lastConnectTime).TotalSeconds > 1)
+            {
+                _client.Connect(_clientIp, _clientPort, "BashRoyaleKey");
+                _lastConnectTime = DateTime.Now;
+            }
+        }
     }
 
     public void SendAction(NetworkAction action)
