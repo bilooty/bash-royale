@@ -107,6 +107,7 @@ public static class UnitSim
     {
         foreach (UnitState unit in units)
         {
+  
             if (unit.Id == ignoreUnitId) continue;
 
             UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
@@ -119,7 +120,6 @@ public static class UnitSim
 
             return true;
         }
-
         return false;
     }
 
