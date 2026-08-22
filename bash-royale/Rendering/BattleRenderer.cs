@@ -351,7 +351,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
                     //     Behaviour.Chase => 'C',
                     // };
                     System.Console.WriteLine(player.NextUnitId);
-                    _unitLayer.Surface[renderX, renderY - 1].GlyphCharacter = unit.Id.ToString()[0];
+                    //_unitLayer.Surface[renderX, renderY - 1].GlyphCharacter = unit.Id.ToString()[0];
                     
                     if ((unit.Ticks - unit.LastAttackTick) < 1)
                     {
