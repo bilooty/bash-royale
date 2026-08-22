@@ -79,6 +79,7 @@ public class AttackBehaviour(int damage) : IUnitBehaviour
         UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
         System.Console.WriteLine("bleehhh");
         if (unit.Ticks % info.TicksPerAttack != 0) return ActionResult.NoAttack(unit);
+        unit.LastAttackTick = unit.Ticks;
         return new ActionResult(unit, targetIdx, damage, true);
     }
 }
