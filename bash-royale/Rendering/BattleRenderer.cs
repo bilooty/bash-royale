@@ -36,19 +36,21 @@ public class BattleRenderer : SadConsole.ScreenSurface
         
         // 1. Initialize your deterministic engine
         _gameState = GameState.CreateNew();
+        SetupTestBattle();
         _unitLayer = new ScreenSurface(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT);
         _unitLayer.Surface.DefaultBackground = Color.Transparent;
         _guiLayer = new ScreenSurface(28, 8);
         _guiLayer.Surface.DefaultBackground = Color.Transparent;
         _guiLayer.Position = new Point(0, ArenaMap.Height); 
         Children.Add(_guiLayer);
-        _gameState = GameState.CreateNew();
-         PlayerState p1 = _gameState.PlayerOne;
+        
+        
+        PlayerState p1 = _gameState.PlayerOne;
         // p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(10, 4)));
         // p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(5, 5)));
         PlayerState p2 = _gameState.PlayerTwo;
-        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.One, new Vector2Int(10, 30)));
-        p2.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(10, 5)));
+        
+        
          _gameState.PlayerOne = p1;
          _gameState.PlayerTwo = p2;
         Children.Add(_unitLayer);
@@ -257,6 +259,32 @@ public class BattleRenderer : SadConsole.ScreenSurface
         }
 
         _guiLayer.Surface.Print(2, 2, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
+    }
+    private void SetupTestBattle()
+    {
+        PlayerState p1 = _gameState.PlayerOne;
+        PlayerState p2 = _gameState.PlayerTwo;
+
+        // Player Two defends the top, Player One the bottom.
+        p2.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(13, 2)));
+        p2.Units.Add(new UnitState(UnitType.Tower,  PlayerId.Two, new Vector2Int(4, 6)));
+        p2.Units.Add(new UnitState(UnitType.Tower,  PlayerId.Two, new Vector2Int(22, 6)));
+
+        p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.One, new Vector2Int(13, 29)));
+        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(4, 25)));
+        p1.Units.Add(new UnitState(UnitType.Tower,  PlayerId.One, new Vector2Int(22, 25)));
+
+        // Five knights a side, spread across the width so none share a spawn cell.
+        // Well back from the river so you can watch them route to the bridges.
+        for (int i = 0; i < 5; i++)
+        {
+            int x = 4 + i * 5;
+            p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(x, 21)));
+            p2.Units.Add(new UnitState(UnitType.Knight, PlayerId.Two, new Vector2Int(x, 10)));
+        }
+
+        _gameState.PlayerOne = p1;
+        _gameState.PlayerTwo = p2;
     }
     private void DrawState()
     {

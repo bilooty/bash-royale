@@ -60,9 +60,6 @@ public static class GameSim
         var p1Result = UpdatePlayer(state.PlayerOne, state);
         var p2Result = UpdatePlayer(state.PlayerTwo, state);
 
-        ApplyDamage(p1Result, state.PlayerTwo.Units);
-        ApplyDamage(p2Result, state.PlayerOne.Units);
-
         state.PlayerOne = p1Result.playerState;
         state.PlayerTwo = p2Result.playerState;
         ApplyDamage(p1Result.results, state.PlayerTwo.Units);
