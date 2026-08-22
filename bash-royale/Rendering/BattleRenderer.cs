@@ -478,7 +478,7 @@ public override void Update(TimeSpan delta)
             }
             else
             {
-                _guiLayer.Surface.Print(centerX, centerY, card.Cost.ToString(), Color.Red);
+                _guiLayer.Surface.Print(centerX, centerY, "*", Color.Red);
             }
         }
         
