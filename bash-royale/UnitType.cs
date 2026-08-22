@@ -142,7 +142,7 @@ public static class UnitInfos
                 UnitType.HogRider => new UnitInfo(
                 UnitType.HogRider,
                 "Hog Rider",
-                9000,
+                900,
                 1,
                 9,
                 30,
