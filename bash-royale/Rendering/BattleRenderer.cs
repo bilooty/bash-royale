@@ -166,9 +166,16 @@ public class BattleRenderer : SadConsole.ScreenSurface
             ShapeParameters.CreateBorder(new ColoredGlyph(Color.Black)));
         
             _guiLayer.Surface.Print(2, 1, "=== HAND ===", Color.Yellow);
-        _guiLayer.Surface.Print(2, 3, "[1] Knight (3)", Color.Cyan);
-        _guiLayer.Surface.Print(2, 4, $"[2] Fireball ({tick})", Color.Orange);
-        _guiLayer.Surface.Print(25, 2, $"Elixir: {(int)_gameState.PlayerOne.Elixir} / 10", Color.Magenta);
+
+        PlayerState player = _gameState.PlayerOne;
+        for (int i = 0; i < player.Hand.Count; i++)
+        {
+            CardInfo card = CardInfos.GetCardInfo(player.Hand[i]);
+            Color color = player.Elixir >= card.Cost ? Color.Cyan : Color.Gray;
+            _guiLayer.Surface.Print(2, 3 + i, $"[{i + 1}] {card.Id} ({card.Cost})", color);
+        }
+
+        _guiLayer.Surface.Print(25, 2, $"Elixir: {player.Elixir:0.0} / {GameSettings.MAX_ELIXIR:0}", Color.Magenta);
     }
     private void DrawState()
     {
