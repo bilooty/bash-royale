@@ -19,7 +19,6 @@ public struct UnitState
     }
     public int Health;
     public int MoveProgress;
-    public IUnitBehaviour UnitBehaviour;
     // increase by 1 each frame / iteration of unit sim
     // if we have attack 1 per second then we want to do 
     public int Ticks;
