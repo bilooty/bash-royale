@@ -189,7 +189,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
         foreach (UnitState unit in player.Units)
         {
             Vector2Int pos = unit.Position;
-            UnitDisplay display = UnitDisplay.Displays[unit.Type];
+            EntityDisplay display = EntityDisplay.Displays[unit.Type];
             Vector2Int size = UnitInfos.GetUnitInfo(unit.Type).Size;
             for (int x = 0; x < size.X; x++)
             {
@@ -398,7 +398,7 @@ public override void Update(TimeSpan delta)
             _guiLayer.Surface.Print(cardX+cardWidth-1, cardY+cardHeight-1, card.Cost.ToString(), Color.Magenta);
             int centerX = cardX + (cardWidth / 2);
             int centerY = cardY + (cardHeight / 2);
-            if (card is UnitCard unitCard && UnitDisplay.Displays.TryGetValue(unitCard.UnitType, out var display))
+            if (card is UnitCard unitCard && EntityDisplay.Displays.TryGetValue(unitCard.UnitType, out var display))
             {
                 ColoredGlyph g = display.Glyphs[0][0];
                 _guiLayer.Surface[centerX, centerY].GlyphCharacter = g.GlyphCharacter;
