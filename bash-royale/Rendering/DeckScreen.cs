@@ -10,8 +10,8 @@ namespace bash_royale.Rendering;
 /// </summary>
 public class DeckScreen : SadConsole.ScreenSurface
 {
-    private const int CardWidth = 8;
-    private const int CardHeight = 4;
+    private const int CardWidth = 6;
+    private const int CardHeight = 3;
     private const int Columns = 4;
 
     private const int DeckStartX = 2;
@@ -22,8 +22,8 @@ public class DeckScreen : SadConsole.ScreenSurface
     private readonly List<CardId> _deck;
     private readonly IReadOnlyList<CardId> _collection = CardInfos.AllCards;
 
-    private readonly Rectangle _saveButton = new(2, 37, 16, 3);
-    private readonly Rectangle _backButton = new(22, 37, 16, 3);
+    private readonly Rectangle _saveButton = new(2, 34, 16, 3);
+    private readonly Rectangle _backButton = new(22, 34, 16, 3);
 
     private Point? _hover;
     private string _message = "Click a card below to add it.";
@@ -197,8 +197,8 @@ public class DeckScreen : SadConsole.ScreenSurface
                 inDeck ? Color.DarkGreen : Color.White, inDeck);
         }
 
-        Surface.Print(2, 35, _message.PadRight(36).Substring(0, 36), _messageColor);
-        Surface.Print(2, 36, "Enter = save, Esc = back".PadRight(36), Color.Gray);
+        Surface.Print(2, 32, _message.PadRight(36).Substring(0, 36), _messageColor);
+        Surface.Print(2, 33, "Enter = save, Esc = back".PadRight(36), Color.Gray);
 
         DrawButton(_saveButton, "SAVE & BACK", complete ? Color.LightGreen : Color.Gray);
         DrawButton(_backButton, "CANCEL", Color.Orange);
