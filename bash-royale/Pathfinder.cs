@@ -3,7 +3,7 @@
 public static class Pathfinder
 {
     // A*
-    public static Vector2Int? NextStep(Vector2Int from, Vector2Int to, Vector2Int size, Vector2Int goalSize, MovementLayer layer, GameState state)
+    public static Vector2Int? NextStep(Vector2Int from, Vector2Int to, Vector2Int size, Vector2Int goalSize, UnitType unitType, GameState state)
     {
         if (from == to) return null;
 
@@ -30,7 +30,7 @@ public static class Pathfinder
 
                 // The goal is exempt, it will always be occupied. Exempt its whole
                 // footprint, or a big unit can never reach a big target.
-                if (UnitSim.FootprintBlocked(state, neighbour, size, layer, from, to, goalSize)) continue;
+                if (UnitSim.FootprintBlocked(state, neighbour, size, unitType, from, to, goalSize)) continue;
 
                 if (costSoFar.TryGetValue(neighbour, out int known) && known <= nextCost) continue;
 

@@ -1,4 +1,4 @@
-namespace bash_royale;
+﻿namespace bash_royale;
 
 public static class ArenaMap
 {
@@ -92,6 +92,18 @@ public static class ArenaMap
         if (position.X < 0 || position.X >= Width) return false;
         if (position.Y < 0 || position.Y >= Height) return false;
         if (layer == MovementLayer.Air) return true;
+        return Grid[position.X, position.Y] != TileType.Water;
+    }
+
+    public static bool IsPassable(Vector2Int position, UnitType unitType)
+    {
+        if (position.X < 0 || position.X >= Width) return false;
+        if (position.Y < 0 || position.Y >= Height) return false;
+
+        UnitInfo info = UnitInfos.GetUnitInfo(unitType);
+        if (info.Layer == MovementLayer.Air) return true;
+        if (unitType == UnitType.HogRider) return true;
+
         return Grid[position.X, position.Y] != TileType.Water;
     }
 }

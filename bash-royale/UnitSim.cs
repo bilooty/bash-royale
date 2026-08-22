@@ -1,4 +1,4 @@
-namespace bash_royale;
+﻿namespace bash_royale;
 
 // Handles targeting, movement and attacking across both armies. This lives apart from
 // UnitSim/PlayerSim because resolving an attack needs to mutate the *enemy's* state.
@@ -53,7 +53,7 @@ public static class UnitSim
     {
         foreach (UnitState unit in units)
         {
-            // Skip the unit doing the moving — its own body isn't an obstacle.
+            // Skip the unit doing the moving; its own body isn't an obstacle.
             if (unit.Position == ignore) continue;
 
             UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
@@ -153,6 +153,24 @@ public static class UnitSim
 
         return false;
     }
+    internal static bool FootprintBlocked(GameState state, Vector2Int topLeft,
+        Vector2Int size, UnitType unitType, Vector2Int ignore)
+    {
+        MovementLayer layer = UnitInfos.GetUnitInfo(unitType).Layer;
+
+        for (int y = 0; y < size.Y; y++)
+        {
+            for (int x = 0; x < size.X; x++)
+            {
+                Vector2Int cell = new(topLeft.X + x, topLeft.Y + y);
+
+                if (!ArenaMap.IsPassable(cell, unitType)) return true;
+                if (IsOccupied(state, cell, layer, ignore)) return true;
+            }
+        }
+
+        return false;
+    }
     internal static bool FootprintBlocked(GameState state, Vector2Int topLeft, Vector2Int size,
         MovementLayer layer, Vector2Int ignore, Vector2Int goal, Vector2Int goalSize)
     {
@@ -164,7 +182,30 @@ public static class UnitSim
 
                 if (!ArenaMap.IsPassable(cell, layer)) return true;
 
-                // The goal's own cells don't block — that's the thing we're walking at.
+                // The goal's own cells don't block; that's the thing we're walking at.
+                if (cell.X >= goal.X && cell.X < goal.X + goalSize.X
+                                     && cell.Y >= goal.Y && cell.Y < goal.Y + goalSize.Y) continue;
+
+                if (IsOccupied(state, cell, layer, ignore)) return true;
+            }
+        }
+
+        return false;
+    }
+    internal static bool FootprintBlocked(GameState state, Vector2Int topLeft, Vector2Int size,
+        UnitType unitType, Vector2Int ignore, Vector2Int goal, Vector2Int goalSize)
+    {
+        MovementLayer layer = UnitInfos.GetUnitInfo(unitType).Layer;
+
+        for (int y = 0; y < size.Y; y++)
+        {
+            for (int x = 0; x < size.X; x++)
+            {
+                Vector2Int cell = new(topLeft.X + x, topLeft.Y + y);
+
+                if (!ArenaMap.IsPassable(cell, unitType)) return true;
+
+                // The goal's own cells don't block - that's the thing we're walking at.
                 if (cell.X >= goal.X && cell.X < goal.X + goalSize.X
                                      && cell.Y >= goal.Y && cell.Y < goal.Y + goalSize.Y) continue;
 
