@@ -13,12 +13,12 @@ public class UnitDisplay(ColoredGlyph[][] glyphs)
         [UnitType.Giant] = new UnitDisplay(
             [
                 [
-                    new ColoredGlyph(Color.White, Color.DarkGray, 'G'),
-                    new ColoredGlyph(Color.White, Color.DarkGray, 'G')
+                    new ColoredGlyph(Color.Red, Color.DarkGray, 'G'),
+                    new ColoredGlyph(Color.Red, Color.DarkGray, 'G')
                 ],
                 [
-                    new ColoredGlyph(Color.White, Color.DarkGray, 'G'),
-                    new ColoredGlyph(Color.White, Color.DarkGray, 'G')
+                    new ColoredGlyph(Color.Red, Color.DarkGray, 'G'),
+                    new ColoredGlyph(Color.Red, Color.DarkGray, 'G')
                 ]
             ]
         ),
@@ -30,7 +30,7 @@ public class UnitDisplay(ColoredGlyph[][] glyphs)
             [new ColoredGlyph(Color.White, Color.DarkGray, 'T')]]),
         [UnitType.Archer] = new UnitDisplay(
             [
-                [new ColoredGlyph(Color.LightGreen, Color.DarkGray, 'A')]
+                [new ColoredGlyph(Color.Yellow, Color.DarkGray, 'A')]
             ]
         ),
         [UnitType.Goblin] = new UnitDisplay(
@@ -43,7 +43,7 @@ public class UnitDisplay(ColoredGlyph[][] glyphs)
                 [new ColoredGlyph(Color.Purple, Color.DarkGray, 'W')]
             ]
         ),
-        [UnitType.Horde] = new UnitDisplay(
+        [UnitType.HogRider] = new UnitDisplay(
             [
                 [new ColoredGlyph(Color.Orange, Color.DarkGray, 'h')]
             ]
