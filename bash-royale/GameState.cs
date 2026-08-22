@@ -4,6 +4,7 @@ public struct GameState
 {
     public PlayerState PlayerOne;
     public PlayerState PlayerTwo;
+    public Occupancy Occupancy;
     public bool IsGameOver;
     public PlayerId? Winner;
     public int Tick;
@@ -37,6 +38,8 @@ public static class GameSim
     }
     public static GameState Update(GameState state)
     {
+        state.Occupancy = Occupancy.Build(state);
+        
         var p1Result = UpdatePlayer(state.PlayerOne, state);
         var p2Result = UpdatePlayer(state.PlayerTwo, state);
 

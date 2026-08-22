@@ -72,12 +72,11 @@ public static class ArenaMap
         }
     }
 
-    // Helper method for pathfinding and deployment validation
-    public static bool IsWalkable(int x, int y)
+    public static bool IsPassable(Vector2Int position, MovementLayer layer)
     {
-        if (x < 0 || x >= Width || y < 0 || y >= Height) return false;
-        TileType tile = Grid[x, y];
-        if (tile == TileType.Water) return false;
-        return true;
+        if (position.X < 0 || position.X >= Width) return false;
+        if (position.Y < 0 || position.Y >= Height) return false;
+        if (layer == MovementLayer.Air) return true;
+        return Grid[position.X, position.Y] != TileType.Water;
     }
 }
