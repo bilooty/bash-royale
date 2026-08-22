@@ -2,14 +2,17 @@ namespace bash_royale.Rendering;
 
 
 
-public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false)
+public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false, bool flashing = false)
 {
     public ColoredGlyph[][] Glyphs => glyphs;
+    public bool isFlashing => flashing;
     public bool IsTransparent => isTransparent;
     public static Dictionary<ProjectileType, EntityDisplay> Projectiles { get; } = new()
     {
         [ProjectileType.ZapEffect] = new EntityDisplay(
-            [[new ColoredGlyph(Color.LightBlue, Color.White, 'Z'), new ColoredGlyph(Color.White, Color.White, '#')]])
+            [[new ColoredGlyph(Color.LightBlue, Color.White, 'Z'), new ColoredGlyph(Color.White, Color.White, '#')]], isTransparent:false, flashing:true),
+        [ProjectileType.CannonBall] = new EntityDisplay(
+            [[new ColoredGlyph(Color.Black, Color.White, '^'), new ColoredGlyph(Color.White, Color.White, 'o')]], isTransparent:true, flashing:false)
     };
     public static Dictionary<UnitType, EntityDisplay> Displays = new Dictionary<UnitType, EntityDisplay>
     {
@@ -48,7 +51,7 @@ public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false)
         ),
         [UnitType.Wizard] = new EntityDisplay(
             [
-                [new ColoredGlyph(Color.Purple, Color.DarkGray, 'W')]
+                [new ColoredGlyph(Color.Magenta, Color.DarkGray, 'W')]
             ]
         ),
         [UnitType.HogRider] = new EntityDisplay(

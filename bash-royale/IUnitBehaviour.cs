@@ -87,6 +87,21 @@ public class AttackBehaviour(int damage) : IUnitBehaviour
         return new ActionResult(unit, targetIdx, damage, true);
     }
 }
+public class RangedAttack(int damage, ProjectileType projectileType) : IUnitBehaviour
+{
+     
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
+    { 
+        if (target is null) return ActionResult.NoAttack(unit);
+        
+        UnitInfo info = UnitInfos.GetUnitInfo(unit.Type); 
+        if (unit.Ticks % info.TicksPerAttack != 0) return ActionResult.NoAttack(unit);
+        unit.LastAttackTick = unit.Ticks;
+        ProjectileState newProj = new ProjectileState(projectileType, unit.Owner, unit.Position);
+        newProj.TargetIndex = targetIdx;
+        return new ActionResult(unit, targetIdx, 0, false, newProj);
+    }
+}
 
 public class DoNothing : IUnitBehaviour
 {

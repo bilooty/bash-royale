@@ -1,4 +1,4 @@
-namespace bash_royale;
+﻿namespace bash_royale;
 
 public enum UnitType
 {
@@ -66,7 +66,7 @@ public static class UnitInfos
                 true,
                 new DoNothing(),
                 new DoNothing(),
-                new AttackBehaviour(65),
+                new RangedAttack(65, ProjectileType.CannonBall),
                 new Vector2Int(3,2),
                 MovementLayer.Ground,
                 true),
@@ -109,7 +109,7 @@ public static class UnitInfos
                 true,
                 new WalkForwards(6),
                 new ChaseBehaviour(6), 
-                new AttackBehaviour(75),
+                new RangedAttack(75, ProjectileType.CannonBall),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
                 UnitType.Goblin => new UnitInfo(
