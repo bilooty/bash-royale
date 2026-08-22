@@ -13,9 +13,9 @@ public static class Movement
 
         Vector2Int size = UnitInfos.GetUnitInfo(unit.Type).Size;
 
-        Vector2Int? next = Pathfinder.NextStep(unit.Position, destination, size, destinationSize, layer, state);
+        Vector2Int? next = Pathfinder.NextStep(unit.Position, destination, size, destinationSize, unit.Type, state);
         if (next is null) return unit;
-        if (UnitSim.FootprintBlocked(state, next.Value, size, layer, unit.Position)) return unit;
+        if (UnitSim.FootprintBlocked(state, next.Value, size, unit.Type, unit.Position)) return unit;
 
         unit.MoveProgress -= MOVE_THRESHOLD;
         unit.Position = next.Value;
@@ -85,6 +85,21 @@ public class AttackBehaviour(int damage) : IUnitBehaviour
         if (unit.Ticks % info.TicksPerAttack != 0) return ActionResult.NoAttack(unit);
         unit.LastAttackTick = unit.Ticks;
         return new ActionResult(unit, targetIdx, damage, true);
+    }
+}
+public class RangedAttack(int damage, ProjectileType projectileType) : IUnitBehaviour
+{
+     
+    public ActionResult Update(UnitState unit, GameState state, UnitState? target, int targetIdx)
+    { 
+        if (target is null) return ActionResult.NoAttack(unit);
+        
+        UnitInfo info = UnitInfos.GetUnitInfo(unit.Type); 
+        if (unit.Ticks % info.TicksPerAttack != 0) return ActionResult.NoAttack(unit);
+        unit.LastAttackTick = unit.Ticks;
+        ProjectileState newProj = new ProjectileState(projectileType, unit.Owner, unit.Position);
+        newProj.TargetIndex = targetIdx;
+        return new ActionResult(unit, targetIdx, 0, false, newProj);
     }
 }
 
