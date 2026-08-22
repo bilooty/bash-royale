@@ -47,6 +47,10 @@ public static class ArenaMap
     // The actual deterministic data structure used by the engine
     public static readonly TileType[,] Grid;
 
+    // The rows the river occupies, so deployment can be restricted to each player's own side.
+    public static readonly int RiverStartRow;
+    public static readonly int RiverEndRow;
+
     static ArenaMap()
     {
         // Calculate based on the string array
@@ -55,21 +59,33 @@ public static class ArenaMap
 
         Grid = new TileType[Width, Height];
 
+        int riverStart = -1;
+        int riverEnd = -1;
+
         for (int y = 0; y < Height; y++)
         {
             for (int x = 0; x < Width; x++)
             {
                 char tileChar = MapTemplate[y][x];
-                
+
                 Grid[x, y] = tileChar switch
                 {
                     '.' => TileType.Grass,
                     '~' => TileType.Water,
                     '=' => TileType.Bridge,
-                    _   => TileType.Grass 
+                    _   => TileType.Grass
                 };
+
+                if (Grid[x, y] == TileType.Water)
+                {
+                    if (riverStart == -1) riverStart = y;
+                    riverEnd = y;
+                }
             }
         }
+
+        RiverStartRow = riverStart;
+        RiverEndRow = riverEnd;
     }
 
     public static bool IsPassable(Vector2Int position, MovementLayer layer)

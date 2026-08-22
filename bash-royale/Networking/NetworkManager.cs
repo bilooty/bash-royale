@@ -5,7 +5,7 @@ namespace bash_royale.Networking;
 
 public class NetworkManager : INetEventListener
 {
-    private NetManager _client;
+    private NetManager? _client;
     private NetPeer? _serverPeer;
     private readonly NetPacketProcessor _packetProcessor;
     private readonly NetDataWriter _writer = new NetDataWriter();
