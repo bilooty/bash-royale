@@ -9,8 +9,8 @@ public class NetworkManager : INetEventListener
     private NetPeer? _serverPeer;
     private readonly NetPacketProcessor _packetProcessor;
     private readonly NetDataWriter _writer = new NetDataWriter();
-    
-    public Dictionary<int, NetworkAction> RemoteInputs { get; private set; }
+
+    public Dictionary<int, NetworkAction> RemoteInputs { get; private set; } = new();
 
     public NetworkManager()
     {
@@ -23,7 +23,11 @@ public class NetworkManager : INetEventListener
         _client.Start();
         _client.Connect(ip, port, "BashRoyaleKey");
     }
-
+    public void StartHost(int port)
+    {
+        _client = new NetManager(this);
+        _client.Start(port); 
+    }
     public void PollEvents()
     {
         _client?.PollEvents();

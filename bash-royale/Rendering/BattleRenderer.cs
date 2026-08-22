@@ -16,11 +16,23 @@ public class BattleRenderer : SadConsole.ScreenSurface
     private string _ipAddress = "127.0.0.1";
     private bool _isHost;
     private int tick = 0;
+    private bool _hasSentAction = false;
     private NetworkManager _networkManager;
+    private NetworkAction? _pendingLocalAction;
     public BattleRenderer(string ipAddress, bool isHost) : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
     {
         _isHost = isHost;
         _ipAddress = ipAddress;
+        
+        _networkManager =  new NetworkManager();
+        if (isHost)
+        {
+            _networkManager.StartHost(9050);
+        }
+        else
+        {
+            _networkManager.StartClient(ipAddress, 9050);
+        }
         
         // 1. Initialize your deterministic engine
         _gameState = GameState.CreateNew();
@@ -54,7 +66,17 @@ public class BattleRenderer : SadConsole.ScreenSurface
             if (keyboard.IsKeyPressed(HandSlotKeys[i]))
             {
                 Vector2Int deployPosition = new Vector2Int(ArenaMap.Width / 2, ArenaMap.Height - 5);
-                _gameState = CardSim.PlayFromHand(_gameState, PlayerId.One, i, deployPosition);
+                _pendingLocalAction = new NetworkAction
+                {
+                    Tick = tick,
+                    PlayerId = (_isHost) ? (byte)0 : (byte)1,
+                    Action = ActionType.DeployCard,
+                    CardIdx = (byte)i,
+                    X = (byte)deployPosition.X,
+                    Y = (byte)deployPosition.Y,
+
+                };
+                //_gameState = CardSim.PlayFromHand(_gameState, PlayerId.One, i, deployPosition);
                 return true;
             }
         }
@@ -96,19 +118,61 @@ public class BattleRenderer : SadConsole.ScreenSurface
     }
     public override void Update(TimeSpan delta)
     {
-
+        _networkManager.PollEvents();
+    
         _unitLayer.Surface.Clear();
         _guiLayer.Surface.Clear();
         DrawUnits(_gameState.PlayerOne);
         DrawUnits(_gameState.PlayerTwo);
         DrawGUI();
+    
         _timer -= delta.TotalSeconds;
+    
         if (_timer <= 0f)
         {
-            _timer = 0.05;
-            tick++;
-            _gameState = GameSim.Update(_gameState);
+            // 1. Prepare local action if the player didn't press anything
+            if (_pendingLocalAction is null)
+            {
+                _pendingLocalAction = new NetworkAction
+                {
+                    Tick = tick,
+                    PlayerId = (_isHost) ? (byte)0 : (byte)1,
+                    Action = ActionType.NoAction
+                };
+            }
+        
+            // 2. Send our action over the network exactly ONCE per tick
+            if (!_hasSentAction)
+            {
+                _networkManager.SendAction(_pendingLocalAction);
+                _hasSentAction = true; // Don't spam the network while we wait!
+            }
+
+            // 3. === THE LOCKSTEP GATE ===
+            if (!_networkManager.RemoteInputs.ContainsKey(tick))
+            {
+                // We sent ours, but they haven't sent theirs. 
+                // Hold the timer at 0 so we check again next frame.
+                _timer = 0f; 
+            }
+            else
+            {
+                // We have their data! Proceed with the simulation.
+                NetworkAction remoteAction = _networkManager.RemoteInputs[tick];
+                
+                // Advance the engine
+                _gameState = GameSim.Update(_gameState, _pendingLocalAction, remoteAction);
+            
+                // Cleanup for the NEXT tick
+                _networkManager.RemoteInputs.Remove(tick);
+                _pendingLocalAction = null; 
+                _hasSentAction = false; // Reset the flag!
+            
+                _timer = 0.05;
+                tick++;
+            }
         }
+    
         DrawUnits(_gameState.PlayerOne);
         DrawUnits(_gameState.PlayerTwo);
         base.Update(delta);

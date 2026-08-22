@@ -1,3 +1,5 @@
+using bash_royale.Networking;
+
 namespace bash_royale;
 using System;
 public struct GameState
@@ -38,8 +40,16 @@ public static class GameSim
         playerState.Units = units;
         return new PlayerResult(playerState, results);
     }
-    public static GameState Update(GameState state)
+    public static GameState Update(GameState state, NetworkAction p1Action, NetworkAction p2Action)
     {
+        if (p1Action.Action == ActionType.DeployCard)
+        {
+            state = CardSim.PlayFromHand(state, PlayerId.One, p1Action.CardIdx, new Vector2Int(p1Action.X, p1Action.Y));
+        }
+        if (p2Action.Action == ActionType.DeployCard)
+        {
+            state = CardSim.PlayFromHand(state, PlayerId.Two, p2Action.CardIdx, new Vector2Int(p2Action.X, p2Action.Y));
+        }
         if (state.Tick % 20 == 0)
         {
             state.PlayerOne.Elixir += 1;
