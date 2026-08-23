@@ -21,9 +21,9 @@ public static class AudioManager
         if (_loaded) return;
         string audioRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Music", "Content");
         
-        _menuMusic = LoadSong("mainMenu", Path.Combine(audioRoot, "Bash Royale Track.ogg"));
+        _menuMusic = LoadSong("mainMenu", Path.Combine(audioRoot, "Bash Royale Main Menu.ogg"));
         _battleMusic = LoadSong("battleMusic", Path.Combine(audioRoot, "Bash Royale Battle Theme.ogg"));
-        _overtimeMusic = LoadSong("overtimeMusic", Path.Combine(audioRoot, "Bash Royale Battle Theme.ogg"));
+        _overtimeMusic = LoadSong("overtimeMusic", Path.Combine(audioRoot, "Bash Royale Overtime Theme.ogg"));
         string sfxFolder = Path.Combine(audioRoot, "SFX");
         if (Directory.Exists(sfxFolder))
         {
@@ -53,7 +53,7 @@ public static class AudioManager
     {
         StopMusic();
 
-        if (_battleMusic == null || IsMuted) return;   // BUG FIX: was checking _menuMusic
+        if (_battleMusic == null || IsMuted) return;
 
         MediaPlayer.IsRepeating = true;
         MediaPlayer.Volume = GameSettings.MUSIC_VOLUME;
