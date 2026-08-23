@@ -81,7 +81,7 @@ public static class UnitInfos
                 2000,
                 8,
                 8,
-                20,
+                16,
                 true,
                 new DoNothing(),
                 new DoNothing(),
@@ -214,7 +214,7 @@ public static class UnitInfos
             UnitType.Cannon => new UnitInfo(
                 UnitType.Cannon,
                 "Cannon",
-                600,
+                900,
                 6,
                 6,
                 28,
