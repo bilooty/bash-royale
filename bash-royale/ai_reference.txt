@@ -1,0 +1,8 @@
+AI was used in the following:
+
+DeckBuilder.cs was almost entirely vibecoded (lol)
+Some finnicky UI code was vibecoded (lol)
+
+Other files were written by humans, but we used AI for bug-checking and
+some auto-generation of boilerplate, and for some quick-and-dirty
+modifications of already existing code. 
