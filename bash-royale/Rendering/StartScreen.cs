@@ -81,7 +81,7 @@ namespace bash_royale.Rendering
 
             var mute = new Button(10)
             {
-                Text = "Mute",
+                Text = AudioManager.IsMuted ? "Unmute" : "Mute",
                 Position = new Point((Width - 10) / 2, 35),
             };
             mute.Click += OnMuteClicked;
@@ -92,11 +92,16 @@ namespace bash_royale.Rendering
         {
             if (MediaPlayer.State == MediaState.Playing)
             {
-                AudioManager.StopMusic();
-            }
-            else
-            {
-                AudioManager.PlayMenuMusic();
+                bool muted = AudioManager.ToggleMute();
+                if (!muted)
+                {
+                    AudioManager.PlayMenuMusic();
+                }
+
+                if (sender is Button btn)
+                {
+                    btn.Text = muted ? "Unmute" : "Mute";
+                }
             }
         }
 

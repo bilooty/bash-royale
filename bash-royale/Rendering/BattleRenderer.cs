@@ -3,6 +3,7 @@ using bash_royale.Networking;
 using SadConsole.Input;
 using System;
 using bash_royale.Emotes;
+using bash_royale.Music;
 using SadConsole.UI.Controls;
 
 namespace bash_royale.Rendering;
@@ -26,6 +27,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
     private int _inputTick = 0;
     private const int COMMAND_DELAY = 10;
 
+    private bool _wasOvertime = false;
     private bool _isPrimed = false;
     // The two decks have to be swapped before the first tick: both machines simulate
     // both players, so each needs to know the cards the other one brought.
@@ -71,7 +73,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
         _guiLayer.UseMouse = false;
         _guiLayer.Position = new Point(0, ArenaMap.Height); 
         Children.Add(_guiLayer);
-        
+
         
         PlayerState p1 = _gameState.PlayerOne;
         // p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(10, 4)));
@@ -82,6 +84,9 @@ public class BattleRenderer : SadConsole.ScreenSurface
          _gameState.PlayerOne = p1;
          _gameState.PlayerTwo = p2;
         Children.Add(_unitLayer);
+        
+        AudioManager.StopMusic();
+        AudioManager.PlayBattleMusic();
 
         _endScreenLayer = new SadConsole.UI.ControlsConsole(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT);
         _endScreenLayer.Surface.DefaultBackground = Color.Transparent;
@@ -563,6 +568,11 @@ public override void Update(TimeSpan delta)
                 _pendingLocalAction = null; // Clear the keyboard buffer
                 _inputTick++;
                 tick++;
+                if (_gameState.IsOvertime && !_wasOvertime)
+                {
+                    AudioManager.PlayOvertimeMusic();
+                    _wasOvertime = true;
+                }
                 _timer = 0.05;
             }
         }
