@@ -197,7 +197,7 @@ public static class CardInfos
         CardId.FireBall => new SpellCard(id, 4, ProjectileType.FireBallSummon, new Vector2Int(-2, -1), new Vector2Int(5, 3), DeploySound: "fireball_placed"),
         CardId.Giant => new UnitCard(id, 5, UnitType.Giant, DeploySound: "Giant_placed"),
         CardId.Archer => new SwarmCard(id, 2, UnitType.Archer, SwarmFormations.Pair, DeploySound: "archer_placed"),
-        CardId.Goblin => new SwarmCard(id, 2, UnitType.Goblin, SwarmFormations.ThreeRing, DeploySound: "Goblin_placed"),
+        CardId.Goblin => new SwarmCard(id, 2, UnitType.Goblin, SwarmFormations.ThreeRing, DeploySound: "goblin_placed"),
         CardId.Wizard => new UnitCard(id, 5, UnitType.Wizard, DeploySound: "Wizard_placed"),
         CardId.Hog => new UnitCard(id, 4, UnitType.HogRider, DeploySound: "Hogrider_placed"),
         CardId.Barbarian => new SwarmCard(id, 5, UnitType.Barbarian, SwarmFormations.FourSquare),
