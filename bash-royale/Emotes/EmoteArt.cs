@@ -37,7 +37,7 @@ public static class EmoteArt
                 new[] { 32, 179, 32, 39,  32, 196,  32, 39,  32, 179, 32 }, // │ ' ─ ' │
                 BoxBot
             },
-            EmoteId.Wow => new[]
+            EmoteId.Usuck => new[]
             {
                 BoxTop,
                 new[] { 32, 179, 32, 79,  32,  32,  32, 79,  32, 179, 32 }, // │ O   O │

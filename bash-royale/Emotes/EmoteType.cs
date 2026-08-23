@@ -1,11 +1,11 @@
-﻿namespace bash_royale.Emotes;
+namespace bash_royale.Emotes;
 
 public enum EmoteId
 {
     GoodGame,
     Thanks,
     Laugh,
-    Wow,
+    Usuck,
     Angry,
     Cry,
 }
@@ -17,7 +17,7 @@ public static class EmoteInfo
         {
             EmoteId.GoodGame => "GG!",
             EmoteId.Thanks => "THX",
-            EmoteId.Wow => "WOW",
+            EmoteId.Usuck => "U SUCK",
             EmoteId.Angry => ">:(",
             EmoteId.Cry => "T_T",
             EmoteId.Laugh => "HEHEHAHA",
@@ -28,10 +28,21 @@ public static class EmoteInfo
     {
         EmoteId.GoodGame => Color.LimeGreen,
         EmoteId.Thanks   => Color.Cyan,
-        EmoteId.Wow      => Color.Yellow,
+        EmoteId.Usuck      => Color.Yellow,
         EmoteId.Angry    => Color.Red,
         EmoteId.Cry      => Color.LightBlue,
         EmoteId.Laugh    => Color.Orange,
         _                => Color.White,
+    };
+
+    public static string GetSound(EmoteId id) => id switch
+    {
+        EmoteId.GoodGame => "GG_placed",
+        EmoteId.Thanks   => "Thanks_placed",
+        EmoteId.Usuck      => "Usuck_placed",
+        EmoteId.Angry    => "emote_angry",
+        EmoteId.Cry      => "emote_cry",
+        EmoteId.Laugh    => "Haha_placed",
+        _                => "",
     };
 }
