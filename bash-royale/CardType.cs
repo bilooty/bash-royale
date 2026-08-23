@@ -213,6 +213,7 @@ public static class CardInfos
         CardId.EBarbs => new SwarmCard(id, 6,  UnitType.EBarbs, SwarmFormations.Pair, DeploySound: "EBarb_placed"),
         CardId.Berserker => new UnitCard(id, 2, UnitType.Berserker,"Berserker_placed"),
         CardId.Princess => new UnitCard(id, 2, UnitType.Princess, "Princess_placed"),
+        CardId.Balloon => new UnitCard(id, 5, UnitType.Balloon, "Balloon_placed"),
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
     };
 
