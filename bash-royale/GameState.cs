@@ -58,7 +58,7 @@ public static class GameSim
 
         foreach (UnitState unit in units)
         {
-            if (unit.Type == UnitType.Tower || unit.Type == UnitType.Castle) continue;
+            if (unit.Type != UnitType.Tower && unit.Type != UnitType.Castle) continue;
             count++;
         }
 
@@ -68,10 +68,11 @@ public static class GameSim
     private static int LowestBuildingHealth(List<UnitState> units)
     {
         int lowest = int.MaxValue;
-
+    
         foreach (UnitState unit in units)
         {
-            if (!UnitInfos.GetUnitInfo(unit.Type).IsBuilding) continue;
+            
+            if (unit.Type != UnitType.Tower && unit.Type != UnitType.Castle) continue; 
             if (unit.Health >= lowest) continue;
 
             lowest = unit.Health;
