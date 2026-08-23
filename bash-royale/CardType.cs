@@ -37,15 +37,18 @@ public enum CardType
     Swarm,
 }
 
-public record UnitCard(CardId Id, int Cost, UnitType UnitType)
-    : CardInfo(Id, CardType.Unit, Cost, ValidLocation.YourSide);
-public record SpellCard(CardId Id, int Cost, ProjectileType ProjectileType, Vector2Int Offset, Vector2Int Size) : CardInfo(Id, CardType.Spell, Cost, ValidLocation.BothSides);
-public record SwarmCard(CardId Id, int Cost, UnitType UnitType, List<Vector2Int> Offsets) :  CardInfo(Id, CardType.Swarm, Cost, ValidLocation.YourSide);
+public record UnitCard(CardId Id, int Cost, UnitType UnitType, string DeploySound = null)
+    : CardInfo(Id, CardType.Unit, Cost, ValidLocation.YourSide, DeploySound);
+public record SpellCard(CardId Id, int Cost, ProjectileType ProjectileType, Vector2Int Offset, Vector2Int Size, string DeploySound = null) 
+    : CardInfo(Id, CardType.Spell, Cost, ValidLocation.BothSides, DeploySound);
+public record SwarmCard(CardId Id, int Cost, UnitType UnitType, List<Vector2Int> Offsets, string DeploySound = null) 
+    :  CardInfo(Id, CardType.Swarm, Cost, ValidLocation.YourSide, DeploySound);
 public record CardInfo(
     CardId Id,
     CardType Type,
     int Cost,
-    ValidLocation ValidLocation);
+    ValidLocation ValidLocation,
+    string DeploySound = null);
 
 
 public static class CardSim
@@ -190,17 +193,18 @@ public static class CardInfos
         CardId.Knight => new UnitCard(id, 3, UnitType.Knight),
         CardId.Zap => new SpellCard(id, 2, ProjectileType.Zap, new Vector2Int(-1, -1), new Vector2Int(3, 3)),
         CardId.FireBall => new SpellCard(id, 4, ProjectileType.FireBallSummon, new Vector2Int(-2, -1), new Vector2Int(5, 3)),
-
         CardId.Giant => new UnitCard(id, 5, UnitType.Giant),
         CardId.Archer => new SwarmCard(id, 2, UnitType.Archer, SwarmFormations.Pair),
-        CardId.Goblin => new SwarmCard(id, 2, UnitType.Goblin, SwarmFormations.ThreeRing),        CardId.Wizard => new UnitCard(id, 5, UnitType.Wizard),
+        CardId.Goblin => new SwarmCard(id, 2, UnitType.Goblin, SwarmFormations.ThreeRing, DeploySound:"goblin_placed"),
+        CardId.Wizard => new UnitCard(id, 5, UnitType.Wizard),
         CardId.Hog => new UnitCard(id, 4, UnitType.HogRider),
         CardId.Barbarian => new SwarmCard(id, 5, UnitType.Barbarian, SwarmFormations.FourSquare),
         CardId.Musketeer => new UnitCard(id, 4, UnitType.Musketeer),
         CardId.MiniPekka => new UnitCard(id, 4, UnitType.MiniPekka),
         CardId.Pekka => new UnitCard(id, 7, UnitType.Pekka),
         CardId.Valkyrie => new UnitCard(id, 4, UnitType.Valkyrie),
-        CardId.Skeleton => new SwarmCard(id, 1, UnitType.Skeleton, SwarmFormations.ThreeRing),        CardId.Dragon => new UnitCard(id, 5, UnitType.Dragon),
+        CardId.Skeleton => new SwarmCard(id, 1, UnitType.Skeleton, SwarmFormations.ThreeRing),
+        CardId.Dragon => new UnitCard(id, 5, UnitType.Dragon),
         CardId.Cannon => new UnitCard(id, 4, UnitType.Cannon),
         CardId.ThreeM => new SwarmCard(id, 9, UnitType.Musketeer, SwarmFormations.ThreeRing),
         CardId.Skarmy => new SwarmCard(id, 3, UnitType.Skeleton, SwarmFormations.EightBlock),

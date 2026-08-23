@@ -563,6 +563,8 @@ public class BattleRenderer : SadConsole.ScreenSurface
     
                 NetworkAction remoteAction = _networkManager.RemoteInputs[_executionTick];
                 NetworkAction localAction = _localInputs[_executionTick];
+                PlayActionSounds(localAction);
+                PlayActionSounds(remoteAction);
                 
                 if (localAction.Action == ActionType.DeployCard)
                 {
@@ -657,6 +659,17 @@ public class BattleRenderer : SadConsole.ScreenSurface
                 Surface.SetCellAppearance(x, y, cellAppearance);
             }
         }
+    }
+    private void PlayActionSounds(NetworkAction action)
+    {
+        if (action.Action != ActionType.DeployCard) return;
+        PlayerState player = action.PlayerId == 0 ? _gameState.PlayerOne : _gameState.PlayerTwo;
+        if (action.CardIdx >= player.Hand.Count) return;
+    
+        CardId cardId = player.Hand[action.CardIdx];
+        CardInfo card = CardInfos.GetCardInfo(cardId);
+    
+        AudioManager.PlaySound(card.DeploySound); 
     }
 
     private void DrawLog()

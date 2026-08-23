@@ -42,6 +42,7 @@ public record UnitInfo(
     bool targetsBuildingsOnly = false,
     int DecayPerTick = 0);
 
+
 public static class UnitInfos
 {
     public static UnitInfo GetUnitInfo(UnitType unitType)
