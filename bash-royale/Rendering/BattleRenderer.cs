@@ -750,9 +750,20 @@ public override void Update(TimeSpan delta)
         for (int i = 0; i < barWidth; i++)
         {
             if (i < filled)
+            {
                 _guiLayer.Surface.SetGlyph(1 + i, barY, 219, Color.Magenta);
+                if (player.Elixir >= 10)
+                {
+                    if (tick % 4 == 0)
+                    {
+                        _guiLayer.Surface.SetGlyph(1 + i, barY, 219, Color.White);
+                    }
+                }
+            }
             else
+            {
                 _guiLayer.Surface.SetGlyph(1 + i, barY, 176, Color.DarkMagenta);
+            }
         }
         _guiLayer.Surface.Print(1 + barWidth, barY, barlabel, Color.Magenta);
 
