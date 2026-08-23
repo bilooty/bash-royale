@@ -192,7 +192,7 @@ public static class CardInfos
         CardId.FireBall => new SpellCard(id, 4, ProjectileType.FireBallSummon, new Vector2Int(-1, -1), new Vector2Int(5, 3)),
 
         CardId.Giant => new UnitCard(id, 5, UnitType.Giant),
-        CardId.Archer => new UnitCard(id, 3, UnitType.Archer),
+        CardId.Archer => new SwarmCard(id, 2, UnitType.Archer, SwarmFormations.Pair),
         CardId.Goblin => new SwarmCard(id, 2, UnitType.Goblin, SwarmFormations.ThreeRing),        CardId.Wizard => new UnitCard(id, 5, UnitType.Wizard),
         CardId.Hog => new UnitCard(id, 4, UnitType.HogRider),
         CardId.Barbarian => new SwarmCard(id, 5, UnitType.Barbarian, SwarmFormations.FourSquare),
