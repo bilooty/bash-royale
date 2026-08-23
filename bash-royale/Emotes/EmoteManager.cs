@@ -1,5 +1,6 @@
-﻿using bash_royale.Emotes;
+using bash_royale.Emotes;
 using SadConsole.Input;
+using bash_royale.Music;
 
 namespace bash_royale.Rendering;
 
@@ -14,7 +15,7 @@ public class EmoteManager
     // The 4 emotes available in the menu
     private static readonly EmoteId[] MenuEmotes =
     {
-        EmoteId.GoodGame, EmoteId.Thanks, EmoteId.Wow, EmoteId.Laugh
+        EmoteId.GoodGame, EmoteId.Thanks, EmoteId.Usuck, EmoteId.Laugh
     };
 
     private static readonly Keys[] SelectKeys =
@@ -58,6 +59,7 @@ public class EmoteManager
     public void Show(EmoteId emote, PlayerId owner)
     {
         _activeEmotes.Add(new EmoteDisplay(emote, owner));
+        AudioManager.PlaySound(EmoteInfo.GetSound(emote));
     }
 
     public void Update(ScreenSurface surface, bool isHost)

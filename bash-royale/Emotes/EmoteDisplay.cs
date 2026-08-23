@@ -31,7 +31,7 @@ public class EmoteDisplay
         
         int baseY = isLocalPlayer ? ArenaMap.Height - 2 : 2;
         int y = isLocalPlayer ? baseY - (elapsed / 10) : baseY + (elapsed / 10);
-        int x = isLocalPlayer ? 1 : ArenaMap.Width - 10;
+        int x = isLocalPlayer ? 1 : ArenaMap.Width - 4;
 
         if (TicksLeft < FADE_TICKS)
         {
@@ -39,13 +39,8 @@ public class EmoteDisplay
             color = color * alpha;
         }
 
-        for (int row = 0; row < art.Length; row++)
-        {
-            for (int col = 0; col < art[row].Length; col++)
-            {
-                surface.SetGlyph(x + col, y + row, art[row][col], color, Color.Black);
-            }
-        }
+        surface.Print(x , y , label, color, Color.Black);
+
     }
 }
 
