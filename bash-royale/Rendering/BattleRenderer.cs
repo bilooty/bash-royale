@@ -586,6 +586,8 @@ public override void Update(TimeSpan delta)
     
                 NetworkAction remoteAction = _networkManager.RemoteInputs[_executionTick];
                 NetworkAction localAction = _localInputs[_executionTick];
+                PlayActionSounds(localAction);
+                PlayActionSounds(remoteAction);
                 if (remoteAction.Action == ActionType.Emote)
                     _emoteManager.Show((EmoteId)remoteAction.EmoteId,
                         _isHost ? PlayerId.Two : PlayerId.One);
@@ -672,7 +674,28 @@ public override void Update(TimeSpan delta)
             }
         }
     }
+    private void PlayActionSounds(NetworkAction action)
+    {
+        if (action.Action != ActionType.DeployCard) return;
 
+        PlayerState player = action.PlayerId == 0 ? _gameState.PlayerOne : _gameState.PlayerTwo;
+        if (action.CardIdx >= player.Hand.Count) return;
+    
+        CardId cardId = player.Hand[action.CardIdx];
+        CardInfo card = CardInfos.GetCardInfo(cardId);
+    
+        string deploySound = null;
+        
+        if (card is UnitCard unitCard)
+            deploySound = UnitInfos.GetUnitInfo(unitCard.UnitType).DeploySound;
+        else if (card is SwarmCard swarmCard)
+            deploySound = UnitInfos.GetUnitInfo(swarmCard.UnitType).DeploySound;
+    
+        if (deploySound != null)
+        {
+            AudioManager.PlaySound(deploySound);
+        }
+    }
     private void DrawGUI()
     {
         int cardWidth = 5;
