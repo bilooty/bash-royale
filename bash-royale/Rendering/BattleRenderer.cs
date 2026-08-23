@@ -41,6 +41,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
     private EmoteManager _emoteManager = new();
     private bool[,] _groundOccupied;
     private const float ShadowDarkness = 0.95f;
+    private const int CountdownSeconds = 3;
     public BattleRenderer(string ipAddress, bool isHost) : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
     {
         _isHost = isHost;
@@ -462,6 +463,50 @@ public class BattleRenderer : SadConsole.ScreenSurface
         }
     }
 
+    private static int CrownTowerCount(List<UnitState> units)
+    {
+        int count = 0;
+        foreach (UnitState unit in units)
+        {
+            if (unit.Type == UnitType.Tower || unit.Type == UnitType.Castle) count++;
+        }
+        return count;
+    }
+
+    private void DrawPhaseCountdown()
+    {
+        if (_gameState.IsGameOver) return;
+
+        int ticksLeft;
+        string label;
+
+        if (!_gameState.IsOvertime)
+        {
+            ticksLeft = GameSettings.REGULATION_END_TICK - _gameState.Tick;
+            bool level = CrownTowerCount(_gameState.PlayerOne.Units)
+                         == CrownTowerCount(_gameState.PlayerTwo.Units);
+            label = level ? "OVERTIME IN " : "GAME ENDS IN ";
+        }
+        else
+        {
+            ticksLeft = GameSettings.OVERTIME_END_TICK - _gameState.Tick;
+            label = "GAME ENDS IN ";
+        }
+
+        if (ticksLeft <= 0) return;
+        if (ticksLeft > CountdownSeconds * GameSettings.TICKS_PER_SECOND) return;
+
+        int seconds = ticksLeft / GameSettings.TICKS_PER_SECOND;
+        string text = label + seconds;
+
+        int row = (ArenaMap.RiverStartRow + ArenaMap.RiverEndRow) / 2;
+        if (row < 0 || row >= _unitLayer.Surface.Height) return;
+
+        int startX = Math.Max(0, (ArenaMap.Width - text.Length) / 2);
+
+        _unitLayer.Surface.Print(startX, row, text, Color.White, Color.Black);
+    }
+
 
 public override void Update(TimeSpan delta)
     {
@@ -788,6 +833,7 @@ public override void Update(TimeSpan delta)
             DrawUnitHP(_gameState.PlayerOne);
             DrawUnitHP(_gameState.PlayerTwo);
             DrawDeployCursor();
+            DrawPhaseCountdown();
             DrawGUI();
             DrawEndScreen();
         }
