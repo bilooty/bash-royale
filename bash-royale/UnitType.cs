@@ -38,7 +38,8 @@ public record UnitInfo(
     Vector2Int Size,
     MovementLayer Layer,
     bool IsBuilding = false,
-    bool targetsBuildingsOnly = false);
+    bool targetsBuildingsOnly = false,
+    int DecayPerTick = 0);
 
 public static class UnitInfos
 {
@@ -220,7 +221,9 @@ public static class UnitInfos
                 new DoNothing(),
                 new RangedAttack(ProjectileType.CannonBall),
                 new Vector2Int(1,1),
-                MovementLayer.Ground, true),
+                MovementLayer.Ground, true,
+                false,
+                1),
                 UnitType.MiniPekka => new UnitInfo(
                 UnitType.MiniPekka,
                 "Mini Pekka",

@@ -19,7 +19,10 @@ public static class UnitSim
         UnitState? target = ResolveTarget(curUnit, info, enemies, castleLocked);
 
         IUnitBehaviour behaviour;
-
+        if (info.IsBuilding && curUnit.Type != UnitType.Tower && curUnit.Type != UnitType.Castle)
+        {
+            curUnit.Health -= info.DecayPerTick;
+        }
         if (target is null)
         {
             curUnit.TargetId = UnitState.NoTarget;
