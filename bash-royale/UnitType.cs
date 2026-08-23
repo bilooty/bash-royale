@@ -21,6 +21,7 @@ public enum UnitType
     Brawler,
     EBarbs,
     Pekka,
+    Balloon,
 
 }
 public record UnitInfo(
@@ -200,8 +201,8 @@ public static class UnitInfos
                 UnitType.Musketeer,
                 "Musketeer",
                 620,
-                7,
-                9,
+                6,
+                6,
                 30,
                 true,
                 new WalkForwards(6),
@@ -302,6 +303,19 @@ public static class UnitInfos
                 new RangedAttack(ProjectileType.DragonBall),
                 new Vector2Int(1,1),
                 MovementLayer.Air),
+            UnitType.Balloon => new UnitInfo(
+                UnitType.Balloon,
+                "Balloon",
+                1300,
+                1,
+                9,
+                60,
+                false,
+                new WalkForwards(5),
+                new ChaseBehaviour(5),
+                new RangedAttack(ProjectileType.DragonBall),
+                new Vector2Int(1,1),
+                MovementLayer.Air, false, true),
                 
             _ => throw new ArgumentOutOfRangeException(nameof(unitType), unitType, null)
         };

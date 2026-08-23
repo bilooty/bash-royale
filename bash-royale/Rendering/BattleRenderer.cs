@@ -8,8 +8,6 @@ using SadConsole.UI.Controls;
 
 namespace bash_royale.Rendering;
 
-
-// UI/BattleRenderer.cs
 public class BattleRenderer : SadConsole.ScreenSurface
 {
     private static readonly Keys[] HandSlotKeys = { Keys.D1, Keys.D2, Keys.D3, Keys.D4 };
@@ -18,6 +16,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
     private GameState _gameState;
     private ScreenSurface _unitLayer;
     private ScreenSurface _guiLayer;
+    private ScreenSurface _logLayer;
     private SadConsole.UI.ControlsConsole _endScreenLayer;
     private double _timer = 0.05f;
     private string _ipAddress = "127.0.0.1";
@@ -29,8 +28,6 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
     private bool _wasOvertime = false;
     private bool _isPrimed = false;
-    // The two decks have to be swapped before the first tick: both machines simulate
-    // both players, so each needs to know the cards the other one brought.
     private bool _deckSent = false;
     private bool _matchStarted = false;
     private int? _selectedHandIdx = null;
@@ -44,7 +41,11 @@ public class BattleRenderer : SadConsole.ScreenSurface
     private bool[,] _groundOccupied;
     private const float ShadowDarkness = 0.95f;
     private const int CountdownSeconds = 3;
-    public BattleRenderer(string ipAddress, bool isHost) : base(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT)
+    private List<ActionLog> _logs = new();
+
+    private record ActionLog(PlayerId Player, CardId Card);
+
+    public BattleRenderer(string ipAddress, bool isHost) : base(GameSettings.GAME_WIDTH + 30, GameSettings.GAME_HEIGHT)
     {
         _isHost = isHost;
         _ipAddress = ipAddress;
@@ -53,20 +54,16 @@ public class BattleRenderer : SadConsole.ScreenSurface
         if (isHost)
         {
             _networkManager.StartHost(9050);
-            
         }
         else
         {
             _networkManager.StartClient(ipAddress, 9050);
         }
         
-        // 1. Initialize your deterministic engine
         _gameState = GameState.CreateNew();
         SetupTestBattle();
         _unitLayer = new ScreenSurface(GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT);
         _unitLayer.Surface.DefaultBackground = Color.Transparent;
-        // Purely visual overlays. SadConsole walks children top-down and stops at the first
-        // one that handles the mouse, so leaving these on would swallow every arena click.
         _unitLayer.UseMouse = false;
         _groundOccupied = new bool[GameSettings.GAME_WIDTH, GameSettings.GAME_HEIGHT];
         _guiLayer = new ScreenSurface(ArenaMap.Width, 8);
@@ -74,13 +71,15 @@ public class BattleRenderer : SadConsole.ScreenSurface
         _guiLayer.UseMouse = false;
         _guiLayer.Position = new Point(0, ArenaMap.Height); 
         Children.Add(_guiLayer);
+        _logLayer = new ScreenSurface(30, GameSettings.GAME_HEIGHT);
+        _logLayer.Surface.DefaultBackground = Color.Black;
+        _logLayer.Surface.Clear();
+        _logLayer.Position = new Point(GameSettings.GAME_WIDTH, 0);
+        _logLayer.UseMouse = false;
+        Children.Add(_logLayer);
 
-        
         PlayerState p1 = _gameState.PlayerOne;
-        // p1.Units.Add(new UnitState(UnitType.Castle, PlayerId.Two, new Vector2Int(10, 4)));
-        // p1.Units.Add(new UnitState(UnitType.Knight, PlayerId.One, new Vector2Int(5, 5)));
         PlayerState p2 = _gameState.PlayerTwo;
-        
         
          _gameState.PlayerOne = p1;
          _gameState.PlayerTwo = p2;
@@ -122,7 +121,6 @@ public class BattleRenderer : SadConsole.ScreenSurface
         
         Children.Add(_endScreenLayer);
 
-        // 3. Draw the static map onto the base surface once
         DrawArena();
 
         UseKeyboard = true;
@@ -133,7 +131,6 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
     public override bool ProcessKeyboard(Keyboard keyboard)
     {
-        // Emote menu takes priority — if open it swallows 1-4 so cards aren't selected
         if (_emoteManager.HandleInput(keyboard, out EmoteId? emote))
         {
             if (emote != null)
@@ -150,7 +147,6 @@ public class BattleRenderer : SadConsole.ScreenSurface
             }
             return true;
         }
-        // Prevent selecting a new card while one is already waiting to be sent
         if (_pendingLocalAction != null && _pendingLocalAction.Action != ActionType.NoAction)
             return base.ProcessKeyboard(keyboard);
         for (int i = 0; i < HandSlotKeys.Length; i++)
@@ -165,26 +161,22 @@ public class BattleRenderer : SadConsole.ScreenSurface
                     _selectedHandIdx = (_selectedHandIdx == i) ? null : i;
                     return true;
                 }
-             
-               
             }
         }
         return base.ProcessKeyboard(keyboard);
     }
+
     private void DrawProjectiles()
     {
         foreach (ProjectileState proj in _gameState.Projectiles)
         {
-            
             if (!EntityDisplay.Projectiles.TryGetValue(proj.Type, out EntityDisplay display))
-                continue; // no visual for this projectile type, skip it
+                continue; 
             if (display.isFlashing && tick % 2 == 0) continue;
             ColoredGlyph glyph = display.Glyphs[0][0];
-            //System.Console.WriteLine(proj.Type + "<-- drawing this");
             Vector2Int? sizeHuh = ProjectileState.Infos[proj.Type].Size;
 
             Vector2Int size = sizeHuh ?? new Vector2Int(1, 1);
-            //System.Console.WriteLine("Size: " + size.X + ", " + size.Y + proj.Type);
             for (int x = 0; x < size.X; x++)
             {
                 for (int y = 0; y < size.Y; y++)
@@ -202,6 +194,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
             }
         }
     }
+
     private static List<(Vector2Int topLeft, Vector2Int size)> DeployFootprints(CardInfo card, Vector2Int origin)
     {
         List<(Vector2Int, Vector2Int)> footprints = new();
@@ -214,8 +207,6 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
             case SwarmCard swarm:
             {
-                // Members are spawned as top-left origins at origin + offset, matching
-                // CardSim.SpawnGroup, so the preview lines up with where they land.
                 Vector2Int size = UnitInfos.GetUnitInfo(swarm.UnitType).Size;
                 foreach (Vector2Int offset in swarm.Offsets)
                 {
@@ -235,6 +226,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
         return footprints;
     }
+
     public override bool ProcessMouse(MouseScreenObjectState state)
     {
         _hoverCell = state.IsOnScreenObject
@@ -246,7 +238,6 @@ public class BattleRenderer : SadConsole.ScreenSurface
             && state.IsOnScreenObject
             && (_pendingLocalAction == null || _pendingLocalAction.Action == ActionType.NoAction))
         {
-            // CellPosition is where the click landed on screen; the sim works in world space.
             Vector2Int deployPosition = Flip(new Vector2Int(state.CellPosition.X, state.CellPosition.Y));
             PlayerState player = _isHost ? _gameState.PlayerOne : _gameState.PlayerTwo;
             if (handIdx >= player.Hand.Count) return base.ProcessMouse(state);
@@ -254,7 +245,6 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
             if (IsValidDeployment(card, deployPosition))
             {
-                // Just save the intent. The Update loop assigns the Tick and PlayerId.
                 _pendingLocalAction = new NetworkAction
                 {
                     Action = ActionType.DeployCard,
@@ -270,9 +260,6 @@ public class BattleRenderer : SadConsole.ScreenSurface
         return base.ProcessMouse(state);
     }
 
-    // The client views the arena rotated 180 degrees so its own side sits at the bottom.
-    // A point reflection is its own inverse, so this one helper converts both ways:
-    // screen -> world for input, world -> screen for rendering.
     private Vector2Int Flip(Vector2Int p) =>
         _isHost ? p : new Vector2Int(ArenaMap.Width - 1 - p.X, ArenaMap.Height - 1 - p.Y);
 
@@ -291,18 +278,16 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
         return true;
     }
+
     private bool IsValidCell(Vector2Int position, CardInfo card)
     {
         if (position.X < 0 || position.X >= ArenaMap.Width) return false;
         if (position.Y < 0 || position.Y >= ArenaMap.Height) return false;
  
-        // Spells land anywhere in bounds — a fireball should reach troops on a bridge or
-        // a tower behind water. Only bodies need somewhere to stand.
         if (card.ValidLocation == ValidLocation.BothSides) return true;
  
         if (!ArenaMap.IsPassable(position, MovementLayer.Ground)) return false;
  
-        // Units can only be deployed on your own side of the river until you've crossed it.
         return _isHost ? position.Y > ArenaMap.RiverEndRow : position.Y < ArenaMap.RiverStartRow;
     }
 
@@ -311,7 +296,6 @@ public class BattleRenderer : SadConsole.ScreenSurface
         if (_selectedHandIdx is not int handIdx) return;
         if (_hoverCell is not Vector2Int visualCell) return;
         
-        // We still want to bounds check the mouse position
         if (visualCell.X < 0 || visualCell.X >= _unitLayer.Surface.Width) return;
         if (visualCell.Y < 0 || visualCell.Y >= _unitLayer.Surface.Height) return;
 
@@ -343,14 +327,8 @@ public class BattleRenderer : SadConsole.ScreenSurface
 
     private bool ShouldDrawSprout(int x, int y)
     {
-        // Use large prime numbers to create a chaotic but repeatable hash
         uint hash = (uint)x * 374761393u ^ (uint)y * 668265263u;
-    
-        // Mix the bits further to eliminate any remaining geometric patterns
         hash = (hash ^ (hash >> 13)) * 1274126177u;
-    
-        // Use modulo to set the density. 
-        // Example: hash % 100 < 15 means a ~15% chance for a sprout.
         return (hash % 100) < 15; 
     }
     
@@ -401,6 +379,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
             }
         }
     }
+
     public void DrawShadows(PlayerState player)
     {
         Color shadowColor = (player.Id == PlayerId.One) == _isHost ? p1Color : p2Color;
@@ -428,6 +407,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
             }
         }
     }
+
     public void DrawUnitHP(PlayerState player)
     {
         foreach (UnitState unit in player.Units)
@@ -512,8 +492,7 @@ public class BattleRenderer : SadConsole.ScreenSurface
         _unitLayer.Surface.Print(startX, row, text, Color.White, Color.Black);
     }
 
-
-public override void Update(TimeSpan delta)
+    public override void Update(TimeSpan delta)
     {
         _networkManager.PollEvents();
         while (_networkManager.RemoteEmotes.Count > 0)
@@ -537,7 +516,6 @@ public override void Update(TimeSpan delta)
             return;
         }
 
-        // --- DECK HANDSHAKE ---
         if (!_deckSent)
         {
             _networkManager.SendDeck(Decks.Current);
@@ -553,7 +531,6 @@ public override void Update(TimeSpan delta)
                 return;
             }
 
-            // Player One is always the host, so the decks go in host-first order.
             _gameState = _isHost
                 ? GameState.CreateNew(Decks.Current, remoteDeck)
                 : GameState.CreateNew(remoteDeck, Decks.Current);
@@ -586,6 +563,20 @@ public override void Update(TimeSpan delta)
     
                 NetworkAction remoteAction = _networkManager.RemoteInputs[_executionTick];
                 NetworkAction localAction = _localInputs[_executionTick];
+                
+                if (localAction.Action == ActionType.DeployCard)
+                {
+                    PlayerState p = _isHost ? _gameState.PlayerOne : _gameState.PlayerTwo;
+                    if (localAction.CardIdx < p.Hand.Count)
+                        _logs.Add(new ActionLog(p.Id, p.Hand[localAction.CardIdx]));
+                }
+                if (remoteAction.Action == ActionType.DeployCard)
+                {
+                    PlayerState p = _isHost ? _gameState.PlayerTwo : _gameState.PlayerOne;
+                    if (remoteAction.CardIdx < p.Hand.Count)
+                        _logs.Add(new ActionLog(p.Id, p.Hand[remoteAction.CardIdx]));
+                }
+                
                 if (remoteAction.Action == ActionType.Emote)
                     _emoteManager.Show((EmoteId)remoteAction.EmoteId,
                         _isHost ? PlayerId.Two : PlayerId.One);
@@ -610,7 +601,7 @@ public override void Update(TimeSpan delta)
                 _localInputs[_inputTick] = nextInput;
                 _networkManager.SendAction(nextInput);
                 
-                _pendingLocalAction = null; // Clear the keyboard buffer
+                _pendingLocalAction = null;
                 _inputTick++;
                 tick++;
                 if (_gameState.IsOvertime && !_wasOvertime)
@@ -625,9 +616,8 @@ public override void Update(TimeSpan delta)
         Redraw();
         base.Update(delta);
         _emoteManager.Update(_unitLayer, _isHost);
-
-        
     }
+
     private void DrawArena()
     {
         for (int y = 0; y < ArenaMap.Height; y++)
@@ -645,7 +635,6 @@ public override void Update(TimeSpan delta)
                         ColoredGlyph grassSprout = new ColoredGlyph(Color.LightSeaGreen, Color.LightGreen, '"');
                         cellAppearance = baseGrass;
                         
-                        // Your modulus logic for random sprouts
                         if (ShouldDrawSprout(x,y))
                         {
                             cellAppearance = grassSprout;
@@ -653,7 +642,6 @@ public override void Update(TimeSpan delta)
                         break;
                 
                     case TileType.Water:
-                        // You can use a similar trick here to make the water look animated or textured later!
                         cellAppearance = new ColoredGlyph(Color.Cyan, Color.Aquamarine, ' ');
                         break;
                 
@@ -666,10 +654,52 @@ public override void Update(TimeSpan delta)
                         break;
                 }
 
-                // No flip needed here: the map is vertically symmetric (30 rows, water on
-                // 14-15, which maps onto itself), so the terrain looks the same either way.
                 Surface.SetCellAppearance(x, y, cellAppearance);
             }
+        }
+    }
+
+    private void DrawLog()
+    {
+        _logLayer.Surface.Clear();
+        _logLayer.Surface.DrawBox(new Rectangle(0, 0, _logLayer.Surface.Width, _logLayer.Surface.Height), ShapeParameters.CreateBorder(new ColoredGlyph(Color.DarkGray)));
+        
+        int ySpacing = 2;
+        int maxVisibleLogs = (_logLayer.Surface.Height - 2) / ySpacing;
+        
+        // Start from the oldest log that can fit on screen, up to the newest one
+        int startIndex = Math.Max(0, _logs.Count - maxVisibleLogs);
+        
+        int startY = 1; // Start drawing at the top of the box
+        
+        for (int i = startIndex; i < _logs.Count; i++)
+        {
+            var log = _logs[i];
+            
+            bool isLocal = (log.Player == PlayerId.One) == _isHost;
+            string pName = isLocal ? "[PLAYER 1]" : "[PLAYER 2]";
+            Color pColor = isLocal ? p1Color : p2Color;
+            
+            _logLayer.Surface.Print(1, startY, pName, Color.White, pColor);
+            _logLayer.Surface.Print(1 + pName.Length, startY, " played ", Color.LightGray);
+            
+            string cardName = CardInfos.GetShortLabel(log.Card);
+            _logLayer.Surface.Print(1 + pName.Length + 8, startY, cardName, Color.White);
+            
+            int glyphX = 1 + pName.Length + 8 + cardName.Length + 1;
+            ColoredGlyph? g = CardInfos.GetDisplayGlyph(log.Card);
+            if (g != null)
+            {
+                _logLayer.Surface.SetCellAppearance(glyphX, startY, g);
+                _logLayer.Surface[glyphX, startY].Background = Color.Black;
+            }
+            else
+            {
+                _logLayer.Surface.Print(glyphX, startY, "*", Color.Red);
+                _logLayer.Surface[glyphX, startY].Background = Color.Black;
+            }
+            
+            startY += ySpacing; // Move down for the next entry
         }
     }
 
@@ -688,7 +718,6 @@ public override void Update(TimeSpan delta)
             ? GameSettings.OVERTIME_END_TICK
             : GameSettings.REGULATION_END_TICK;
 
-        // Count down within the current phase, so overtime restarts from 1:00.
         int remaining = Math.Max(0, (phaseEndTick - _gameState.Tick) / GameSettings.TICKS_PER_SECOND);
 
         string clock = $"{remaining / 60}:{remaining % 60:00}";
@@ -767,8 +796,6 @@ public override void Update(TimeSpan delta)
         }
         _guiLayer.Surface.Print(1 + barWidth, barY, barlabel, Color.Magenta);
 
-        // Row 2 is the only line left: row 1 is the elixir bar, row 3 the HAND banner
-        // and rows 4-6 the card boxes.
         if (_selectedHandIdx is int sel && sel < player.Hand.Count)
             _guiLayer.Surface.Print(1, 2, $"{player.Hand[sel]} -> CLICK ARENA", Color.White);
         else
@@ -837,51 +864,52 @@ public override void Update(TimeSpan delta)
         _endScreenLayer.IsVisible = true;
     }
     
-        private void Redraw()
+    private void Redraw()
+    {
+        _unitLayer.Surface.Clear();
+        _guiLayer.Surface.Clear();
+        Array.Clear(_groundOccupied, 0, _groundOccupied.Length);
+        DrawUnits(_gameState.PlayerOne, MovementLayer.Ground);
+        DrawUnits(_gameState.PlayerTwo, MovementLayer.Ground);
+        DrawShadows(_gameState.PlayerOne);
+        DrawShadows(_gameState.PlayerTwo);
+        DrawUnits(_gameState.PlayerOne, MovementLayer.Air);
+        DrawUnits(_gameState.PlayerTwo, MovementLayer.Air);
+        DrawProjectiles();
+        DrawBuildingHealth(_gameState.PlayerOne);
+        DrawBuildingHealth(_gameState.PlayerTwo);
+        DrawUnitHP(_gameState.PlayerOne);
+        DrawUnitHP(_gameState.PlayerTwo);
+        DrawDeployCursor();
+        DrawPhaseCountdown();
+        DrawGUI();
+        DrawLog();
+        DrawEndScreen();
+    }
+
+
+    private void DrawBuildingHealth(PlayerState player)
+    {
+        Color teamColor = (player.Id == PlayerId.One) == _isHost ? p1Color : p2Color;
+
+        foreach (UnitState unit in player.Units)
         {
-            _unitLayer.Surface.Clear();
-            _guiLayer.Surface.Clear();
-            Array.Clear(_groundOccupied, 0, _groundOccupied.Length);
-            DrawUnits(_gameState.PlayerOne, MovementLayer.Ground);
-            DrawUnits(_gameState.PlayerTwo, MovementLayer.Ground);
-            DrawShadows(_gameState.PlayerOne);
-            DrawShadows(_gameState.PlayerTwo);
-            DrawUnits(_gameState.PlayerOne, MovementLayer.Air);
-            DrawUnits(_gameState.PlayerTwo, MovementLayer.Air);
-            DrawProjectiles();
-            DrawBuildingHealth(_gameState.PlayerOne);
-            DrawBuildingHealth(_gameState.PlayerTwo);
-            DrawUnitHP(_gameState.PlayerOne);
-            DrawUnitHP(_gameState.PlayerTwo);
-            DrawDeployCursor();
-            DrawPhaseCountdown();
-            DrawGUI();
-            DrawEndScreen();
+            if (unit.Type != UnitType.Tower && unit.Type != UnitType.Castle) continue;
+
+            UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
+            string text = unit.Health.ToString().PadLeft(5);
+
+            int worldCenterX = unit.Position.X + info.Size.X / 2;
+            int worldY = unit.Position.Y > ArenaMap.Height / 2
+                ? unit.Position.Y + info.Size.Y
+                : unit.Position.Y - 1;
+
+            Vector2Int anchor = Flip(new Vector2Int(worldCenterX, worldY));
+
+            int labelX = Math.Clamp(anchor.X - text.Length / 2, 0, ArenaMap.Width - text.Length);
+            if (anchor.Y < 0 || anchor.Y >= ArenaMap.Height) continue;
+
+            _unitLayer.Surface.Print(labelX, anchor.Y, text, Color.White, Color.Black);
         }
-
-
-        private void DrawBuildingHealth(PlayerState player)
-        {
-            Color teamColor = (player.Id == PlayerId.One) == _isHost ? p1Color : p2Color;
-
-            foreach (UnitState unit in player.Units)
-            {
-                if (unit.Type != UnitType.Tower && unit.Type != UnitType.Castle) continue;
-
-                UnitInfo info = UnitInfos.GetUnitInfo(unit.Type);
-                string text = unit.Health.ToString().PadLeft(5);
-
-                int worldCenterX = unit.Position.X + info.Size.X / 2;
-                int worldY = unit.Position.Y > ArenaMap.Height / 2
-                    ? unit.Position.Y + info.Size.Y
-                    : unit.Position.Y - 1;
-
-                Vector2Int anchor = Flip(new Vector2Int(worldCenterX, worldY));
-
-                int labelX = Math.Clamp(anchor.X - text.Length / 2, 0, ArenaMap.Width - text.Length);
-                if (anchor.Y < 0 || anchor.Y >= ArenaMap.Height) continue;
-
-                _unitLayer.Surface.Print(labelX, anchor.Y, text, Color.White, Color.Black);
-            }
-        }
+    }
 }
