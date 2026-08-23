@@ -23,6 +23,7 @@ public enum UnitType
     Pekka,
     Balloon,
     Berserker,
+    Princess,
 
 }
 public record UnitInfo(
@@ -318,6 +319,19 @@ public static class UnitInfos
                 new RangedAttack(ProjectileType.DragonBall),
                 new Vector2Int(1,1),
                 MovementLayer.Air),
+            UnitType.Princess => new UnitInfo(
+                UnitType.Princess,
+                "Princess",
+                250,
+                15,
+                20,
+                70,
+                true,
+                new WalkForwards(5),
+                new ChaseBehaviour(5),
+                new RangedAttack(ProjectileType.DragonBall),
+                new Vector2Int(1,1),
+                MovementLayer.Ground),
             UnitType.Balloon => new UnitInfo(
                 UnitType.Balloon,
                 "Balloon",
