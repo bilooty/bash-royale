@@ -96,10 +96,12 @@ public class TowerSummon(ProjectileType toCreate) : IProjectileBehaviour
         PlayerId player = state.Owner;
         PlayerState playerState = GameState.GetPlayerState(gameState, player);
         ProjectileState newProj = new ProjectileState(toCreate, player, playerState.CrownTowerLoc);
-        newProj.TargetLoc = state.Position;
+        Vector2Int size = ProjectileState.Infos[newProj.Type].Size ?? new Vector2Int(1, 1);
+        Vector2Int offset = new Vector2Int(size.X / 2, size.Y / 2);
+        newProj.TargetLoc = state.Position - offset;
         return new ProjectileResult(state,
             [],
-            [newProj]);
+            [newProj], []);
     }
 }
 public class Splash(int speed, ProjectileType toCreate) : MoveTowards(speed)
@@ -111,7 +113,7 @@ public class Splash(int speed, ProjectileType toCreate) : MoveTowards(speed)
         Vector2Int size = ProjectileState.Infos[toCreate].Size ?? new Vector2Int(1, 1);
         Vector2Int offset = new Vector2Int(size.X / 2, size.Y / 2);
       
-        return new ProjectileResult(state, [], [new ProjectileState(toCreate, state.Owner, state.Position - offset)]);
+        return new ProjectileResult(state, [], [new ProjectileState(toCreate, state.Owner, state.Position - offset)], []);
     }
 }
 public class Missile(int speed, int damage) : MoveTowards(speed)
@@ -120,7 +122,10 @@ public class Missile(int speed, int damage) : MoveTowards(speed)
     {
         state.ShouldDie = true;
         PlayerId targetPlayer = state.Owner == PlayerId.Two ? PlayerId.One :  PlayerId.Two;
-        return new ProjectileResult(state, [new DamageInstance(state.TargetId, damage, targetPlayer)], []);
+        return new ProjectileResult(state, [new DamageInstance(state.TargetId, damage, targetPlayer)],
+            [],
+            []
+            );
     }
 }
 public class MoveTowards(int speed) : IProjectileBehaviour
@@ -133,7 +138,7 @@ public class MoveTowards(int speed) : IProjectileBehaviour
     public virtual ProjectileResult OnArrive(ProjectileState state, GameState gameState)
     {
         state.ShouldDie = true;
-        return new ProjectileResult(state, [], []);
+        return new ProjectileResult(state, [], [], []);
     }
     public ProjectileResult Update(ProjectileState state, GameState gameState)
     {
@@ -167,7 +172,7 @@ public class MoveTowards(int speed) : IProjectileBehaviour
         state.SubPosition = new Vector2Int(state.SubPosition.X + stepX, state.SubPosition.Y + stepY);
         state.Position = new Vector2Int(state.SubPosition.X / SCALE, state.SubPosition.Y / SCALE);
         //System.Console.WriteLine("Moved to:  " + state.Position + " " + state.SubPosition);
-        return new ProjectileResult(state, new List<DamageInstance>(), new List<ProjectileState>());
+        return new ProjectileResult(state, [], [], []);
     }
 
     private static int IntSqrt(long n)
@@ -190,7 +195,7 @@ public class Linger(int duration) : IProjectileBehaviour
             state.ShouldDie = true;
         }
 
-        return new ProjectileResult(state, [], []);
+        return new ProjectileResult(state, [], [], []);
     }
 }
 
@@ -199,7 +204,7 @@ public class SummonProj(ProjectileType type) : IProjectileBehaviour
     public ProjectileResult Update(ProjectileState state, GameState gameState)
     {
         //System.Console.WriteLine("Summon projectile");
-        return new ProjectileResult(state, [], [new ProjectileState(type, state.Owner, state.Position)]);
+        return new ProjectileResult(state, [], [new ProjectileState(type, state.Owner, state.Position)], []);
     }
 }
 
@@ -212,7 +217,7 @@ public class InstantDamage(Vector2Int size, int damage, bool die =true) : IProje
 
         if (state.Ticks > 0)
         {
-            return new ProjectileResult(state, [], []);
+            return new ProjectileResult(state, [], [], []);
         }
         PlayerState enemy = GameState.GetPlayerState(gameState, state.Owner == PlayerId.One ? PlayerId.Two : PlayerId.One);
         List<UnitState> units = enemy.Units;
@@ -229,11 +234,12 @@ public class InstantDamage(Vector2Int size, int damage, bool die =true) : IProje
         }
 
         state.ShouldDie = die;
-        return new ProjectileResult(state, damageInstances, []);
+        return new ProjectileResult(state, damageInstances, [], []);
     }
 }
 public record ProjectileResult(
     ProjectileState State,
     List<DamageInstance> DamageInstances,
-    List<ProjectileState> NewProjectiles
+    List<ProjectileState> NewProjectiles,
+    List<UnitState> NewUnits
     );

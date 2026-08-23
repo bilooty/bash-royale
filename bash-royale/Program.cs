@@ -1,6 +1,6 @@
 using SadConsole.Configuration;
 
-Settings.WindowTitle = "My SadConsole Game";
+Settings.WindowTitle = "Console";
 
 Builder
     .GetBuilder()

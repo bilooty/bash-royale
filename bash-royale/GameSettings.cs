@@ -12,7 +12,7 @@ static class GameSettings
     
     public const int TICKS_PER_SECOND = 20;
     public const int REGULATION_END_TICK = 3600;   // 2 minutes 
-    public const int OVERTIME_END_TICK   = 4600;   // 3 minutes 
+    public const int OVERTIME_END_TICK   = 2400;   // 3 minutes 
     
     public const float MUSIC_VOLUME = 0.4f;
     public const float SFX_VOLUME = 0.8f;
