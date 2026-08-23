@@ -39,8 +39,7 @@ public record UnitInfo(
     MovementLayer Layer,
     bool IsBuilding = false,
     bool targetsBuildingsOnly = false,
-    int DecayPerTick = 0,
-    string DeploySound = null);
+    int DecayPerTick = 0);
 
 
 public static class UnitInfos
@@ -143,8 +142,7 @@ public static class UnitInfos
                 new ChaseBehaviour(10), 
                 new AttackBehaviour(50),
                 new Vector2Int(1,1),
-                MovementLayer.Ground,
-                DeploySound: "goblin_placed"),
+                MovementLayer.Ground),
                 UnitType.Wizard => new UnitInfo(
                 UnitType.Wizard,
                 "Wizard",
