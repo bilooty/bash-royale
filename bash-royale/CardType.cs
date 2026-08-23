@@ -21,6 +21,7 @@ public enum CardId
     ThreeM,
     Skarmy,
     EBarbs,
+    Balloon,
 }
 
 public enum ValidLocation
@@ -204,6 +205,7 @@ public static class CardInfos
         CardId.ThreeM => new SwarmCard(id, 9, UnitType.Musketeer, SwarmFormations.ThreeRing),
         CardId.Skarmy => new SwarmCard(id, 3, UnitType.Skeleton, SwarmFormations.EightBlock),
         CardId.EBarbs => new SwarmCard(id, 6,  UnitType.EBarbs, SwarmFormations.Pair),
+        CardId.Balloon => new UnitCard(id, 6, UnitType.Balloon),
 
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
     };
@@ -234,6 +236,7 @@ public static class CardInfos
         CardId.Cannon    => "CNNON", 
         CardId.EBarbs => "EBARB",
         CardId.Zap => "ZAP",
+        CardId.Balloon => "BLOON",
         _ => id.ToString().PadRight(5)[..5].ToUpper(),
     };
 

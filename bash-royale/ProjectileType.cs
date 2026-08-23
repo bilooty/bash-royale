@@ -63,7 +63,7 @@ public struct ProjectileState
         [ProjectileType.FireBall] = new ProjectileInfo([new Splash(1000, ProjectileType.FireBallBoom)],size:new Vector2Int(2,2), targetType:TargetType.Location),
         [ProjectileType.FireBallBoom] = new ProjectileInfo([ new Linger(4), new InstantDamage(new Vector2Int(5,3), 800, die:false)], size:new Vector2Int(5,3), targetType:TargetType.Location),
 
-        [ProjectileType.Arrow] = new ProjectileInfo([new Missile(1000, 110)], null, TargetType.Unit),
+        [ProjectileType.Arrow] = new ProjectileInfo([new Missile(1000, 130)], null, TargetType.Unit),
         [ProjectileType.CannonBall] = new ProjectileInfo([new Missile(1000, 200)], null, TargetType.Unit),
         [ProjectileType.WizardBall] = new ProjectileInfo([new Splash(1000, ProjectileType.WizardBoom)])
 
