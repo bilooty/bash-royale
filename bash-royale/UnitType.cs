@@ -22,6 +22,7 @@ public enum UnitType
     EBarbs,
     Pekka,
     Balloon,
+    Berserker,
 
 }
 public record UnitInfo(
@@ -60,6 +61,19 @@ public static class UnitInfos
                 new WalkForwards(8),
                 new ChaseBehaviour(8), 
                 new AttackBehaviour(230),
+                new Vector2Int(1,1),
+                MovementLayer.Ground),
+            UnitType.Berserker => new UnitInfo(
+                UnitType.Berserker,
+                "Berserker",
+                650,
+                1,
+                7,
+                12,
+                false,
+                new WalkForwards(8),
+                new ChaseBehaviour(8), 
+                new AttackBehaviour(100),
                 new Vector2Int(1,1),
                 MovementLayer.Ground),
             UnitType.Knight => new UnitInfo(

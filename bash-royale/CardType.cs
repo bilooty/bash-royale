@@ -21,6 +21,7 @@ public enum CardId
     ThreeM,
     Skarmy,
     EBarbs,
+    Berserker,
     Balloon,
 }
 
@@ -210,6 +211,7 @@ public static class CardInfos
         CardId.Skarmy => new SwarmCard(id, 3, UnitType.Skeleton, SwarmFormations.EightBlock),
         CardId.EBarbs => new SwarmCard(id, 6,  UnitType.EBarbs, SwarmFormations.Pair),
         CardId.Balloon => new UnitCard(id, 6, UnitType.Balloon),
+        CardId.Berserker => new UnitCard(id, 2, UnitType.Berserker),
 
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
     };
@@ -241,6 +243,7 @@ public static class CardInfos
         CardId.EBarbs => "EBARB",
         CardId.Zap => "ZAP",
         CardId.Balloon => "BLOON",
+        CardId.Berserker => "BSERK",
         _ => id.ToString().PadRight(5)[..5].ToUpper(),
     };
 
