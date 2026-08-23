@@ -49,6 +49,9 @@ public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false, 
                 ]
             ]
         ),
+        [UnitType.Berserker] = new EntityDisplay(
+        [
+            [new ColoredGlyph(Color.Orange, Color.DarkGray, 'B')]]),
         [UnitType.Balloon] = new EntityDisplay(
         [
             [new ColoredGlyph(Color.Yellow, Color.DarkGray, 'L')]]),

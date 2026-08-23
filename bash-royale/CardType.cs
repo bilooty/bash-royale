@@ -21,6 +21,7 @@ public enum CardId
     ThreeM,
     Skarmy,
     EBarbs,
+    Berserker,
     Balloon,
 }
 
@@ -199,16 +200,19 @@ public static class CardInfos
         CardId.Wizard => new UnitCard(id, 5, UnitType.Wizard, DeploySound: "Wizard_placed"),
         CardId.Hog => new UnitCard(id, 4, UnitType.HogRider, DeploySound: "Hogrider_placed"),
         CardId.Barbarian => new SwarmCard(id, 5, UnitType.Barbarian, SwarmFormations.FourSquare),
-        CardId.Musketeer => new UnitCard(id, 4, UnitType.Musketeer, DeploySound: "Musketeer_placed"),
-        CardId.MiniPekka => new UnitCard(id, 4, UnitType.MiniPekka, DeploySound: "Pekka_placed"),
-        CardId.Pekka => new UnitCard(id, 7, UnitType.Pekka, DeploySound: "Pekka_placed"),
-        CardId.Valkyrie => new UnitCard(id, 4, UnitType.Valkyrie, DeploySound: "Valkyrie_placed"),
-        CardId.Skeleton => new SwarmCard(id, 1, UnitType.Skeleton, SwarmFormations.ThreeRing, DeploySound: "Skeleton_placed"),
-        CardId.Dragon => new UnitCard(id, 5, UnitType.Dragon, DeploySound: "Dragon_placed"),
-        CardId.Cannon => new UnitCard(id, 4, UnitType.Cannon, DeploySound: "Cannon_placed"),
-        CardId.ThreeM => new SwarmCard(id, 9, UnitType.Musketeer, SwarmFormations.ThreeRing, DeploySound: "Musketeer_placed"),
-        CardId.Skarmy => new SwarmCard(id, 3, UnitType.Skeleton, SwarmFormations.EightBlock, DeploySound: "Skarmy_placed"),
-        CardId.EBarbs => new SwarmCard(id, 6,  UnitType.EBarbs, SwarmFormations.Pair, DeploySound: "EBarb_placed"),
+        CardId.Musketeer => new UnitCard(id, 4, UnitType.Musketeer),
+        CardId.MiniPekka => new UnitCard(id, 4, UnitType.MiniPekka),
+        CardId.Pekka => new UnitCard(id, 7, UnitType.Pekka),
+        CardId.Valkyrie => new UnitCard(id, 4, UnitType.Valkyrie),
+        CardId.Skeleton => new SwarmCard(id, 1, UnitType.Skeleton, SwarmFormations.ThreeRing),
+        CardId.Dragon => new UnitCard(id, 5, UnitType.Dragon),
+        CardId.Cannon => new UnitCard(id, 4, UnitType.Cannon),
+        CardId.ThreeM => new SwarmCard(id, 9, UnitType.Musketeer, SwarmFormations.ThreeRing),
+        CardId.Skarmy => new SwarmCard(id, 3, UnitType.Skeleton, SwarmFormations.EightBlock),
+        CardId.EBarbs => new SwarmCard(id, 6,  UnitType.EBarbs, SwarmFormations.Pair),
+        CardId.Balloon => new UnitCard(id, 6, UnitType.Balloon),
+        CardId.Berserker => new UnitCard(id, 2, UnitType.Berserker),
+
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
     };
 
@@ -239,6 +243,7 @@ public static class CardInfos
         CardId.EBarbs => "EBARB",
         CardId.Zap => "ZAP",
         CardId.Balloon => "BLOON",
+        CardId.Berserker => "BSERK",
         _ => id.ToString().PadRight(5)[..5].ToUpper(),
     };
 
