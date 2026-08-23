@@ -22,7 +22,7 @@ namespace bash_royale.Rendering
                 Position = new Point((Width - 11) / 2, 5), 
                 TextColor = Color.Cyan
             };
-            Controls.Add(title); // <-- Changed here
+            Controls.Add(title); 
 
             // 2. Host Button
             var hostBtn = new Button(10)
@@ -31,7 +31,7 @@ namespace bash_royale.Rendering
                 Position = new Point((Width - 10) / 2, 10)
             };
             hostBtn.Click += OnHostClicked;
-            Controls.Add(hostBtn); // <-- Changed here
+            Controls.Add(hostBtn); 
 
             // 3. IP Address Text Box
             var ipInput = new TextBox(16)
@@ -39,7 +39,7 @@ namespace bash_royale.Rendering
                 Text = "127.0.0.1",
                 Position = new Point((Width - 16) / 2, 15)
             };
-            Controls.Add(ipInput); // <-- Changed here
+            Controls.Add(ipInput);
 
             // 4. Join Button
             var joinBtn = new Button(10)
@@ -48,7 +48,7 @@ namespace bash_royale.Rendering
                 Position = new Point((Width - 10) / 2, 17)
             };
             joinBtn.Click += (s, e) => OnJoinClicked(ipInput.Text);
-            Controls.Add(joinBtn); // <-- Changed here
+            Controls.Add(joinBtn);
 
             // 5. Deck Button - opens the deck builder
             var deckBtn = new Button(10)
@@ -90,18 +90,15 @@ namespace bash_royale.Rendering
 
         private void OnMuteClicked(object? sender, EventArgs e)
         {
-            if (MediaPlayer.State == MediaState.Playing)
+            bool muted = AudioManager.ToggleMute();
+            if (!muted)
             {
-                bool muted = AudioManager.ToggleMute();
-                if (!muted)
-                {
-                    AudioManager.PlayMenuMusic();
-                }
+                AudioManager.PlayMenuMusic();
+            }
 
-                if (sender is Button btn)
-                {
-                    btn.Text = muted ? "Unmute" : "Mute";
-                }
+            if (sender is Button btn)
+            {
+                btn.Text = muted ? "Unmute" : "Mute";
             }
         }
 

@@ -191,14 +191,14 @@ public static class CardInfos
 {
     public static CardInfo GetCardInfo(CardId id) => id switch
     {
-        CardId.Knight => new UnitCard(id, 3, UnitType.Knight),
-        CardId.Zap => new SpellCard(id, 2, ProjectileType.Zap, new Vector2Int(-1, -1), new Vector2Int(3, 3)),
-        CardId.FireBall => new SpellCard(id, 4, ProjectileType.FireBallSummon, new Vector2Int(-2, -1), new Vector2Int(5, 3)),
-        CardId.Giant => new UnitCard(id, 5, UnitType.Giant),
-        CardId.Archer => new SwarmCard(id, 2, UnitType.Archer, SwarmFormations.Pair),
-        CardId.Goblin => new SwarmCard(id, 2, UnitType.Goblin, SwarmFormations.ThreeRing, DeploySound:"goblin_placed"),
-        CardId.Wizard => new UnitCard(id, 5, UnitType.Wizard),
-        CardId.Hog => new UnitCard(id, 4, UnitType.HogRider),
+        CardId.Knight => new UnitCard(id, 3, UnitType.Knight, DeploySound: "Knight_placed"),
+        CardId.Zap => new SpellCard(id, 2, ProjectileType.Zap, new Vector2Int(-1, -1), new Vector2Int(3, 3), DeploySound: "zap_placed"),
+        CardId.FireBall => new SpellCard(id, 4, ProjectileType.FireBallSummon, new Vector2Int(-2, -1), new Vector2Int(5, 3), DeploySound: "fireball_placed"),
+        CardId.Giant => new UnitCard(id, 5, UnitType.Giant, DeploySound: "Giant_placed"),
+        CardId.Archer => new SwarmCard(id, 2, UnitType.Archer, SwarmFormations.Pair, DeploySound: "archer_placed"),
+        CardId.Goblin => new SwarmCard(id, 2, UnitType.Goblin, SwarmFormations.ThreeRing, DeploySound: "goblin_placed"),
+        CardId.Wizard => new UnitCard(id, 5, UnitType.Wizard, DeploySound: "Wizard_placed"),
+        CardId.Hog => new UnitCard(id, 4, UnitType.HogRider, DeploySound: "Hogrider_placed"),
         CardId.Barbarian => new SwarmCard(id, 5, UnitType.Barbarian, SwarmFormations.FourSquare),
         CardId.Musketeer => new UnitCard(id, 4, UnitType.Musketeer),
         CardId.MiniPekka => new UnitCard(id, 4, UnitType.MiniPekka),
