@@ -200,7 +200,7 @@ public static class CardInfos
         CardId.Goblin => new SwarmCard(id, 2, UnitType.Goblin, SwarmFormations.ThreeRing, DeploySound: "goblin_placed"),
         CardId.Wizard => new UnitCard(id, 5, UnitType.Wizard, DeploySound: "Wizard_placed"),
         CardId.Hog => new UnitCard(id, 4, UnitType.HogRider, DeploySound: "Hogrider_placed"),
-        CardId.Barbarian => new SwarmCard(id, 5, UnitType.Barbarian, SwarmFormations.FourSquare),
+        CardId.Barbarian => new SwarmCard(id, 5, UnitType.Barbarian, SwarmFormations.FourSquare, DeploySound:"EBard_placed"),
         CardId.Musketeer => new UnitCard(id, 4, UnitType.Musketeer, DeploySound: "Musketeer_placed"),
         CardId.MiniPekka => new UnitCard(id, 4, UnitType.MiniPekka, DeploySound: "Pekka_placed"),
         CardId.Pekka => new UnitCard(id, 7, UnitType.Pekka, DeploySound: "Pekka_placed"),
