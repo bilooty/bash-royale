@@ -19,7 +19,9 @@ public enum CardId
     Cannon,
     GoblinCage,
     Pekka,
+    ThreeM,
     Skarmy,
+    EBarbs,
 }
 
 public enum ValidLocation
@@ -160,6 +162,12 @@ public static class SwarmFormations
         new Vector2Int(-1, 1),
         new Vector2Int(1, 1),
     ];
+    
+    public static readonly List<Vector2Int> Pair =
+    [
+        new Vector2Int(-1, 0),
+        new Vector2Int(1, 0),
+    ];
 
     public static readonly List<Vector2Int> FourSquare =
     [
@@ -181,7 +189,7 @@ public static class CardInfos
     {
         CardId.Knight => new UnitCard(id, 3, UnitType.Knight),
         CardId.Zap => new SpellCard(id, 2, ProjectileType.Zap, new Vector2Int(-1, -1), new Vector2Int(3, 3)),
-        CardId.FireBall => new SpellCard(id, 4, ProjectileType.FireBall, new Vector2Int(-1, -1), new Vector2Int(3, 3)),
+        CardId.FireBall => new SpellCard(id, 4, ProjectileType.FireBallSummon, new Vector2Int(-1, -1), new Vector2Int(5, 3)),
 
         CardId.Giant => new UnitCard(id, 5, UnitType.Giant),
         CardId.Archer => new UnitCard(id, 3, UnitType.Archer),
@@ -195,7 +203,10 @@ public static class CardInfos
         CardId.Skeleton => new SwarmCard(id, 1, UnitType.Skeleton, SwarmFormations.ThreeRing),        CardId.Dragon => new UnitCard(id, 5, UnitType.Dragon),
         CardId.Cannon => new UnitCard(id, 4, UnitType.Cannon),
         CardId.GoblinCage => new UnitCard(id, 4, UnitType.GoblinCage),
+        CardId.ThreeM => new SwarmCard(id, 9, UnitType.Musketeer, SwarmFormations.ThreeRing),
         CardId.Skarmy => new SwarmCard(id, 3, UnitType.Skeleton, SwarmFormations.EightBlock),
+        CardId.EBarbs => new SwarmCard(id, 6,  UnitType.EBarbs, SwarmFormations.Pair),
+
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
     };
 
@@ -220,9 +231,11 @@ public static class CardInfos
         CardId.Valkyrie  => "VALK",
         CardId.Skeleton  => "SKLTN",
         CardId.Skarmy => "SKRMY",
+        CardId.ThreeM => "3MUSK",
         CardId.Dragon    => "DRAGN",
         CardId.Cannon    => "CNNON",
         CardId.GoblinCage  => "GCAGE",
+        CardId.EBarbs => "EBARB",
         CardId.Zap => "ZAP",
         _ => id.ToString().PadRight(5)[..5].ToUpper(),
     };
@@ -238,8 +251,13 @@ public static class CardInfos
     };
 
     // The glyph the card is drawn with, so the deck builder looks like the arena.
-    public static char GetGlyph(CardId id) =>
-        GetCardInfo(id) is UnitCard unitCard && Rendering.EntityDisplay.Displays.TryGetValue(unitCard.UnitType, out var display)
-            ? display.Glyphs[0][0].GlyphCharacter
-            : '*';
+    public static ColoredGlyph? GetDisplayGlyph(CardId id) => GetCardInfo(id) switch
+    {
+        UnitCard c  => Rendering.EntityDisplay.Displays.GetValueOrDefault(c.UnitType)?.Glyphs[0][0],
+        SwarmCard c => Rendering.EntityDisplay.Displays.GetValueOrDefault(c.UnitType)?.Glyphs[0][0],
+        SpellCard c => Rendering.EntityDisplay.Projectiles.GetValueOrDefault(c.ProjectileType)?.Glyphs[0][0],
+        _ => null,
+    };
+
+    public static char GetGlyph(CardId id) => GetDisplayGlyph(id)?.GlyphCharacter ?? '*';
 }

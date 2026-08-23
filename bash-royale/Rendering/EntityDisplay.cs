@@ -13,6 +13,8 @@ public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false, 
             [[new ColoredGlyph(Color.LightBlue, Color.White, 'Z'), new ColoredGlyph(Color.White, Color.White, '#')]], isTransparent:false, flashing:true),
         [ProjectileType.WizardBoom] = new EntityDisplay(
             [[new ColoredGlyph(Color.Orange, Color.Yellow, '*')]], isTransparent:false, flashing:true),
+        [ProjectileType.FireBallBoom] = new EntityDisplay(
+            [[new ColoredGlyph(Color.Orange, Color.Yellow, '*')]], isTransparent:false, flashing:true),
         [ProjectileType.DragonBoom] = new EntityDisplay(
             [[new ColoredGlyph(Color.Orange, Color.Yellow, '*')]], isTransparent:false, flashing:true),
         [ProjectileType.Arrow] = new EntityDisplay(
@@ -21,6 +23,10 @@ public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false, 
             [[new ColoredGlyph(Color.Black, Color.White, 'o'), new ColoredGlyph(Color.White, Color.White, 'o')]], isTransparent:true, flashing:false),
         [ProjectileType.WizardBall] = new EntityDisplay(
             [[new ColoredGlyph(Color.Orange, Color.White, 'o'), new ColoredGlyph(Color.White, Color.White, 'o')]], isTransparent:true, flashing:false),
+        [ProjectileType.FireBallSummon] = new EntityDisplay(
+            [[new ColoredGlyph(Color.Orange, Color.White, 'O'), new ColoredGlyph(Color.White, Color.White, 'o')]], isTransparent:true, flashing:false),
+        [ProjectileType.FireBall] = new EntityDisplay(
+            [[new ColoredGlyph(Color.Orange, Color.Red, 'o'), new ColoredGlyph(Color.White, Color.White, 'o')]], isTransparent:false, flashing:false),
         [ProjectileType.DragonBall] = new EntityDisplay(
             [[new ColoredGlyph(Color.Orange, Color.White, 'o'), new ColoredGlyph(Color.White, Color.White, 'o')]], isTransparent:true, flashing:false),
     };
@@ -82,7 +88,12 @@ public class EntityDisplay(ColoredGlyph[][] glyphs, bool isTransparent = false, 
 
         [UnitType.Barbarian] = new EntityDisplay(
             [
-                [new ColoredGlyph(Color.Brown, Color.DarkGray, 'B')]
+                [new ColoredGlyph(Color.Yellow, Color.DarkGray, 'B')]
+            ]
+        ),
+        [UnitType.EBarbs] = new EntityDisplay(
+            [
+                [new ColoredGlyph(Color.Silver, Color.DarkGray, 'B')]
             ]
         ),
         [UnitType.GoblinCage] = new EntityDisplay(

@@ -5,7 +5,9 @@ namespace bash_royale;
 public enum ProjectileType
 {
     Zap,
+    FireBallSummon,
     FireBall,
+    FireBallBoom,
     ZapEffect,
     Arrow,
     CannonBall,
@@ -57,7 +59,10 @@ public struct ProjectileState
             new SummonProj(ProjectileType.ZapEffect),
             
         ], targetType: TargetType.Location, size:new Vector2Int(3,3)),
-        [ProjectileType.FireBall] = new ProjectileInfo([new InstantDamage(new Vector2Int(3, 3), 450)], targetType: TargetType.Location),
+        [ProjectileType.FireBallSummon] = new ProjectileInfo([new TowerSummon(ProjectileType.FireBall)], size: new Vector2Int(5,3), targetType: TargetType.Location),
+        [ProjectileType.FireBall] = new ProjectileInfo([new Splash(1000, ProjectileType.FireBallBoom)],size:new Vector2Int(2,2), targetType:TargetType.Location),
+        [ProjectileType.FireBallBoom] = new ProjectileInfo([ new Linger(4), new InstantDamage(new Vector2Int(5,3), 800, die:false)], size:new Vector2Int(5,3), targetType:TargetType.Location),
+
         [ProjectileType.Arrow] = new ProjectileInfo([new Missile(1000, 110)], null, TargetType.Unit),
         [ProjectileType.CannonBall] = new ProjectileInfo([new Missile(1000, 200)], null, TargetType.Unit),
         [ProjectileType.WizardBall] = new ProjectileInfo([new Splash(1000, ProjectileType.WizardBoom)])
@@ -82,6 +87,21 @@ public interface IProjectileBehaviour
 {
     public ProjectileResult Update(ProjectileState state, GameState gameState);
 }
+
+public class TowerSummon(ProjectileType toCreate) : IProjectileBehaviour
+{
+    public ProjectileResult Update(ProjectileState state, GameState gameState)
+    {
+        state.ShouldDie = true;
+        PlayerId player = state.Owner;
+        PlayerState playerState = GameState.GetPlayerState(gameState, player);
+        ProjectileState newProj = new ProjectileState(toCreate, player, playerState.CrownTowerLoc);
+        newProj.TargetLoc = state.Position;
+        return new ProjectileResult(state,
+            [],
+            [newProj]);
+    }
+}
 public class Splash(int speed, ProjectileType toCreate) : MoveTowards(speed)
 {
     public override ProjectileResult OnArrive(ProjectileState state, GameState gameState)
@@ -105,8 +125,7 @@ public class Missile(int speed, int damage) : MoveTowards(speed)
 }
 public class MoveTowards(int speed) : IProjectileBehaviour
 {
-    // Fixed-point scale: 1000 "sub-units" per grid cell. Keeps movement in ints
-    // so both machines compute byte-identical positions each tick.
+   
     private const int SCALE = 1000;
     private readonly int _speed = speed; // sub-units per tick, e.g. 400 = 0.4 cells/tick
 
