@@ -97,8 +97,9 @@ public class TowerSummon(ProjectileType toCreate) : IProjectileBehaviour
         PlayerState playerState = GameState.GetPlayerState(gameState, player);
         ProjectileState newProj = new ProjectileState(toCreate, player, playerState.CrownTowerLoc);
         Vector2Int size = ProjectileState.Infos[newProj.Type].Size ?? new Vector2Int(1, 1);
-        Vector2Int offset = new Vector2Int(size.X / 2, size.Y / 2);
-        newProj.TargetLoc = state.Position - offset;
+        Vector2Int offset = new Vector2Int(2, 1);
+        //Vector2Int offset = new Vector2Int(1, 1);
+        newProj.TargetLoc = state.Position + offset;
         return new ProjectileResult(state,
             [],
             [newProj], []);

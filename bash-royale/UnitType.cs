@@ -160,7 +160,7 @@ public static class UnitInfos
                 "Hog Rider",
                 900,
                 1,
-                9,
+                11,
                 30,
                 false,
                 new WalkForwards(15),
