@@ -323,7 +323,7 @@ public static class UnitInfos
                 UnitType.Princess,
                 "Princess",
                 250,
-                15,
+                13,
                 20,
                 70,
                 true,
