@@ -12,7 +12,7 @@ Built in 48 hours at UQCS winning the prize for Best Game.
  
 <img width="454" height="634" alt="bashroyale" src="https://github.com/user-attachments/assets/5a6614c5-837e-4b3d-81bc-c0cbc94c2289" />
  
----
+
  
 ## Running it
  
@@ -37,7 +37,7 @@ internet you'll want to forward that port or run both ends through a tunnel.
 | [key] | Open the emote menu |
 | Deck builder | Click cards to add/remove; `Enter` saves, `Esc` cancels |
  
----
+
  
 ## What's actually interesting here
  
@@ -170,6 +170,7 @@ DeckScreen.cs     Deck builder
   missed input ticks.
 - No matchmaking, direct IP only.
 - Balance is hackathon-grade some units are definitely overtuned.
+- 
 ## Authors:
 James Miller 
  
