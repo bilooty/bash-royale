@@ -34,7 +34,7 @@ internet you'll want to forward that port or run both ends through a tunnel.
 | --- | --- |
 | `1`–`4` | Select a card from your hand |
 | Left click | Deploy the selected card |
-| [key] | Open the emote menu |
+| e | Open the emote menu |
 | Deck builder | Click cards to add/remove; `Enter` saves, `Esc` cancels |
  
 
