@@ -144,20 +144,6 @@ dense battle readable in a 28×38 character space:
   is identical on both machines without costing any state.
 ---
  
-## Project layout
- 
-```
-UnitSim.cs        Targeting, range checks, footprint collision
-Movement.cs       Movement behaviours and the attack/chase/neutral behaviour tree
-Pathfinder.cs     A* with footprint and stop-distance awareness
-ProjectileSim.cs  Projectile behaviours and area effects
-CardSim.cs        Card definitions, deployment, swarm formations
-GameSim.cs        Tick orchestration, damage resolution, win conditions
-UnitInfos.cs      Every unit's stats and behaviours
-NetworkManager.cs LiteNetLib transport, deck handshake, input relay
-BattleRenderer.cs The arena, HUD and all in-battle drawing
-DeckScreen.cs     Deck builder
-```
  
 ## Built with
  
