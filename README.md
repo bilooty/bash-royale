@@ -19,7 +19,7 @@ Built in 48 hours at UQCS winning the prize for Best Game.
 **Requirements:** .NET 8+ SDK
  
 ```bash
-git clone [repo-url]
+git clone (https://github.com/bilooty/bash-royale.git)
 cd bash-royale
 dotnet run
 ```
