@@ -142,8 +142,7 @@ dense battle readable in a 28×38 character space:
   silently hiding a unit behind UI.
 - Terrain sprouts are placed by a spatial hash rather than RNG, so the grass texture
   is identical on both machines without costing any state.
----
- 
+
  
 ## Built with
  
